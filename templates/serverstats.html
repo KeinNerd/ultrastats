@@ -1,11 +1,15 @@
 <!-- INCLUDE include_header.html --> 
 
-<br>
-
 <!-- IF iserror="true" -->
-	<center>
-	<h3><font color="red">{LN_ERROR_NOSERVERMAPS}</font></h3>
-	</center>
+<br><br>
+<center>
+	<div class="table_with_border_second ErrorMsg" style="width:600px">
+		<div class="PriorityError">{LN_ERROR_DETAILS}</div>
+		<p>{LN_ERROR_NOSERVERMAPS}</p>
+		</div>
+	<br><br>
+</center>
+<br><br>
 <!-- ENDIF iserror="true" -->
 
 <!-- IF serverlistenabled="true" -->
@@ -18,6 +22,8 @@
 	<tr>
 		<td colspan="5" class="title" width="350" nowrap>{LN_GLOBAL_SERVERLIST}</td>
 	</tr>
+	</table>
+	<table width="100%" cellpadding="1" cellspacing="1" border="0" align="center" class="with_border">
 	<tr>
 		<td colspan="2" align="center" width="200" class="cellmenu1" nowrap><b>{LN_SERVER_NAME}</b></td>
 		<td align="center" width="150" class="cellmenu1" nowrap><b>{LN_SERVER_IP}</b></td>
@@ -57,7 +63,7 @@
 		<br><br>
 -->
 
-		<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center">
+		<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" class="with_border_alternate">
 		<tr>
 			<td colspan="2" class="title" nowrap>{LN_SERVER_MAPSTATS}</td>
 		</tr>
@@ -76,9 +82,9 @@
 		<!-- ENDIF maps_pagerenabled="true" -->
 
 		<!-- BEGIN playedmaps -->
-		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
+		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
 		<tr>
-			<td width="50%" valign="top" class="{cssclass}">
+			<td width="50%" valign="top" class="tableBackground">
 
 				<table width="100%" cellpadding="2" cellspacing="1" border="0" align="center">
 				<tr>
@@ -90,7 +96,7 @@
 				<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" >
 				<tr>
 					<td width="209" nowrap valign="top">
-					<A HREF="info-maps.php?id={MAPNAME}{additional_url}"><img class="imageborder" src="{MapImage}" alt="{MapDisplayName}" width="200"></A>
+					<A HREF="info-maps.php?id={MAPNAME}{additional_url}"><img class="imageborder" src="{MapImage}" alt="{MapDisplayName}"></A>
 					</td>
 					<td width="100%" nowrap valign="top" rowspan="3">
 						<br>
@@ -106,7 +112,7 @@
 						</tr>
 						<tr>
 							<td nowrap width="150" align="center" class="cellmenu2"><B>{LN_SERVER_MOSTGAMETYPE}</B></td>
-							<td nowrap width="100%" align="center" valign="top" class="line2"><A HREF="info-gametypes.php?id={GameTypeName}{additional_url}">{GameTypeName}</A> ({GameTypeCount} times)</td>
+							<td nowrap width="100%" align="center" valign="top" class="line2"><A HREF="info-gametypes.php?id={GameTypeName}{additional_url}">{GameTypeDisplayName}</A> ({GameTypeCount} times)</td>
 						</tr>
 						</table>
 
@@ -134,7 +140,7 @@
 
 				<!-- BEGIN lastrounds -->
 				<tr>
-					<td class="{sub_cssclass}" align="center"><B>{Number}</B></td>
+					<td class="{sub_cssclass}" align="center"><B>{LRNumber}</B></td>
 					<td class="{sub_cssclass}"><img src="{BASEPATH}images/icons/date-time.png" width="16" align="left">{TimePlayed}</td>
 					<td class="{sub_cssclass}" align="center"><img src="{BASEPATH}images/icons/arrow_right_blue.png" width="16" align="left"><A HREF="rounds-detail.php?id={ROUNDID}{additional_url}">{LN_PLAYER_DETAILS}</A></td>
 					<td class="{sub_cssclass}" align="left"><A HREF="info-gametypes.php?id={GameTypeName}{additional_url}">{FinalGameTypeDisplayName}</A></td>

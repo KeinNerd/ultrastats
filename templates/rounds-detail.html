@@ -1,6 +1,16 @@
 <!-- INCLUDE include_header.html --> 
 
-<br>
+<!-- IF roundsenabled!="true" -->
+<br><br>
+<center>
+	<div class="table_with_border_second ErrorMsg" style="width:600px">
+		<div class="PriorityError">{LN_ERROR_DETAILS}</div>
+		<p>{LN_ROUNDS_ROUNDNOTFOUND}</p>
+		</div>
+	<br><br>
+</center>
+<br><br>
+<!-- ENDIF roundsenabled!="true" -->
 
 <!-- IF roundsenabled="true" -->
 <table width="100%" cellpadding="0" cellspacing="5" border="0" align="center">
@@ -8,14 +18,14 @@
 	<td width="10" valign="top" rowspan="2" nowrap>&nbsp;</td>
 	<td width="60%" valign="top">
 
-		<table width="100%" cellpadding="1" cellspacing="0" border="0" align="center">
+		<table width="100%" align="center" border="0" cellpadding="1" cellspacing="1" class="with_border_alternate">
 		<tr>
-			<td class="title" width="400" nowrap>{LN_ROUNDS_DETAILS} '{roundid}'</td>
+			<td class="title" nowrap>{LN_ROUNDS_DETAILS} '{roundid}'</td>
 		</tr>
 		</table>
 
 		<!-- IF rounds_team_enabled="true" -->
-		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
+		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
 		<tr>
 			<td width="36" class="cellmenu1" align="left" nowrap><img src="{BASEPATH}images/main/{gen_gameversion_picpath}/flag-axis-small.png" width="24" alt="Axis"></td>
 			<td width="50%" class="cellmenu1" align="center" nowrap><B>{LN_ROUNDS_AXIS}</B></td>
@@ -170,18 +180,18 @@
 		<tr>
 			<td width="50%" valign="top">
 
-			<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center">
+			<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
 			<tr>
 				<td class="title" nowrap>{LN_ROUNDS_AWARDS}</td>
 			</tr>
 			</table>
 			<!-- BEGIN Awards -->
-			<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
+			<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
 			<tr>
 				<td colspan="3" class="cellmenu1" align="center" nowrap><B>{DisplayName}</B></td>
 			</tr>
 			<tr>
-				<td class="cellmenu2" width="42" align="left" nowrap><img src="{MedalImage}" width="32" height="64" alt="{PLAYER_FinalMapDisplayName}"></td>
+				<td class="cellmenu2_naked" width="42" align="left" nowrap><img src="{MedalImage}" width="32" height="64" alt="{PLAYER_FinalMapDisplayName}"></td>
 				<td class="{cssclass}" align="center" valign="top">
 					<br><A HREF="players-detail.php?id={PLAYERID}{additional_url}" title="{Alias}">{AliasAsHtml}</B>
 					<br>{ValueTitel}: <B>{Value}</B>
@@ -193,17 +203,17 @@
 			</td>
 			<td width="50%" valign="top">
 
-			<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center">
+			<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
 			<tr>
 				<td class="title" nowrap>{LN_ROUNDS_SUM}</td>
 			</tr>
 			</table>
 
-			<table width="100%" cellpadding="2" cellspacing="1" border="0" align="center" class="with_border_alternate">
+			<table width="100%" cellpadding="2" cellspacing="1" border="0" align="center" class="with_border">
 			<tr>
-				<td class="cellmenu2" width="75" align="center" nowrap><b>{LN_LROUNDS_MAPNAME}</b></td>
+				<td class="cellmenu2_naked" width="75" align="center" nowrap><b>{LN_LROUNDS_MAPNAME}</b></td>
 				<td class="line1" align="center" width="100%" valign="top">
-					<img src="{MapNameFile}" width="100" alt="{MapDisplayName}" class="imageborder">
+					<a href="info-maps.php?id={MapName}{additional_url}"><img src="{MapNameFile}" width="100" alt="{MapDisplayName}" class="imageborder"></a>
 				</td>
 			</tr>
 			<tr>
@@ -238,7 +248,7 @@
 			<!-- BEGIN gameactions -->
 			<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
 			<tr>
-				<td width="100" class="cellmenu1" align="center" rowspan="{RowSpanCount}" nowrap><B>{LN_ROUNDS_ACTIONNAME}<br> {DisplayName}</B></td>
+				<td width="100" class="cellmenu1_naked" align="left" rowspan="{RowSpanCount}" nowrap><B>{DisplayName}</B></td>
 				<td width="100%" class="cellmenu2" align="center" nowrap><B>{LN_TOPPLAY_NAME}</B></td>
 				<td width="50" class="cellmenu2" align="center" nowrap><B>{LN_PLAYER_ALIASCOUNT}</B></td>
 			</tr>
@@ -260,14 +270,16 @@
 </tr>
 <tr>
 	<td valign="top" colspan="3">
-<br>
-		<table width="100%" cellpadding="1" cellspacing="0" border="0" align="center">
+	<br>
+		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
 			<td class="title" nowrap>{LN_ROUNDS_CHATLOG}</td>
 		</tr>
+		</table>
+		<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center">
 		<tr>
 			<td>
-			<iframe id="container" src="rounds-chatlog.php?id={roundid}{additional_url}" width="100%" height="300" class="with_border_alternate">
+			<iframe id="container" src="rounds-chatlog.php?id={roundid}{additional_url}" width="100%" height="200" class="with_border">
 				<p>{NO_INFRAME_POSSIBLE}</p>
 			</iframe>
 			</td>

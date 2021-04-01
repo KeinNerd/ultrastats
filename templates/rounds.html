@@ -1,6 +1,16 @@
 <!-- INCLUDE include_header.html --> 
 
-<br>
+<!-- IF roundsenabled!="true" -->
+<br><br>
+<center>
+	<div class="table_with_border_second ErrorMsg" style="width:600px">
+		<div class="PriorityError">{LN_ERROR_DETAILS}</div>
+		<p>{LN_ERROR_NOSTATSDATAFOUND}</p>
+		</div>
+	<br><br>
+</center>
+<br><br>
+<!-- ENDIF roundsenabled!="true" -->
 
 <!-- IF roundsenabled="true" -->
 <table width="100%" cellpadding="0" cellspacing="5" border="0" align="center">
@@ -8,7 +18,7 @@
 	<td width="10" valign="top" nowrap>&nbsp;</td>
 	<td width="100%" valign="top">
 
-		<table width="100%" cellpadding="1" cellspacing="0" border="0" align="center">
+		<table width="100%" align="center" border="0" cellpadding="1" cellspacing="1" class="with_border_alternate">
 		<tr>
 			<td class="title" nowrap>{LN_ROUNDS_ALLROUNDS} {titlesortedby}</td>
 		</tr>
@@ -27,7 +37,7 @@
 		</table>
 		<!-- ENDIF rounds_pagerenabled="true" -->
 
-		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
+		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
 <!--		<tr>
 			<td width="125" class="cellmenu1" align="center" nowrap><B>{LN_LROUNDS_TIME}</B></td>
 			<td width="100%" colspan="2"class="cellmenu1" align="center" nowrap><B>{LN_LROUNDS_DETAILS}</B></td>

@@ -1,0 +1,22 @@
+-- --------------------------------------------------------
+
+-- --------------------------------------------------------
+-- New Database Structure Updates
+
+-- --------------------------------------------------------
+-- Replace existing data, this automatically INSERTS or UPDATES!
+
+-- New Game Actions
+REPLACE INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES('unknown_action', 'Unknown', 0);
+REPLACE INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES('flag_taken', 'Flag taken', 2);
+REPLACE INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES('flag_returned', 'Flag returned', 5);
+REPLACE INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES('flag_captured', 'Flag captured', 10);
+REPLACE INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES('headquaters_captured', 'HQ Captured', 10);
+REPLACE INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES('headquaters_destroyed', 'Destroyed', 5);
+REPLACE INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES('bomb_planted', 'Bomb planted', 5);
+REPLACE INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES('bomb_defused', 'Bomb defused', 10);
+
+
+-- New Insert stuff
+-- Updated data records stuff
+UPDATE `stats_maps` SET `MAPNAME` = 'mp_asylum' WHERE `stats_maps`.`MAPNAME` LIKE '%mp_asylum%'; -- Codww only%$&1337&%&;

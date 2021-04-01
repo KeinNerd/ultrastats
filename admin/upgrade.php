@@ -1,39 +1,48 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006!								*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Installer File													*
-	*																	*
-	* -> Will help you n00b to install the stats by clicking :P			*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Upgrade File													
+	*		Helper script to upgrade existing databases 
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
+
 
 // *** Default includes	and procedures *** //
 define('IN_ULTRASTATS', true);
 $gl_root_path = './../';
-include($gl_root_path . 'include/functions_db.php');
 include($gl_root_path . 'include/functions_common.php');
-include($gl_root_path . 'include/class_template.php');
 include($gl_root_path . 'include/functions_frontendhelpers.php');
+
+// Set PAGE to be ADMINPAGE!
+define('IS_ADMINPAGE', true);
+$content['IS_ADMINPAGE'] = true;
 
 InitUltraStats();
 CheckForUserLogin( false, true );	// Second Param needed, this is the db upgrade page
-
 IncludeLanguageFile( $gl_root_path . 'lang/' . $LANG . '/admin.php' );
 // ***					*** //
 
-// --- CONTENT Vars
-$content['TITLE'] = "Ultrastats - Admin Center - Database Upgrade";	// Title of the Page 
-// --- 
+// --- BEGIN CREATE TITLE
+$content['TITLE'] = InitPageTitle();
+$content['TITLE'] .= " :: Database Upgrade";
+// --- END CREATE TITLE
+
 
 // --- BEGIN Custom Code
-
 if ( isset($content['database_forcedatabaseupdate']) && $content['database_forcedatabaseupdate'] == "yes" ) 
 {
 	if ( isset($_GET['op']) )
@@ -116,6 +125,13 @@ if ( isset($content['database_forcedatabaseupdate']) && $content['database_force
 									continue; // Ignore this database statement!
 								else 
 									$mycommands[$i] = str_replace("-- Cod4 only%$&1337&%&", "", $mycommands[$i]); // Remove appendix!
+							}
+							else if ( strpos($mycommands[$i], "-- Codww only%$&1337&%&") !== false )
+							{
+								if ( $content['gen_gameversion'] != CODWW )
+									continue; // Ignore this database statement!
+								else 
+									$mycommands[$i] = str_replace("-- Codww only%$&1337&%&", "", $mycommands[$i]); // Remove appendix!
 							}
 
 							$result = DB_Query( $mycommands[$i], false );

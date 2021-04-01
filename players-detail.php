@@ -1,34 +1,44 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006, 2007, 2008						*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Player Details File												*
-	*																	*
-	* -> Shows Details for each player !								*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Playerdetails File
+	*		Shows details for each Player 
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
 
 // *** Default includes	and procedures *** //
 define('IN_ULTRASTATS', true);
 $gl_root_path = './';
-include($gl_root_path . 'include/functions_db.php');
 include($gl_root_path . 'include/functions_common.php');
-include($gl_root_path . 'include/class_template.php');
 include($gl_root_path . 'include/functions_frontendhelpers.php');
 
 InitUltraStats();
-IncludeLanguageFile( $gl_root_path . '/lang/' . $LANG . '/main.php' );
 InitFrontEndDefaults();	// Only in WebFrontEnd
 // ***					*** //
 
-// --- BEGIN Custom Code
+// --- BEGIN CREATE TITLE
+$content['TITLE'] = InitPageTitle();
 
+// Append custom title part!
+$content['TITLE'] .= " :: Playerdetails ";
+// --- END CREATE TITLE
+
+
+// --- BEGIN Custom Code
 // Set default
 $content['iserror'] = false;
 
@@ -36,9 +46,7 @@ $content['iserror'] = false;
 if ( isset($_GET['id']) )
 {
 	// get and check
-	//$content['playerguid'] = DB_RemoveBadChars($_GET['id']);
-	// Blind SQL Fix from https://www.exploit-db.com/exploits/6067 but untested!
-	$content['playerguid'] = intval(DB_RemoveBadChars($_GET['id']));
+	$content['playerguid'] = DB_RemoveBadChars($_GET['id']);
 	if (
 			!is_numeric($content['playerguid']) 
 				|| 
@@ -47,6 +55,7 @@ if ( isset($_GET['id']) )
 	{
 		// Invalid Guid!
 		$content['iserror'] = "true";
+		$content['ERROR_DETAILS'] = $content['LN_ERROR_INVALIDPLAYER'];
 	}
 	else
 	{	
@@ -89,18 +98,15 @@ if ( isset($_GET['id']) )
 								"sum( " . STATS_PLAYERS . ".Suicides) as Suicides, " . 
 //								"round(AVG( " . STATS_PLAYERS . ".KillRatio),2) as KillRatio " .
 								"sum(" . STATS_PLAYERS . ".Kills) / sum(" . STATS_PLAYERS . ".Deaths) as KillRatio " .	// TRUE l33tAGE!
-//								STATS_ALIASES . ".Alias, " .
-//								STATS_ALIASES . ".AliasAsHtml " .
 								" FROM " . STATS_PLAYERS . 
 								" LEFT OUTER JOIN (" . STATS_PLAYERS_STATIC . 
 								") ON (" . 
 								STATS_PLAYERS_STATIC . ".GUID=" . STATS_PLAYERS . ".GUID) " . 
 								" WHERE " . STATS_PLAYERS . ".GUID = " . $content['playerguid'] . " " . 
-//								" AND " . STATS_ALIASES . ".Count = " . $content['aliases'][0]['Count'] .
-								GetCustomServerWhereQuery(STATS_PLAYERS, false) . // GetCustomServerWhereQuery(STATS_ALIASES, false) . 
+								GetCustomServerWhereQuery(STATS_PLAYERS, false) . 
 								GetBannedPlayerWhereQuery(STATS_PLAYERS, "GUID", false) . 
-								" GROUP BY " . STATS_PLAYERS . ".GUID "; // . 
-//								" ORDER BY AliasCount DESC";
+								GetTimeWhereQueryString(STATS_PLAYERS) . 
+								" GROUP BY " . STATS_PLAYERS . ".GUID ";
 			$result = DB_Query($sqlquery);
 			$playervars = DB_GetSingleRow($result, true);
 
@@ -116,10 +122,11 @@ if ( isset($_GET['id']) )
 				$content['playerenabled'] = "true";
 
 				// Set Playervars 
-				if ( isset($playervars['PBGuid']) && strlen($playervars['PBGuid']) > 0 )
+				if ( isset($playervars['PBGuid']) && strlen( trim($playervars['PBGuid']) ) > 16 ) // Must be at least more then 16 chars, proberly more
 				{
 					// Enable Showing GUID
 					$content['EnableShowPBGuid'] = true;
+//					echo $playervars['PBGuid'];
 					$content['PBGuid'] = substr($playervars['PBGuid'], 24); // Only show last 8 digits for security reasons!
 				}
 				else
@@ -183,10 +190,13 @@ if ( isset($_GET['id']) )
 				// Get Rounds first
 				$sqlquery = "SELECT " . STATS_ROUNDS . ".ID " . 
 							" FROM " . STATS_ROUNDS . 
-							" INNER JOIN (" . STATS_PLAYER_KILLS . ") ON (" . 
-							STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID)" . 
+							" INNER JOIN (" . STATS_PLAYER_KILLS . 
+							") ON (" . 
+							STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID " . 
+							")" . 
 							" WHERE " . STATS_PLAYER_KILLS . ".PLAYERID=" . $content['playerguid'] . 
 							GetCustomServerWhereQuery( STATS_ROUNDS, false) . 
+							GetTimeWhereQueryStringForRoundTable() . 
 							" GROUP BY " . STATS_ROUNDS . ".ID";
 
 				$result = DB_Query( $sqlquery );
@@ -204,9 +214,12 @@ if ( isset($_GET['id']) )
 											STATS_MAPS . ".MAPNAME, " . 
 											STATS_MAPS . ".DisplayName " . 
 											" FROM " . STATS_ROUNDS . 
-											" INNER JOIN (" . STATS_MAPS . ") ON (" . 
-											STATS_MAPS . ".ID=" . STATS_ROUNDS . ".MAPID) " . 
+											" INNER JOIN (" . STATS_MAPS .
+											") ON (" . 
+											STATS_MAPS . ".ID=" . STATS_ROUNDS . ".MAPID " . 
+											") " . 
 											" WHERE " . STATS_ROUNDS . ".ID IN (" . $myrounds . ")" . 
+											GetTimeWhereQueryStringForRoundTable() . 
 											" GROUP BY " . STATS_ROUNDS . ".MAPID" . 
 											" ORDER BY mapcount DESC";
 					$result = DB_Query( $sqlquery );
@@ -217,7 +230,7 @@ if ( isset($_GET['id']) )
 					// --- Set Mapimage
 					$content['PLAYER_MapImage'] = $gl_root_path . "images/maps/small/" . $content['PLAYER_MAPNAME'] . ".jpg";
 					if ( !is_file($content['PLAYER_MapImage']) )
-						$content['PLAYER_MapImage'] = $gl_root_path . "images/maps/no-pic.jpg";
+						$content['PLAYER_MapImage'] = $gl_root_path . "images/maps/no-pic.png";
 					// --- 
 
 					// --- Set DisplayName
@@ -238,10 +251,13 @@ if ( isset($_GET['id']) )
 										STATS_WEAPONS . ".INGAMENAME, " . 
 										STATS_WEAPONS . ".DisplayName " . 
 										" FROM " . STATS_PLAYER_KILLS . 
-										" INNER JOIN (" . STATS_WEAPONS . ") ON (" . 
-										STATS_WEAPONS . ".ID=" . STATS_PLAYER_KILLS . ".WEAPONID) " . 
+										" INNER JOIN (" . STATS_WEAPONS . ", " . STATS_ROUNDS . ") ON (" . 
+										STATS_WEAPONS . ".ID=" . STATS_PLAYER_KILLS . ".WEAPONID AND " . 
+										STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID " . 
+										") " . 
 										" WHERE " . STATS_PLAYER_KILLS . ".PLAYERID=" .  $content['playerguid'] . 
 										GetCustomServerWhereQuery( STATS_PLAYER_KILLS, false) . 
+										GetTimeWhereQueryStringForRoundTable() . 
 										" GROUP BY " . STATS_WEAPONS . ".INGAMENAME" . 
 										" ORDER BY TotalKills DESC";
 
@@ -258,7 +274,7 @@ if ( isset($_GET['id']) )
 					$tmpWeaponimg = ReturnWeaponBaseName($content['PLAYER_WEAPONID']);
 					$content['PLAYER_WeaponImage'] = $gl_root_path . "images/weapons/normal/" . $tmpWeaponimg . ".png";
 					if ( !is_file($content['PLAYER_WeaponImage']) )
-						$content['PLAYER_WeaponImage'] = $gl_root_path . "images/weapons/no-pic.jpg";
+						$content['PLAYER_WeaponImage'] = $gl_root_path . "images/weapons/no-pic.png";
 					// --- 
 
 					// --- Set DisplayName
@@ -279,10 +295,13 @@ if ( isset($_GET['id']) )
 										STATS_WEAPONS . ".INGAMENAME, " . 
 										STATS_WEAPONS . ".DisplayName " . 
 										" FROM " . STATS_PLAYER_KILLS . 
-										" INNER JOIN (" . STATS_WEAPONS . ") ON (" . 
-										STATS_WEAPONS . ".ID=" . STATS_PLAYER_KILLS . ".WEAPONID) " . 
+										" INNER JOIN (" . STATS_WEAPONS . ", " . STATS_ROUNDS . ") ON (" . 
+										STATS_WEAPONS . ".ID=" . STATS_PLAYER_KILLS . ".WEAPONID AND " . 
+										STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID " . 
+										") " . 
 										" WHERE " . STATS_PLAYER_KILLS . ".PLAYERID=" .  $content['playerguid'] . 
 										GetCustomServerWhereQuery( STATS_PLAYER_KILLS, false) . 
+										GetTimeWhereQueryStringForRoundTable() . 
 										" GROUP BY " . STATS_WEAPONS . ".INGAMENAME" . 
 										" ORDER BY TotalKills DESC";
 				$result = DB_Query( $sqlquery );
@@ -306,7 +325,7 @@ if ( isset($_GET['id']) )
 						$tmpWeaponimg = ReturnWeaponBaseName($content['weaponstats'][$i]['INGAMENAME']);
 						$content['weaponstats'][$i]['WeaponImage'] = $gl_root_path . "images/weapons/thumbs/" . $tmpWeaponimg . ".png";
 						if ( !is_file($content['weaponstats'][$i]['WeaponImage']) )
-							$content['weaponstats'][$i]['WeaponImage'] = $gl_root_path . "images/weapons/no-pic.jpg";
+							$content['weaponstats'][$i]['WeaponImage'] = $gl_root_path . "images/weapons/thumbs/no-pic.png";
 						// --- 
 
 						// --- Set CSS Class
@@ -337,9 +356,12 @@ if ( isset($_GET['id']) )
 											STATS_MAPS . ".MAPNAME, " . 
 											STATS_MAPS . ".DisplayName " . 
 											" FROM " . STATS_ROUNDS . 
-											" INNER JOIN (" . STATS_MAPS . ") ON (" . 
-											STATS_MAPS . ".ID=" . STATS_ROUNDS . ".MAPID) " . 
+											" INNER JOIN (" . STATS_MAPS .
+											") ON (" . 
+											STATS_MAPS . ".ID=" . STATS_ROUNDS . ".MAPID " . 
+											") " . 
 											" WHERE " . STATS_ROUNDS . ".ID IN (" . $myrounds . ")" . 
+											GetTimeWhereQueryStringForRoundTable() . 
 											" GROUP BY " . STATS_ROUNDS . ".MAPID" . 
 											" ORDER BY mapcount DESC LIMIT 10";
 
@@ -359,7 +381,7 @@ if ( isset($_GET['id']) )
 							// --- Set Mapimage
 							$content['mapstats'][$i]['MapImage'] = $gl_root_path . "images/maps/thumbs/" . $content['mapstats'][$i]['MAPNAME'] . ".jpg";
 							if ( !is_file($content['mapstats'][$i]['MapImage']) )
-								$content['mapstats'][$i]['MapImage'] = $gl_root_path . "images/maps/no-pic.jpg";
+								$content['mapstats'][$i]['MapImage'] = $gl_root_path . "images/maps/thumbs/no-pic.png";
 							// --- 
 
 							// --- Set DisplayName
@@ -395,14 +417,12 @@ if ( isset($_GET['id']) )
 				// --- Top Victims
 				$sqlquery = "SELECT " . STATS_PLAYER_KILLS . ".ENEMYID, " . 
 										"Sum(" . STATS_PLAYER_KILLS . ".Kills) as TotalKills " . 
-//										STATS_ALIASES . ".PLAYERID, " . 
-//										"(" . STATS_ALIASES . ".Alias) as EnemyAlias, " . 
-//										"(" . STATS_ALIASES . ".AliasAsHtml) as EnemyAliasHtml " . 
 										" FROM " . STATS_PLAYER_KILLS . 
-//										" INNER JOIN (" . STATS_ALIASES . ") ON (" . 
-//										STATS_PLAYER_KILLS . ".ENEMYID=" . STATS_ALIASES . ".PLAYERID) " . 
+										" INNER JOIN (" . STATS_ROUNDS . ") ON (" . 
+										STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID ) " . 
 										" WHERE " . STATS_PLAYER_KILLS . ".PLAYERID=" .  $content['playerguid'] . 
 										GetCustomServerWhereQuery( STATS_PLAYER_KILLS, false) . 
+										GetTimeWhereQueryStringForRoundTable() . 
 										" GROUP BY " . STATS_PLAYER_KILLS . ".ENEMYID" . 
 										" ORDER BY TotalKills DESC LIMIT 15";
 				$result = DB_Query( $sqlquery );
@@ -442,13 +462,12 @@ if ( isset($_GET['id']) )
 				// --- Top Killers
 				$sqlquery = "SELECT " . STATS_PLAYER_KILLS . ".PLAYERID, " . 
 										"Sum(" . STATS_PLAYER_KILLS . ".Kills) as TotalKills " . 
-	//									STATS_ALIASES . ".PLAYERID, " . 
-//										"(" . STATS_ALIASES . ".Alias) as KillerAlias, " . 
-//										"(" . STATS_ALIASES . ".AliasAsHtml) as KillerAliasHtml " . 
 										" FROM " . STATS_PLAYER_KILLS . 
-//										" INNER JOIN (" . STATS_ALIASES . ") ON (" . 
-//										STATS_PLAYER_KILLS . ".PLAYERID=" . STATS_ALIASES . ".PLAYERID) " . 
-										" WHERE " . STATS_PLAYER_KILLS . ".ENEMYID=" .  $content['playerguid'] . GetCustomServerWhereQuery( STATS_PLAYER_KILLS, false) . 
+										" INNER JOIN (" . STATS_ROUNDS . ") ON (" . 
+										STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID ) " . 
+										" WHERE " . STATS_PLAYER_KILLS . ".ENEMYID=" .  $content['playerguid'] . 
+										GetCustomServerWhereQuery( STATS_PLAYER_KILLS, false) . 
+										GetTimeWhereQueryStringForRoundTable() . 
 										" GROUP BY " . STATS_PLAYER_KILLS . ".PLAYERID" . 
 										" ORDER BY TotalKills DESC LIMIT 15";
 				$result = DB_Query( $sqlquery );
@@ -491,8 +510,11 @@ if ( isset($_GET['id']) )
 									STATS_CHAT . ".ROUNDID, " .
 									STATS_CHAT . ".TextSaid " .
 									" FROM " . STATS_CHAT . 
+									" INNER JOIN (" . STATS_ROUNDS . ") ON (" . 
+									STATS_CHAT . ".ROUNDID=" . STATS_ROUNDS . ".ID ) " . 
 									" WHERE " . STATS_CHAT . ".PLAYERID=" . $content['playerguid'] . 
 									GetCustomServerWhereQuery( STATS_CHAT, false) . 
+									GetTimeWhereQueryStringForRoundTable() . 
 									" ORDER BY " . STATS_CHAT . ".ID DESC " .
 									" LIMIT 10 ";
 
@@ -525,16 +547,22 @@ if ( isset($_GET['id']) )
 				$sqlquery = "SELECT " . STATS_HITLOCATIONS . ".ID, " . 
 							STATS_HITLOCATIONS . ".BODYPART, " . 
 							STATS_HITLOCATIONS . ".DisplayName " . 
-							" FROM " . STATS_HITLOCATIONS;
+							" FROM " . STATS_HITLOCATIONS . 
+							" WHERE " . STATS_HITLOCATIONS . ".BODYPART != 'none'";
 				$result = DB_Query( $sqlquery );
 				$hitlocations = DB_GetAllRows($result, true);
 				if ( isset($hitlocations) )
 				{
+					// Set some helpers here!
+					$content['KILLEDDETAILS'][0]['modelname'] = $content['web_playermodel_killer'];
+
 					for($i = 0; $i < count($hitlocations); $i++)
 					{
 						$content['KILLEDDETAILS'][0][ $hitlocations[$i]['BODYPART'] ] = $hitlocations[$i]['BODYPART'];
 						$content['KILLEDDETAILS'][0][ $hitlocations[$i]['BODYPART'] . "_display" ] = $hitlocations[$i]['DisplayName'];
 						$content['KILLEDDETAILS'][0][ $hitlocations[$i]['BODYPART'] . "_level" ] = 0;
+						$content['KILLEDDETAILS'][0][ $hitlocations[$i]['BODYPART'] . "_hovertxt" ] = "Hitlocation<br><B>" . $hitlocations[$i]['DisplayName'] . "</B><br><br>Damage<br><font color=#FFFF55><B>0%</B></font>";
+						$content['KILLEDDETAILS'][0][ $hitlocations[$i]['BODYPART'] . "_image" ] = $content['BASEPATH'] . "images/player/" . $content['KILLEDDETAILS'][0]['modelname'] . "/hover/" . $hitlocations[$i]['BODYPART'] . ".png";
 					}
 				}
 
@@ -544,66 +572,88 @@ if ( isset($_GET['id']) )
 							STATS_HITLOCATIONS . ".BODYPART, " . 
 							STATS_HITLOCATIONS . ".DisplayName " . 
 							" FROM " . STATS_PLAYER_KILLS . 
-							" INNER JOIN (" . STATS_HITLOCATIONS . 
+							" INNER JOIN (" . STATS_HITLOCATIONS . ", " . STATS_ROUNDS . 
 							") ON (" . 
-							STATS_HITLOCATIONS . ".ID=" . STATS_PLAYER_KILLS . ".HITLOCATIONID) " . 
-							" WHERE " . STATS_PLAYER_KILLS . ".PLAYERID=" .  $content['playerguid'] . GetCustomServerWhereQuery( STATS_PLAYER_KILLS, false) . 
+							STATS_HITLOCATIONS . ".ID=" . STATS_PLAYER_KILLS . ".HITLOCATIONID AND " .
+							STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID " . 
+							") " . 
+							" WHERE " . STATS_PLAYER_KILLS . ".PLAYERID=" .  $content['playerguid'] . 
+							" AND " . STATS_HITLOCATIONS . ".BODYPART != 'none'" . 
+							GetCustomServerWhereQuery( STATS_PLAYER_KILLS, false) . 
+							GetTimeWhereQueryStringForRoundTable() . 
 							" GROUP BY " . STATS_HITLOCATIONS . ".ID" . 
 							" ORDER BY TotalKills DESC";
 				$result = DB_Query( $sqlquery );
 				$content['KILLEDDETAILS'][0]['hitlocations'] = DB_GetAllRows($result, true);
 				if ( isset($content['KILLEDDETAILS'][0]['hitlocations']) )
 				{
-					for($i = 0; $i < count($content['KILLEDDETAILS'][0]['hitlocations']); $i++)
+					$i = 0;
+					foreach ( $content['KILLEDDETAILS'][0]['hitlocations'] as $myKey => $myHitLocation)
 					{
 						// Set default props
-						$content['KILLEDDETAILS'][0][ $content['KILLEDDETAILS'][0]['hitlocations'][$i]['BODYPART'] ] = $content['KILLEDDETAILS'][0]['hitlocations'][$i]['BODYPART'];
-						$content['KILLEDDETAILS'][0][ $content['KILLEDDETAILS'][0]['hitlocations'][$i]['BODYPART'] . "_display" ] = $content['KILLEDDETAILS'][0]['hitlocations'][$i]['DisplayName'];
+						$content['KILLEDDETAILS'][0][ $myHitLocation['BODYPART'] ] = $myHitLocation['BODYPART'];
+						$content['KILLEDDETAILS'][0][ $myHitLocation['BODYPART'] . "_display" ] = $myHitLocation['DisplayName'];
 
-						if ( !isset($content['KILLEDDETAILS'][0]['hitlocations'][$i]['TotalKills']) )
-							$content['KILLEDDETAILS'][0]['hitlocations'][$i]['TotalKills'] = 0;
+						if ( !isset($myHitLocation['TotalKills']) )
+							$myHitLocation['TotalKills'] = 0;
 
-						$content['KILLEDDETAILS'][0]['hitlocations'][$i]['Number'] = $i+1;
+						$content['KILLEDDETAILS'][0]['hitlocations'][ $myKey ]['Number'] = $i+1;
 						// --- 
 
 						// --- Set CSS Class
 						if ( $i % 2 == 0 )
-							$content['KILLEDDETAILS'][0]['hitlocations'][$i]['cssclass'] = "line1";
+							$content['KILLEDDETAILS'][0]['hitlocations'][ $myKey ]['cssclass'] = "line1";
 						else
-							$content['KILLEDDETAILS'][0]['hitlocations'][$i]['cssclass'] = "line2";
+							$content['KILLEDDETAILS'][0]['hitlocations'][ $myKey ]['cssclass'] = "line2";
+						$i++;
 						// --- 
 						
 						// --- Calc Hitlocations and Round up by 10
 						if ( $content['Kills'] > 0 )
-							$tmpval = intval( $content['KILLEDDETAILS'][0]['hitlocations'][$i]['TotalKills'] / ($content['Kills'] / 100));
+							$tmpval = intval( $myHitLocation['TotalKills'] / ($content['Kills'] / 100));
 						else 
 							$tmpval = 0;
 						if ( $tmpval > 0 )
 						{
 							$tmpval += 10;
 							$tmpval = intval($tmpval/10) * 10;
+
+							// Secure Check, if for some reason the level is higher then 100%, we set it down to 100%!
+							if ( $tmpval > 100) 
+								$tmpval = 100;
 						}
-						$content['KILLEDDETAILS'][0][ $content['KILLEDDETAILS'][0]['hitlocations'][$i]['BODYPART'] . "_level" ] = $tmpval;
+						$content['KILLEDDETAILS'][0][ $myHitLocation['BODYPART'] . "_level" ] = $tmpval;
+						// ---
+
+						// --- Set Popup Content
+						$content['KILLEDDETAILS'][0][ $myHitLocation['BODYPART'] . "_hovertxt" ] = "Hitlocation<br><b>" . $myHitLocation['DisplayName'] . "</b><br><br>Damage<br><font color=" . GetPopupContentColor($tmpval) . "><B>" . $tmpval . "%</B></font>";
+//						$content['KILLEDDETAILS'][0][ $hitlocations[$i]['BODYPART'] . "_hovertxt" ] = "Hitlocation<br><b>" . $myHitLocation['DisplayName'] . "</b><br><br>Damage<br><font color=" . GetPopupContentColor($tmpval) . "><B>" . $tmpval . "%</B></font>";
+						// ---
 					}
 				}
 				// --- 
-
 
 				// --- Top HitLocations Killed BY Others
 				// PreInit All HitLocations
 				$sqlquery = "SELECT " . STATS_HITLOCATIONS . ".ID, " . 
 							STATS_HITLOCATIONS . ".BODYPART, " . 
 							STATS_HITLOCATIONS . ".DisplayName " . 
-							" FROM " . STATS_HITLOCATIONS;
+							" FROM " . STATS_HITLOCATIONS .
+							" WHERE " . STATS_HITLOCATIONS . ".BODYPART != 'none'";
 				$result = DB_Query( $sqlquery );
 				$hitlocations = DB_GetAllRows($result, true);
 				if ( isset($hitlocations) )
 				{
+					// Set some helpers here!
+					$content['KILLEDBYDETAILS'][0]['modelname'] = $content['web_playermodel_killedby'];
+
 					for($i = 0; $i < count($hitlocations); $i++)
 					{
 						$content['KILLEDBYDETAILS'][0][ $hitlocations[$i]['BODYPART'] ] = $hitlocations[$i]['BODYPART'];
 						$content['KILLEDBYDETAILS'][0][ $hitlocations[$i]['BODYPART'] . "_display" ] = $hitlocations[$i]['DisplayName'];
 						$content['KILLEDBYDETAILS'][0][ $hitlocations[$i]['BODYPART'] . "_level" ] = 0;
+						$content['KILLEDBYDETAILS'][0][ $hitlocations[$i]['BODYPART'] . "_hovertxt" ] = "Hitlocation<br><B>" . $hitlocations[$i]['DisplayName'] . "</B><br><br>Damage<br><font color=#FFFF55><B>0%</B></font>";
+						$content['KILLEDBYDETAILS'][0][ $hitlocations[$i]['BODYPART'] . "_image" ] = $content['BASEPATH'] . "images/player/" . $content['KILLEDBYDETAILS'][0]['modelname'] . "/hover/" . $hitlocations[$i]['BODYPART'] . ".png";
 					}
 				}
 
@@ -613,48 +663,62 @@ if ( isset($_GET['id']) )
 							STATS_HITLOCATIONS . ".BODYPART, " . 
 							STATS_HITLOCATIONS . ".DisplayName " . 
 							" FROM " . STATS_PLAYER_KILLS . 
-							" INNER JOIN (" . STATS_HITLOCATIONS . 
+							" INNER JOIN (" . STATS_HITLOCATIONS . ", " . STATS_ROUNDS . 
 							") ON (" . 
-							STATS_HITLOCATIONS . ".ID=" . STATS_PLAYER_KILLS . ".HITLOCATIONID) " . 
-							" WHERE " . STATS_PLAYER_KILLS . ".ENEMYID=" . $content['playerguid'] . GetCustomServerWhereQuery( STATS_PLAYER_KILLS, false) . 
+							STATS_HITLOCATIONS . ".ID=" . STATS_PLAYER_KILLS . ".HITLOCATIONID AND " . 
+							STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID " . 
+							") " . 
+							" WHERE " . STATS_PLAYER_KILLS . ".ENEMYID=" . $content['playerguid'] . 
+							" AND " . STATS_HITLOCATIONS . ".BODYPART != 'none'" . 
+							GetCustomServerWhereQuery( STATS_PLAYER_KILLS, false) . 
+							GetTimeWhereQueryStringForRoundTable() . 
 							" GROUP BY " . STATS_HITLOCATIONS . ".ID" . 
 							" ORDER BY TotalKills DESC";
 				$result = DB_Query( $sqlquery );
 				$content['KILLEDBYDETAILS'][0]['hitlocations'] = DB_GetAllRows($result, true);
 				if ( isset($content['KILLEDBYDETAILS'][0]['hitlocations']) )
 				{
-					for($i = 0; $i < count($content['KILLEDBYDETAILS'][0]['hitlocations']); $i++)
+					$i = 0;
+					foreach ( $content['KILLEDBYDETAILS'][0]['hitlocations'] as $myKey => $myHitLocation)
 					{
 						// Set default props
-						$content['KILLEDBYDETAILS'][0][ $content['KILLEDBYDETAILS'][0]['hitlocations'][$i]['BODYPART'] ] = $content['KILLEDBYDETAILS'][0]['hitlocations'][$i]['BODYPART'];
-						$content['KILLEDBYDETAILS'][0][ $content['KILLEDBYDETAILS'][0]['hitlocations'][$i]['BODYPART'] . "_display" ] = $content['KILLEDBYDETAILS'][0]['hitlocations'][$i]['DisplayName'];
+						$content['KILLEDBYDETAILS'][0][ $myHitLocation['BODYPART'] ] = $myHitLocation['BODYPART'];
+						$content['KILLEDBYDETAILS'][0][ $myHitLocation['BODYPART'] . "_display" ] = $myHitLocation['DisplayName'];
 
-						if ( !isset($content['KILLEDBYDETAILS'][0]['hitlocations'][$i]['TotalKills']) )
-							$content['KILLEDBYDETAILS'][0]['hitlocations'][$i]['TotalKills'] = 0;
+						if ( !isset($myHitLocation['TotalKills']) )
+							$myHitLocation['TotalKills'] = 0;
 
-						$content['KILLEDBYDETAILS'][0]['hitlocations'][$i]['Number'] = $i+1;
+						$content['KILLEDBYDETAILS'][0]['hitlocations'][ $myKey ]['Number'] = $i+1;
 						// --- 
 
 						// --- Set CSS Class
 						if ( $i % 2 == 0 )
-							$content['KILLEDBYDETAILS'][0]['hitlocations'][$i]['cssclass'] = "line1";
+							$content['KILLEDBYDETAILS'][0]['hitlocations'][ $myKey ]['cssclass'] = "line1";
 						else
-							$content['KILLEDBYDETAILS'][0]['hitlocations'][$i]['cssclass'] = "line2";
+							$content['KILLEDBYDETAILS'][0]['hitlocations'][ $myKey ]['cssclass'] = "line2";
+						$i++;
 						// --- 
 						
 						// --- Calc Hitlocations and Round up by 10
-
 						if ( $content['Kills'] > 0 )
-							$tmpval = intval( $content['KILLEDBYDETAILS'][0]['hitlocations'][$i]['TotalKills'] / ($content['Kills'] / 100));
+							$tmpval = intval( $myHitLocation['TotalKills'] / ($content['Kills'] / 100));
 						else 
 							$tmpval = 0;
-
 						if ( $tmpval > 0 )
 						{
 							$tmpval += 10;
 							$tmpval = intval($tmpval/10) * 10;
+
+							// Secure Check, if for some reason the level is higher then 100%, we set it down to 100%!
+							if ( $tmpval > 100) 
+								$tmpval = 100;
 						}
-						$content['KILLEDBYDETAILS'][0][ $content['KILLEDBYDETAILS'][0]['hitlocations'][$i]['BODYPART'] . "_level" ] = $tmpval;
+						$content['KILLEDBYDETAILS'][0][ $myHitLocation['BODYPART'] . "_level" ] = $tmpval;
+						// ---
+
+						// --- Set Popup Content
+						$content['KILLEDBYDETAILS'][0][ $myHitLocation['BODYPART'] . "_hovertxt" ] = "Hitlocation<br><b>" . $myHitLocation['DisplayName'] . "</b><br><br>Damage<br><font color=" . GetPopupContentColor($tmpval) . "><B>" . $tmpval . "%</B></font>";
+						// ---
 					}
 				}
 				// --- 
@@ -673,13 +737,15 @@ if ( isset($_GET['id']) )
 									STATS_MAPS . ".MAPNAME ," . 
 									STATS_MAPS . ".DisplayName as MapDisplayName" . 
 									" FROM " . STATS_ROUNDS . 
-									" INNER JOIN (" . STATS_GAMETYPES . ", " . STATS_MAPS . ", " . STATS_PLAYER_KILLS .
+									" INNER JOIN (" . STATS_GAMETYPES . ", " . STATS_MAPS . ", " . STATS_PLAYER_KILLS . 
 									") ON (" . 
 									STATS_GAMETYPES . ".ID=" . STATS_ROUNDS . ".GAMETYPE AND " . 
 									STATS_MAPS . ".ID=" . STATS_ROUNDS . ".MAPID AND " . 
-									STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID)" . 
+									STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID " . 
+									")" . 
 									" WHERE " . STATS_PLAYER_KILLS . ".PLAYERID=" . $content['playerguid'] . 
 									GetCustomServerWhereQuery( STATS_ROUNDS, false) . 
+									GetTimeWhereQueryStringForRoundTable() . 
 									" GROUP BY " . STATS_ROUNDS . ".ID" . 
 									" ORDER BY TIMEADDED DESC LIMIT 10";
 				$result = DB_Query($sqlquery);
@@ -700,7 +766,7 @@ if ( isset($_GET['id']) )
 						// --- Set Mapimage
 						$content['lastrounds'][$i]['MapImage'] = $gl_root_path . "images/maps/thumbs/" . $content['lastrounds'][$i]['MAPNAME'] . ".jpg";
 						if ( !is_file($content['lastrounds'][$i]['MapImage']) )
-							$content['lastrounds'][$i]['MapImage'] = $gl_root_path . "images/maps/no-pic.jpg";
+							$content['lastrounds'][$i]['MapImage'] = $gl_root_path . "images/maps/thumbs/no-pic.png";
 						// --- 
 
 						// --- Set GametypeName 
@@ -729,10 +795,20 @@ if ( isset($_GET['id']) )
 				// --- 
 			}
 			else
+			{
 				$content['iserror'] = "true";
+				$content['ERROR_DETAILS'] = $content['LN_PLAYER_ERROR_NOPLAYERDATA'];
+				if ( TimeFilterUsed() ) 
+					$content['ERROR_DETAILS'] .= "<br>" . GetAndReplaceLangStr( $content['LN_PLAYER_ERROR_DIDNOTPLAY'], $content['aliases'][0]['Aliases_AliasAsHtml']) ;
+			}
 		}
 		else
+		{
 			$content['iserror'] = "true";
+			$content['ERROR_DETAILS'] = $content['LN_PLAYER_ERROR_NOPLAYERDATA'];
+			if ( TimeFilterUsed() ) 
+				$content['ERROR_DETAILS'] .= "<br>" . $content['LN_PLAYER_ERROR_TIMEFILTER'];
+		}
 		// --- END LastRounds Code for front stats
 	}
 }
@@ -740,20 +816,46 @@ else
 {
 	// Invalid Guid!
 	$content['iserror'] = "true";
+	$content['ERROR_DETAILS'] = $content['LN_ERROR_INVALIDPLAYER'];
 }
 // --- 
 
 // --- CONTENT Vars
 if ( $content['iserror'] == "true" )
 {
-		$content['TITLE'] = "Ultrastats :: Player Derails :: Error invalid GUID";
+	// Append to title
+	$content['TITLE'] .= $content['LN_PLAYER_ERROR'];
 }
 else
 {
-	if ( isset($content['myserver']) ) 
-		$content['TITLE'] = "Ultrastats :: Player Derails for '" . $playervars['Alias'] . "' :: Server '" . $content['myserver']['Name'] . "'";	// Title of the Page 
-	else
-		$content['TITLE'] = "Ultrastats :: Player Derails for '" . $playervars['Alias'] . "'";
+	// Append to title
+	$content['TITLE'] .= " for '" . $playervars['Alias'] . "'";
+}
+// --- 
+
+// --- Helper functions
+function GetPopupContentColor( $nValue ) 
+{
+	if		( $nValue < 10 )
+		return "#FFFF00";
+	else if ( $nValue < 20 )
+		return "#FFDD00";
+	else if ( $nValue < 30 )
+		return "#FFBB00";
+	else if ( $nValue < 40 )
+		return "#FF9900";
+	else if ( $nValue < 50 )
+		return "#FF7700";
+	else if ( $nValue < 60 )
+		return "#FF5500";
+	else if ( $nValue < 70 )
+		return "#FF3300";
+	else if ( $nValue < 80 )
+		return "#FF1100";
+	else if ( $nValue < 90 )
+		return "#EE0000";
+	else 
+		return "#CC0000";
 }
 // --- 
 

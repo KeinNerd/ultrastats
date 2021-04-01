@@ -1,35 +1,44 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006!								*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Server Edit Admin File											*
-	*																	*
-	* -> Helps to admin and manage Servers in UltraStats		*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	User Admin File													
+	*		File to administrate user accounts 
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
 
 // *** Default includes	and procedures *** //
 define('IN_ULTRASTATS', true);
 $gl_root_path = './../';
-include($gl_root_path . 'include/functions_db.php');
 include($gl_root_path . 'include/functions_common.php');
-include($gl_root_path . 'include/class_template.php');
+
+// Set PAGE to be ADMINPAGE!
+define('IS_ADMINPAGE', true);
+$content['IS_ADMINPAGE'] = true;
 
 InitUltraStats();
 CheckForUserLogin( false );
-
 IncludeLanguageFile( $gl_root_path . 'lang/' . $LANG . '/admin.php' );
 // ***					*** //
 
-// --- CONTENT Vars
-$content['TITLE'] = "Ultrastats - Admin Center - Users";	// Title of the Page 
-// --- 
+// --- BEGIN CREATE TITLE
+$content['TITLE'] = InitPageTitle();
+$content['TITLE'] .= " :: User Admin";
+// --- END CREATE TITLE
+
 
 // --- BEGIN Custom Code
 if ( isset($_GET['op']) )
@@ -103,6 +112,14 @@ if ( isset($_GET['op']) )
 					$content['ISERROR'] = "true";
 					$content['ERROR_MSG'] = GetAndReplaceLangStr( $content['LN_USER_ERROR_IDNOTFOUND'], $content['USERID'] ); 
 				}
+
+				// --- Ask for deletion first!
+				if ( (!isset($_GET['verify']) || $_GET['verify'] != "yes") )
+				{
+					// This will print an additional secure check which the user needs to confirm and exit the script execution.
+					PrintSecureUserCheck( GetAndReplaceLangStr( $content['LN_USER_WARNDELETEUSER'], $myrow['username'] ), $content['LN_DELETEYES'], $content['LN_DELETENO'] );
+				}
+				// ---
 
 				if ( $_SESSION['SESSION_USERNAME'] == $myrow['username'] ) 
 				{
@@ -253,9 +270,9 @@ else
 	{
 		// --- Set CSS Class
 		if ( $i % 2 == 0 )
-			$content['USERS'][$i]['cssclass'] = "line0";
-		else
 			$content['USERS'][$i]['cssclass'] = "line1";
+		else
+			$content['USERS'][$i]['cssclass'] = "line2";
 		// --- 
 	}
 	// --- 

@@ -1,35 +1,45 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006!								*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Server Edit Admin File											*
-	*																	*
-	* -> Helps to admin and manage Servers in UltraStats		*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Player Admin File													
+	*		Administrates Players in UltraStats 
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
+
 
 // *** Default includes	and procedures *** //
 define('IN_ULTRASTATS', true);
 $gl_root_path = './../';
-include($gl_root_path . 'include/functions_db.php');
 include($gl_root_path . 'include/functions_common.php');
-include($gl_root_path . 'include/class_template.php');
+
+// Set PAGE to be ADMINPAGE!
+define('IS_ADMINPAGE', true);
+$content['IS_ADMINPAGE'] = true;
 
 InitUltraStats();
 CheckForUserLogin( false );
-
 IncludeLanguageFile( $gl_root_path . 'lang/' . $LANG . '/admin.php' );
 // ***					*** //
 
-// --- CONTENT Vars
-$content['TITLE'] = "Ultrastats - Admin Center - Players";	// Title of the Page 
-// --- 
+// --- BEGIN CREATE TITLE
+$content['TITLE'] = InitPageTitle();
+$content['TITLE'] .= " :: Player Admin";
+// --- END CREATE TITLE
+
 
 // --- Read Vars
 if ( isset($_GET['start']) )
@@ -106,10 +116,10 @@ if ( isset($_GET['op']) )
 		$content['PLAYER_FORMACTION'] = "edit";
 		$content['PLAYER_SENDBUTTON'] = $content['LN_PLAYER_EDIT'];
 
-		if ( isset($_GET['id']) )
+		if ( isset($_GET['id']) && is_numeric($_GET['id']) )
 		{
 			//PreInit these values 
-			$content['GUID'] = intval( DB_RemoveBadChars($_GET['id']) );
+			$content['GUID'] = DB_RemoveBadChars($_GET['id']);
 
 			$sqlquery = "SELECT " . 
 						STATS_PLAYERS_STATIC . ".GUID, " . 
@@ -158,10 +168,10 @@ if ( isset($_GET['op']) )
 		// Set Mode to edit
 		$content['ISDELETEPLAYER'] = "true";
 
-		if ( isset($_GET['id']) )
+		if ( isset($_GET['id']) && is_numeric($_GET['id']) )
 		{
 			//PreInit these values 
-			$content['GUID'] = intval( DB_RemoveBadChars($_GET['id']) );
+			$content['GUID'] = DB_RemoveBadChars($_GET['id']);
 			$content['AliasName'] = GetPlayerHtmlNameFromID( $content['GUID'] );
 
 			if ( isset($_GET['verify']) || $_GET['verify'] == "yes" )
@@ -206,9 +216,9 @@ if ( isset($_GET['op']) )
 				$content['DeletedData'][5]['DELETED_RECORD'] = GetRowsAffected();
 				$content['DeletedData'][5]['cssclass'] = "line2";
 
-				$content['DeletedData'][6]['SQL_CMD'] = "DELETE FROM " . STATS_PLAYERS_TOPALIAS . " WHERE GUID = " . $content['GUID'];
+				$content['DeletedData'][6]['SQL_CMD'] = "DELETE FROM " . STATS_PLAYERS_TOPALIASES . " WHERE GUID = " . $content['GUID'];
 				ProcessDeleteStatement( $content['DeletedData'][6]['SQL_CMD'] );
-				$content['DeletedData'][6]['NAME'] = STATS_PLAYERS_TOPALIAS;
+				$content['DeletedData'][6]['NAME'] = STATS_PLAYERS_TOPALIASES;
 				$content['DeletedData'][6]['DELETED_RECORD'] = GetRowsAffected();
 				$content['DeletedData'][6]['cssclass'] = "line1";
 
@@ -289,9 +299,11 @@ else
 	$sqlquery = "SELECT " . 
 				"count(" . STATS_PLAYERS_STATIC . ".GUID) as PlayersCount " . 
 				" FROM " . STATS_PLAYERS_STATIC . 
-				" INNER JOIN (" . STATS_ALIASES . 
+				" INNER JOIN (" . STATS_PLAYERS_TOPALIASES . ", " . STATS_ALIASES .
 				") ON (" . 
-				STATS_PLAYERS_STATIC . ".GUID=" . STATS_ALIASES . ".PLAYERID) " . 
+				STATS_PLAYERS_STATIC . ".GUID=" . STATS_PLAYERS_TOPALIASES . ".GUID AND " . 
+				STATS_PLAYERS_TOPALIASES . ".ALIASID=" . STATS_ALIASES . ".ID " . 
+				") " . 
 				$content['playersqlwhere'] . 
 				" GROUP BY " . STATS_PLAYERS_STATIC . ".GUID "; 
 //	$result = DB_Query($sqlquery);
@@ -314,6 +326,11 @@ else
 		$content['current_pagebegin'] = 0;
 		$pagenumbers = 0;
 	}
+	
+	// Set text
+	$content['players_count_text'] = GetAndReplaceLangStr( $content['LN_PLAYER_PLAYERCOUNT'], $content['players_count']);
+
+
 	// --- 
 
 // --- Now the final query !
@@ -326,19 +343,20 @@ else
 				STATS_ALIASES . ".Alias, " . 
 				STATS_ALIASES . ".AliasAsHtml " .
 				" FROM " . STATS_PLAYERS_STATIC . 
-				" INNER JOIN (" . STATS_ALIASES . 
+				" INNER JOIN (" . STATS_PLAYERS_TOPALIASES . ", " . STATS_ALIASES .
 				") ON (" . 
-				STATS_PLAYERS_STATIC . ".GUID=" . STATS_ALIASES . ".PLAYERID) " . 
+				STATS_PLAYERS_STATIC . ".GUID=" . STATS_PLAYERS_TOPALIASES . ".GUID AND " . 
+				STATS_PLAYERS_TOPALIASES . ".ALIASID=" . STATS_ALIASES . ".ID " . 
+				") " . 
 				$content['playersqlwhere'] . 
 				" GROUP BY " . STATS_PLAYERS_STATIC . ".GUID " . 
 				" ORDER BY " . STATS_ALIASES . ".Alias " .  
 				" LIMIT " . $content['current_pagebegin'] . " , " . $content['admin_maxplayers'];
-
 	$result = DB_Query($sqlquery);
 	$content['PLAYERS'] = DB_GetAllRows($result, true);
 
 	// For the eye
-	$css_class = "line0";
+	$css_class = "line";
 	for($i = 0; $i < count($content['PLAYERS']); $i++)
 	{
 		// --- Set Number
@@ -384,7 +402,7 @@ else
 		// Fix for now of the list exceeds $CFG['MAX_PAGES_COUNT'] pages
 		if ($pagenumbers > $content['admin_maxpages'])
 		{
-			$content['PLAYERS_MOREPAGES'] = "*(More then " . $content['admin_maxpages'] . " pages found)";
+			$content['PLAYERS_MOREPAGES'] = GetAndReplaceLangStr( $content['LN_ADMIN_MOREPAGES'], $content['admin_maxpages'] ); 
 			$pagenumbers = $content['admin_maxpages'];
 		}
 		else

@@ -1,41 +1,44 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006, 2007, 2008						*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* ServerStats - Maps File											*
-	*																	*
-	* -> The most played maps per server are displayed here				*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Server Stats File
+	*		Shows played maps of a server 
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
 
 // *** Default includes	and procedures *** //
 define('IN_ULTRASTATS', true);
 $gl_root_path = './';
-include($gl_root_path . 'include/functions_db.php');
 include($gl_root_path . 'include/functions_common.php');
-include($gl_root_path . 'include/class_template.php');
 include($gl_root_path . 'include/functions_frontendhelpers.php');
 
 InitUltraStats();
-IncludeLanguageFile( $gl_root_path . '/lang/' . $LANG . '/main.php' );
 InitFrontEndDefaults();	// Only in WebFrontEnd
 // ***					*** //
 
-// --- CONTENT Vars
-if ( isset($content['myserver']) ) 
-	$content['TITLE'] = "Ultrastats :: ServerStats :: Server '" . $content['myserver']['Name'] . "'";	// Title of the Page 
-else
-	$content['TITLE'] = "Ultrastats :: ServerStats";
-// --- 
+// --- BEGIN CREATE TITLE
+$content['TITLE'] = InitPageTitle();
+
+// Append custom title part!
+$content['TITLE'] .= " :: Mapstats ";
+// --- END CREATE TITLE
+
 
 // --- BEGIN Custom Code
-
 // --- Read Vars
 if ( isset($_GET['start']) )
 	$content['current_pagebegin'] = intval(DB_RemoveBadChars($_GET['start']));
@@ -52,8 +55,10 @@ if ( isset($content['serverid']) )
 						" FROM " . STATS_MAPS . 
 						" INNER JOIN (" . STATS_ROUNDS . 
 						") ON (" . 
-						STATS_ROUNDS . ".MAPID =" . STATS_MAPS . ".ID ) " .
+						STATS_ROUNDS . ".MAPID =" . STATS_MAPS . ".ID " . 
+						") " .
 						GetCustomServerWhereQuery(STATS_ROUNDS, true) . 
+						GetTimeWhereQueryStringForRoundTable() . 
 						" GROUP BY " . STATS_MAPS . ".MAPNAME ";
 
 	$content['maps_count'] = DB_GetRowCount( $sqlquery );
@@ -82,10 +87,12 @@ if ( isset($content['serverid']) )
 						STATS_MAPS . ".DisplayName, " . 
 						"count(" . STATS_ROUNDS . ".MAPID) as MapCount" .
 						" FROM " . STATS_MAPS . 
-						" INNER JOIN (" . STATS_ROUNDS . 
+						" INNER JOIN (" . STATS_ROUNDS .
 						") ON (" . 
-						STATS_ROUNDS . ".MAPID =" . STATS_MAPS . ".ID ) " .
+						STATS_ROUNDS . ".MAPID =" . STATS_MAPS . ".ID " . 
+						") " .
 						GetCustomServerWhereQuery(STATS_ROUNDS, true) . 
+						GetTimeWhereQueryStringForRoundTable() . 
 						" GROUP BY " . STATS_MAPS . ".MAPNAME " .
 						" ORDER BY MapCount DESC" .
 						" LIMIT " . $content['current_pagebegin'] . " , " . $content['web_maxmapsperpage'];
@@ -120,19 +127,22 @@ if ( isset($content['serverid']) )
 			// --- Set Mapimage
 			$content['playedmaps'][$i]['MapImage'] = $gl_root_path . "images/maps/middle/" . $content['playedmaps'][$i]['MAPNAME'] . ".jpg";
 			if ( !is_file($content['playedmaps'][$i]['MapImage']) )
-				$content['playedmaps'][$i]['MapImage'] = $gl_root_path . "images/maps/no-pic.jpg";
+				$content['playedmaps'][$i]['MapImage'] = $gl_root_path . "images/maps/no-pic.png";
 			// --- 
 
 			// --- Set Most Played Gametype
 			$sqlquery = "SELECT " .
 								STATS_GAMETYPES . ".NAME, " . 
+								STATS_GAMETYPES . ".DisplayName, " . 
 								"count(" . STATS_ROUNDS . ".GAMETYPE) as GametypeCount" .
 								" FROM " . STATS_ROUNDS . 
 								" INNER JOIN (" . STATS_GAMETYPES . 
 								") ON (" . 
-								STATS_GAMETYPES . ".ID =" . STATS_ROUNDS . ".GAMETYPE ) " .
+								STATS_GAMETYPES . ".ID =" . STATS_ROUNDS . ".GAMETYPE " . 
+								") " .
 								" WHERE " . STATS_ROUNDS . ".MAPID = " . $content['playedmaps'][$i]['ID'] . 
 								GetCustomServerWhereQuery(STATS_ROUNDS, false) . 
+								GetTimeWhereQueryStringForRoundTable() . 
 								" GROUP BY " . STATS_ROUNDS . ".MAPID " .
 								" ORDER BY GametypeCount DESC" .
 								" LIMIT 1 ";
@@ -141,12 +151,16 @@ if ( isset($content['serverid']) )
 			if ( isset($gametypevars['GametypeCount']) )
 			{
 				$content['GameTypeCount'] = $gametypevars['GametypeCount'];
-				$content['GameTypeName'] = $gametypevars['NAME'];
+				$content['playedmaps'][$i]['GameTypeName'] = $gametypevars['NAME'];
+				if ( strlen($gametypevars['DisplayName']) > 0 )
+					$content['playedmaps'][$i]['GameTypeDisplayName'] = $gametypevars['DisplayName'];
+				else
+					$content['playedmaps'][$i]['GameTypeDisplayName'] = $gametypevars['NAME'];
 			}
 			else
 			{
-				$content['GameTypeCount'] = "";
-				$content['GameTypeName'] = "";
+				$content['playedmaps'][$i]['GameTypeCount'] = "0";
+				$content['playedmaps'][$i]['GameTypeName'] = "Unknown";
 			}
 			// --- 
 
@@ -164,13 +178,16 @@ if ( isset($content['serverid']) )
 								STATS_MAPS . ".MAPNAME ," . 
 								STATS_MAPS . ".DisplayName as MapDisplayName" . 
 								" FROM " . STATS_ROUNDS . 
-								" INNER JOIN (" . STATS_GAMETYPES . ", " . STATS_MAPS . ", " . STATS_PLAYER_KILLS .
+								" INNER JOIN (" . STATS_GAMETYPES . ", " . STATS_MAPS . ", " . STATS_PLAYER_KILLS . /*", " . STATS_TIME . */
 								") ON (" . 
 								STATS_GAMETYPES . ".ID=" . STATS_ROUNDS . ".GAMETYPE AND " . 
 								STATS_MAPS . ".ID=" . STATS_ROUNDS . ".MAPID AND " . 
-								STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID)" . 
+								STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID " . 
+								/*" AND " . STATS_ROUNDS . ".ID=" . STATS_TIME . ".ROUNDID " . */
+								") " . 
 								" WHERE " . STATS_MAPS . ".MAPNAME = '" . $content['playedmaps'][$i]['MAPNAME'] . "'" . 
 								GetCustomServerWhereQuery( STATS_ROUNDS, false) . 
+								GetTimeWhereQueryStringForRoundTable() . 
 								" GROUP BY " . STATS_ROUNDS . ".ID" . 
 								" ORDER BY TIMEADDED DESC LIMIT 10";
 			$result = DB_Query($sqlquery);
@@ -181,7 +198,7 @@ if ( isset($content['serverid']) )
 				for($n = 0; $n < count($content['playedmaps'][$i]['lastrounds']); $n++)
 				{
 					// --- Set GametypeName 
-					if ( isset($content['playedmaps'][$i]['lastrounds'][$n]['GameTypeDisplayName']) )
+					if ( isset($content['playedmaps'][$i]['lastrounds'][$n]['GameTypeDisplayName']) && strlen($content['playedmaps'][$i]['lastrounds'][$n]['GameTypeDisplayName']) > 0 )
 						$content['playedmaps'][$i]['lastrounds'][$n]['FinalGameTypeDisplayName'] = $content['playedmaps'][$i]['lastrounds'][$n]['GameTypeDisplayName'];
 					else
 						$content['playedmaps'][$i]['lastrounds'][$n]['FinalGameTypeDisplayName'] = $content['playedmaps'][$i]['lastrounds'][$n]['GameTypeName'];
@@ -192,7 +209,7 @@ if ( isset($content['serverid']) )
 					// --- 
 
 					// --- Set Display Time
-					$content['playedmaps'][$i]['lastrounds'][$n]['Number'] = $n+1;
+					$content['playedmaps'][$i]['lastrounds'][$n]['LRNumber'] = $n+1;
 					// --- 
 
 					// --- Set CSS Class

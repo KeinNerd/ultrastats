@@ -1,38 +1,43 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006, 2007, 2008						*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Main Index File													*
-	*																	*
-	* -> Loads the main UltraStats Site									*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Main Index File 
+	*		Shows the UltraStats startpage 
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
 
 // *** Default includes	and procedures *** //
 define('IN_ULTRASTATS', true);
 $gl_root_path = './';
-include($gl_root_path . 'include/functions_db.php');
-include($gl_root_path . 'include/functions_common.php');
-include($gl_root_path . 'include/class_template.php');
-include($gl_root_path . 'include/functions_frontendhelpers.php');
+require_once($gl_root_path . 'include/functions_common.php');
+require_once($gl_root_path . 'include/functions_frontendhelpers.php');
 
 InitUltraStats();
-IncludeLanguageFile( $gl_root_path . '/lang/' . $LANG . '/main.php' );
-InitFrontEndDefaults();	// Only in WebFrontEnd
+InitFrontEndDefaults();	// Only for WebFrontEnd
+//IncludeLanguageFile( $gl_root_path . '/lang/' . $LANG . '/main.php' );
 // ***					*** //
 
-// --- CONTENT Vars
-if ( isset($content['myserver']) ) 
-	$content['TITLE'] = "Ultrastats :: Home :: Server '" . $content['myserver']['Name'] . "'";	// Title of the Page 
-else
-	$content['TITLE'] = "Ultrastats :: Home";
-// --- 
+// --- BEGIN CREATE TITLE
+$content['TITLE'] = InitPageTitle();
+
+// Append custom title part!
+$content['TITLE'] .= " :: Home Overview";
+// --- END CREATE TITLE
+
 
 // --- BEGIN Custom Code
 
@@ -57,6 +62,7 @@ $sqlquery = "SELECT " .
 					STATS_ROUNDS . ".MAPID=" . STATS_MAPS . ".ID AND " . 
 					STATS_ROUNDS . ".ID=" . STATS_TIME . ".ROUNDID )" . 
 					GetCustomServerWhereQuery( STATS_ROUNDS, true) . 
+					GetTimeWhereQueryStringForRoundTable() . 
 					" GROUP BY " . STATS_ROUNDS . ".ID " . 
 					" ORDER BY TIMEADDED DESC LIMIT 10";
 $result = DB_Query($sqlquery);
@@ -64,7 +70,13 @@ $result = DB_Query($sqlquery);
 $content['roundsonly'] = DB_GetAllRows($result, true);
 if ( isset($content['roundsonly']) )
 {
+	// Enabled last round display
 	$content['lastroundsenable'] = "true";
+
+	// Set LastRounds title
+	$content['MAINLASTROUNDS'] = GetAndReplaceLangStr( $content['LN_MAINLASTROUNDS'], 10);
+
+	// Process all rounds
 	for($i = 0; $i < count($content['roundsonly']); $i++)
 	{
 		// --- Set Mapname 
@@ -77,11 +89,11 @@ if ( isset($content['roundsonly']) )
 		// --- Set Mapimage
 		$content['roundsonly'][$i]['MapImage'] = $gl_root_path . "images/maps/thumbs/" . $content['roundsonly'][$i]['MAPNAME'] . ".jpg";
 		if ( !is_file($content['roundsonly'][$i]['MapImage']) )
-			$content['roundsonly'][$i]['MapImage'] = $gl_root_path . "images/maps/no-pic.jpg";
+			$content['roundsonly'][$i]['MapImage'] = $gl_root_path . "images/maps/thumbs/no-pic.png";
 		// --- 
 
 		// --- Set GametypeName 
-		if ( isset($content['roundsonly'][$i]['GameTypeDisplayName']) )
+		if ( isset($content['roundsonly'][$i]['GameTypeDisplayName']) && strlen($content['roundsonly'][$i]['GameTypeDisplayName']) > 0 )
 			$content['roundsonly'][$i]['FinalGameTypeDisplayName'] = $content['roundsonly'][$i]['GameTypeDisplayName'];
 		else
 			$content['roundsonly'][$i]['FinalGameTypeDisplayName'] = $content['roundsonly'][$i]['GameTypeName'];
@@ -90,7 +102,7 @@ if ( isset($content['roundsonly']) )
 		// --- Set Gametypeimage
 		$content['roundsonly'][$i]['GametypeImage'] = $gl_root_path . "images/gametypes/thumbs/" . $content['roundsonly'][$i]['GameTypeName'] . ".png";
 		if ( !is_file($content['roundsonly'][$i]['GametypeImage']) )
-			$content['roundsonly'][$i]['GametypeImage'] = $gl_root_path . "images/gametypes/no-pic.jpg";
+			$content['roundsonly'][$i]['GametypeImage'] = $gl_root_path . "images/gametypes/no-pic.png";
 		// --- 
 
 		// --- Set CSS Classes for Teams
@@ -188,18 +200,18 @@ $sqlquery =		"SELECT " .
 				"sum(" . STATS_PLAYERS . ".Deaths) as Deaths, " . 
 //					"round(AVG( " . STATS_PLAYERS . ".KillRatio),2) as KillRatio " .
 				"sum(" . STATS_PLAYERS . ".Kills) / sum(" . STATS_PLAYERS . ".Deaths) as KillRatio " .	// TRUE l33tAGE!
-//					STATS_PLAYERS . ".KillRatio " .
-//					STATS_ALIASES . ".Alias, " . 
-//					STATS_ALIASES . ".AliasAsHtml " .
+//				"sum(" . STATS_TIME . ".TIMEPLAYED) as TIMEPLAYED " . 
 				" FROM " . STATS_PLAYERS . 
-//					" INNER JOIN (" . STATS_ALIASES . 
-//					") ON (" . 
-//					STATS_ALIASES . ".PLAYERID=" . STATS_PLAYERS . ".GUID) " . 
-				" WHERE Kills > " . $content['web_minkills'] .
+//				" INNER JOIN (" . STATS_TIME . 
+//				") ON (" . 
+//				STATS_TIME . ".PLAYERID=" . STATS_PLAYERS . ".GUID) " . 
+				" WHERE Kills > " . $content['web_minkills'] . " " . 
+//				" AND TIMEPLAYED > " . $content['web_mintime'] . " " . 
 				GetCustomServerWhereQuery(STATS_PLAYERS, false) . 
 				GetBannedPlayerWhereQuery(STATS_PLAYERS, "GUID", false) . 
+				GetTimeWhereQueryString(STATS_PLAYERS) . 
 				" GROUP BY " . STATS_PLAYERS . ".GUID " .
-				" ORDER BY Kills DESC LIMIT 20";
+				" ORDER BY Kills DESC LIMIT " . $content["web_mainpageplayers"];
 //echo $sqlquery;
 $result = DB_Query($sqlquery);
 
@@ -283,6 +295,10 @@ else
 	$content['topplayersenable'] = "false";
 // --- END TopPlayers Code for front stats
 
+// --- Create TIME Where query for Consolidated queries
+$szTimeWhere = GetTimeWhereConsolidatedQueryString( STATS_CONSOLIDATED );
+// ---
+
 // --- BEGIN Server Details Code 
 if ( isset($content['myserver']) )
 {
@@ -317,6 +333,7 @@ if ( isset($content['myserver']) )
 						STATS_LANGUAGE_STRINGS . ".STRINGID =" . STATS_CONSOLIDATED . ".DescriptionID) " . 
 						" WHERE " . STATS_CONSOLIDATED . ".NAME LIKE 'server_total%' " .
 						GetCustomServerWhereQuery(STATS_CONSOLIDATED, false, true) . 
+						$szTimeWhere . 
 						" ORDER BY " . STATS_CONSOLIDATED . ".SortID";
 	$result = DB_Query($sqlquery);
 
@@ -359,6 +376,7 @@ if ( isset($content['myserver']) )
 						STATS_LANGUAGE_STRINGS . ".STRINGID =" . STATS_CONSOLIDATED . ".DescriptionID) " . 
 						" WHERE " . STATS_CONSOLIDATED . ".NAME LIKE 'server_top%' " .
 						GetCustomServerWhereQuery(STATS_CONSOLIDATED, false, true) . 
+						$szTimeWhere . 
 						" ORDER BY " . STATS_CONSOLIDATED . ".SortID";
 	$result = DB_Query($sqlquery);
 	$content['server_top'] = DB_GetAllRows($result, true);
@@ -377,7 +395,7 @@ if ( isset($content['myserver']) )
 				// --- Set Mapimage
 				$content['server_top_map_picture'] = $gl_root_path . "images/maps/small/" . $content['server_top'][$i]['VALUE_TXT'] . ".jpg";
 				if ( !is_file($content['server_top_map_picture']) )
-					$content['server_top_map_picture'] = $gl_root_path . "images/maps/no-pic.jpg";
+					$content['server_top_map_picture'] = $gl_root_path . "images/maps/no-pic.png";
 				// --- 
 			}
 			else if ( $content['server_top'][$i]['NAME'] == "server_top_gametype" ) 
@@ -388,7 +406,7 @@ if ( isset($content['myserver']) )
 				// --- Set Mapimage
 				$content['server_top_gametype_picture'] = $gl_root_path . "images/gametypes/small/" . $content['server_top'][$i]['VALUE_TXT'] . ".png";
 				if ( !is_file($content['server_top_gametype_picture']) )
-					$content['server_top_gametype_picture'] = $gl_root_path . "images/gametypes/no-pic.jpg";
+					$content['server_top_gametype_picture'] = $gl_root_path . "images/gametypes/no-pic.png";
 				// --- 
 			}
 
@@ -447,14 +465,11 @@ $sqlquery = "SELECT " .
 					STATS_CONSOLIDATED . ".VALUE_INT, " . 
 					STATS_CONSOLIDATED . ".VALUE_TXT, " . 
 					STATS_CONSOLIDATED . ".DescriptionID, " . 
-//					STATS_LANGUAGE_STRINGS . ".TEXT as Description, " .
 					STATS_CONSOLIDATED . ".PLAYER_ID " . 
 					" FROM " . STATS_CONSOLIDATED . 
-//					" LEFT JOIN (" . STATS_LANGUAGE_STRINGS . 
-//					") ON (" . 
-//					STATS_LANGUAGE_STRINGS . ".STRINGID =" . STATS_CONSOLIDATED . ".DescriptionID) " . 
 					" WHERE " . STATS_CONSOLIDATED . ".NAME LIKE 'medal_pro%' " .
 					GetCustomServerWhereQuery(STATS_CONSOLIDATED, false, true) . 
+					$szTimeWhere . 
 					" ORDER BY " . STATS_CONSOLIDATED . ".SortID";
 $result = DB_Query($sqlquery);
 
@@ -469,6 +484,9 @@ if ( isset($content['medals_pro']) )
 	{
 		// --- Get Description 
 		$content['medals_pro'][$i]['Description'] = GetTextFromDescriptionID( $content['medals_pro'][$i]['DescriptionID'], $content['LN_NODESCRIPTION'] );
+
+		// --- Set MousrOver Text
+		$content['medals_pro'][$i]['MEDAL_DETAILTXT'] = GetAndReplaceLangStr($content['LN_MEDAL_DETAILS'], $content['medals_pro'][$i]['DisplayName']);
 
 		// --- Set Number
 		$content['medals_pro'][$i]['Number'] = $i+1;
@@ -486,6 +504,8 @@ else
 	$content['medalsproenable'] = "false";
 // --- END PRO Medals Code
 
+
+/*  *** ANTI MEDAL CODE REMOVED BY REQUEST ***
 // --- BEGIN ANTI Medals Code
 $sqlquery = "SELECT " .
 					STATS_CONSOLIDATED . ".NAME, " . 
@@ -493,12 +513,8 @@ $sqlquery = "SELECT " .
 					STATS_CONSOLIDATED . ".VALUE_INT, " . 
 					STATS_CONSOLIDATED . ".VALUE_TXT, " . 
 					STATS_CONSOLIDATED . ".DescriptionID, " . 
-//					STATS_LANGUAGE_STRINGS . ".TEXT as Description, " .
 					STATS_CONSOLIDATED . ".PLAYER_ID " . 
 					" FROM " . STATS_CONSOLIDATED . 
-//					" LEFT JOIN (" . STATS_LANGUAGE_STRINGS . 
-//					") ON (" . 
-//					STATS_LANGUAGE_STRINGS . ".STRINGID =" . STATS_CONSOLIDATED . ".DescriptionID) " . 
 					" WHERE " . STATS_CONSOLIDATED . ".NAME LIKE 'medal_anti%' " .
 					GetCustomServerWhereQuery(STATS_CONSOLIDATED, false, true) . 
 					" ORDER BY " . STATS_CONSOLIDATED . ".SortID";
@@ -516,6 +532,9 @@ if ( isset($content['medals_anti']) )
 		// --- Get Description 
 		$content['medals_anti'][$i]['Description'] = GetTextFromDescriptionID( $content['medals_anti'][$i]['DescriptionID'], $content['LN_NODESCRIPTION'] );
 
+		// --- Set MousrOver Text
+		$content['medals_anti'][$i]['MEDAL_DETAILTXT'] = GetAndReplaceLangStr($content['LN_MEDAL_DETAILS'], $content['medals_anti'][$i]['DisplayName']);
+
 		// --- Set Number
 		$content['medals_anti'][$i]['Number'] = $i+1;
 		// ---
@@ -529,6 +548,7 @@ if ( isset($content['medals_anti']) )
 	}
 }
 else
+*/
 	$content['medalsantienable'] = "false";
 // --- END ANTI Medals Code
 

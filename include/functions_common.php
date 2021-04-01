@@ -1,17 +1,24 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006-2008!							*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Common needed functions											*
-	*																	*
-	* -> 		*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Common Functions File													
+	*		This file contains the most common functions needed by 
+	*		UltraStats !
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
 
 // --- Avoid directly accessing this file! 
@@ -23,8 +30,11 @@ if ( !defined('IN_ULTRASTATS') )
 // --- 
 
 // --- Basic Includes
-include($gl_root_path . 'include/functions_constants.php');
-include($gl_root_path . 'include/functions_themes.php');
+require_once($gl_root_path . 'include/functions_constants.php');
+require_once($gl_root_path . 'include/functions_themes.php');
+require_once($gl_root_path . 'include/functions_users.php');
+require_once($gl_root_path . 'include/functions_db.php');
+require_once($gl_root_path . 'include/class_template.php');
 // --- 
 
 // --- Define Basic vars
@@ -32,7 +42,11 @@ $RUNMODE = RUNMODE_WEBSERVER;
 $DEBUGMODE = DEBUG_INFO;
 
 // --- Disable ARGV setting @webserver!
-ini_set( "register_argc_argv", "Off" );
+@ini_set( "register_argc_argv", "Off" );
+// --- 
+
+// Enable error tracking
+@ini_set( "track_errors", "On" );
 // --- 
 
 // Default language
@@ -40,11 +54,29 @@ $LANG_EN = "en";	// Used for fallback
 $LANG = "en";		// Default language
 
 // Default Template vars
-$content['BUILDNUMBER'] = "0.2.144";
-$content['TITLE'] = "Ultrastats - Release " . $content['BUILDNUMBER'];	// Title of the Page 
+$content['BUILDNUMBER'] = "0.3.16";
+$content['UPDATEURL'] = "http://www.ultrastats.org/codww/version.txt";
+$content['TITLE'] = "Ultrastats :: Release " . $content['BUILDNUMBER'];	// Default title
 $content['BASEPATH'] = $gl_root_path;
+
+// PreInit overall user variables
+$content['EXTRA_ULTRASTATS_LOGO'] = $content['BASEPATH'] . "images/main/Header-Logo.png";
 $content['EXTRA_METATAGS'] = "";
+$content['EXTRA_JAVASCRIPT'] = "";
+$content['EXTRA_STYLESHEET'] = "";
+$content['EXTRA_HTMLHEAD'] = "";
+$content['EXTRA_HEADER'] = "";
+$content['EXTRA_FOOTER'] = "";
+$content['additional_url'] = "";
 // --- 
+
+// --- Check PHP Version! If lower the 4, UltraStats will not work proberly!
+$myPhpVer = phpversion();
+$myPhpVerArray = explode('.', $myPhpVer);
+if ( $myPhpVerArray[0] < 4 )
+	DieWithErrorMsg( 'Error, the PHP Version on this Server does not meet the installation requirements.<br> <A HREF="http://www.php.net"><B>PHP4</B></A> or higher is needed. Current installed Version is: <B>' . $myPhpVer . '</B>');
+// ---
+
 
 function InitBasicUltraStats()
 {
@@ -64,7 +96,7 @@ function InitBasicUltraStats()
 	StartPHPSession();
 }
 
-function InitUltraStatsConfigFile()
+function InitUltraStatsConfigFile($bHandleMissing = true)
 {
 	// Needed to make global
 	global $CFG, $gl_root_path, $content;
@@ -75,50 +107,74 @@ function InitUltraStatsConfigFile()
 		include_once($gl_root_path . 'config.php');
 		
 		// Easier DB Access
-		define('STATS_ALIASES', $CFG['TBPref'] . "aliases");
-		define('STATS_CHAT', $CFG['TBPref'] . "chat");
-		define('STATS_CONFIG', $CFG['TBPref'] . "config");
-		define('STATS_CONSOLIDATED', $CFG['TBPref'] . "consolidated");
-		define('STATS_GAMEACTIONS', $CFG['TBPref'] . "gameactions");
-		define('STATS_DAMAGETYPES', $CFG['TBPref'] . "damagetypes");
-		define('STATS_GAMETYPES', $CFG['TBPref'] . "gametypes");
-		define('STATS_HITLOCATIONS', $CFG['TBPref'] . "hitlocations");
-		define('STATS_LANGUAGE_STRINGS', $CFG['TBPref'] . "language_strings");
-		define('STATS_MAPS', $CFG['TBPref'] . "maps");
-		define('STATS_PLAYER_KILLS', $CFG['TBPref'] . "player_kills");
-		define('STATS_PLAYERS', $CFG['TBPref'] . "players");
-		define('STATS_ROUNDS', $CFG['TBPref'] . "rounds");
-		define('STATS_ROUNDACTIONS', $CFG['TBPref'] . "roundactions");
-		define('STATS_SERVERS', $CFG['TBPref'] . "servers");
-		define('STATS_TIME', $CFG['TBPref'] . "time");
-		define('STATS_USERS', $CFG['TBPref'] . "users");
-		define('STATS_WEAPONS', $CFG['TBPref'] . "weapons");
-		define('STATS_PLAYERS_STATIC', $CFG['TBPref'] . "players_static");
-		define('STATS_PLAYERS_TOPALIASES', $CFG['TBPref'] . "players_topalias");
-		define('STATS_WEAPONS_PERSERVER', $CFG['TBPref'] . "weapons_perserver");
+		$myPref = GetConfigSetting("TBPref", "stats_");
+		define('STATS_ALIASES',				$myPref . "aliases");
+		define('STATS_CHAT',				$myPref . "chat");
+		define('STATS_CONFIG',				$myPref . "config");
+		define('STATS_CONSOLIDATED',		$myPref . "consolidated");
+		define('STATS_GAMEACTIONS',			$myPref . "gameactions");
+		define('STATS_DAMAGETYPES',			$myPref . "damagetypes");
+		define('STATS_DAMAGETYPES_KILLS',	$myPref . "damagetypes_kills");
+		define('STATS_ATTACHMENTS',			$myPref . "attachments");
+		define('STATS_GAMETYPES',			$myPref . "gametypes");
+		define('STATS_HITLOCATIONS',		$myPref . "hitlocations");
+		define('STATS_LANGUAGE_STRINGS',	$myPref . "language_strings");
+		define('STATS_MAPS',				$myPref . "maps");
+		define('STATS_PLAYER_KILLS',		$myPref . "player_kills");
+		define('STATS_PLAYERS',				$myPref . "players");
+		define('STATS_ROUNDS',				$myPref . "rounds");
+		define('STATS_ROUNDACTIONS',		$myPref . "roundactions");
+		define('STATS_SERVERS',				$myPref . "servers");
+		define('STATS_TIME',				$myPref . "time");
+		define('STATS_USERS',				$myPref . "users");
+		define('STATS_WEAPONS',				$myPref . "weapons");
+		define('STATS_WEAPONS_KILLS',		$myPref . "weapons_kills");
+		define('STATS_WEAPONS_PERSERVER',	$myPref . "weapons_perserver");
+		define('STATS_PLAYERS_STATIC',		$myPref . "players_static");
+		define('STATS_PLAYERS_TOPALIASES',	$myPref . "players_topalias");
+
+		// --- Now Copy all entries into content variable
+		foreach ($CFG as $key => $value )
+			$content[$key] = $value;
+		// --- 
 
 		// For ShowPageRenderStats
-		if ( $CFG['ShowPageRenderStats'] == 1 )
+		if ( GetConfigSetting("ShowPageRenderStats", 1) == 1 )
 		{
 			$content['ShowPageRenderStats'] = "true";
 			InitPageRenderStats();
 		}
+
+		// return result
+		return true;
 	}
 	else
 	{
-		// Check for installscript!
-		if ( file_exists($content['BASEPATH'] . "install.php") ) 
-			$strinstallmsg = '<br><br>' 
-							. '<center><b>Click <a href="' . $content['BASEPATH'] . 'install.php">here</a> to Install UltraStats!</b><br><br>'
-							. 'See the Installation Guides for more Details!<br>'
-							. '<a href="docs/installation.htm" target="_blank">English Installation Guide</a>&nbsp;|&nbsp;'
-							. '<a href="docs/installation_de.htm" target="_blank">German Installation Guide</a><br><br>' 
-							. 'Also take a look to the <a href="docs/readme.htm" target="_blank">Readme</a> for some basics around UltraStats!<br>'
-							. '</center>';
+		// if handled ourselfe, we die in CheckForInstallPhp.
+		if ( $bHandleMissing == true )
+		{
+			// Check for installscript!
+			CheckForInstallPhp();
+		}
 		else
-			$strinstallmsg = "";
-		DieWithErrorMsg( 'Error, main configuration file is missing!' . $strinstallmsg );
+			return false;
 	}
+}
+
+function CheckForInstallPhp()
+{
+	// Check for installscript!
+	if ( file_exists($content['BASEPATH'] . "install.php") ) 
+		$strinstallmsg = '<br><br>' 
+						. '<center><b>Click <a href="' . $content['BASEPATH'] . 'install.php">here</a> to Install UltraStats!</b><br>'
+						. 'If you need help for the installation process, you should take a look into the <B>INSTALL</B> document!<br>'
+//						. '<a href="docs/installation.htm" target="_blank">English Installation Guide</a>&nbsp;|&nbsp;'
+//						. '<a href="docs/installation_de.htm" target="_blank">German Installation Guide</a><br><br>' 
+//						. 'Also take a look to the <a href="docs/readme.htm" target="_blank">Readme</a> for some basics around UltraStats!<br>'
+						. '</center>';
+	else
+		$strinstallmsg = "";
+	DieWithErrorMsg( 'Error, main configuration file is missing!' . $strinstallmsg );
 }
 
 function GetFileLength($szFileName)
@@ -139,12 +195,15 @@ function InitUltraStats()
 	
 	// Will init the config file!
 	InitUltraStatsConfigFile();
-
+	
 	// Establish DB Connection
 	DB_Connect();
 
 	// Now load the Page configuration values
 	InitConfigurationValues();
+
+	// Check if GZIP is enabled!
+	InitPostDbConfigRuntime();
 
 	// Now Create Themes List because we haven't the config before!
 	CreateThemesList();
@@ -162,6 +221,10 @@ function InitUltraStats()
 	CreateBannedPlayerFilter();
 	// --- 
 
+	// --- Created available years and month, which can be used for filtering
+	CreateAvailableYearsAndMonthFilters();
+	// --- 
+
 	// --- Enable PHP Debug Mode 
 	InitPhpDebugMode();
 	// --- 
@@ -173,9 +236,9 @@ function InitPhpDebugMode()
 
 	// --- Set Global DEBUG Level!
 	if ( $content['gen_phpdebug'] == "yes" )
-		ini_set( "error_reporting", E_ALL ); // ALL PHP MESSAGES!
+		@ini_set( "error_reporting", E_ALL ); // ALL PHP MESSAGES!
 	else
-		ini_set( "error_reporting", E_ERROR ); // ONLY PHP ERROR'S!
+		@ini_set( "error_reporting", E_ERROR ); // ONLY PHP ERROR'S!
 	// --- 
 }
 
@@ -200,7 +263,14 @@ function CreateGameVersionsList()
 	$content['GAMEVERSIONS'][COD4]['gamever'] = COD4;
 	$content['GAMEVERSIONS'][COD4]['gamevertitle'] = LN_GEN_COD4;
 	if ( $content['gen_gameversion'] == $content['GAMEVERSIONS'][COD4]['gamever'] ) { $content['GAMEVERSIONS'][COD4]['selected'] = "selected"; } else { $content['GAMEVERSIONS'][COD4]['selected'] = ""; }
+
+	$content['GAMEVERSIONS'][CODWW]['gamever'] = CODWW;
+	$content['GAMEVERSIONS'][CODWW]['gamevertitle'] = LN_GEN_CODWW;
+	if ( $content['gen_gameversion'] == $content['GAMEVERSIONS'][CODWW]['gamever'] ) { $content['GAMEVERSIONS'][CODWW]['selected'] = "selected"; } else { $content['GAMEVERSIONS'][CODWW]['selected'] = ""; }
 	// ---
+	
+	// Set for display!
+	$content['CONFIGUREDGAME_TITLE'] = $content['GAMEVERSIONS'][ $content['gen_gameversion'] ]['gamevertitle'];
 }
 
 function CreateParseByTypesList()
@@ -220,19 +290,67 @@ function CreateParseByTypesList()
 
 function CheckAndSetRunMode()
 {
-	global $RUNMODE;
+	global $content, $RUNMODE, $MaxExecutionTime;
+
 	// Set to command line mode if argv is set! 
-//FICKU PHP!	if ( isset($_SERVER["argc"]) && $_SERVER["argc"] > 1 )
-	if ( !isset($_SERVER["GATEWAY_INTERFACE"]) )
+	if ( !isset($_SERVER["SERVER_SOFTWARE"]) )
 		$RUNMODE = RUNMODE_COMMANDLINE;
+
+	// Obtain max_execution_time
+	$MaxExecutionTime = ini_get("max_execution_time");
+	
+	// --- Check necessary PHP Extensions!
+	$loadedExtensions = get_loaded_extensions();
+
+	// Check for FTP Extensions
+	if ( in_array("ftp", $loadedExtensions) ){ $content['FTP_IS_ENABLED'] = true; } else { $content['FTP_IS_ENABLED'] = false; }
+	// Check for GD libary
+	if ( in_array("gd", $loadedExtensions) ){ $content['GD_IS_ENABLED'] = true; } else { $content['GD_IS_ENABLED'] = false; }
+	// Check MYSQL Extension
+	if ( in_array("mysql", $loadedExtensions) ) { $content['MYSQL_IS_ENABLED'] = true; } else { $content['MYSQL_IS_ENABLED'] = false; }
+	
+	// Set if fopen is allowed
+	$content["allow_url_fopen"] = ini_get("allow_url_fopen");
+}
+
+function InitPostDbConfigRuntime()
+{
+	global $content, $MaxExecutionTime;
+
+	// --- Enable GZIP Compression if available
+	if (	
+			strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false && 
+			GetConfigSetting("gen_gzipcompression", "yes", CFGLEVEL_USER) == "yes" &&
+			!defined('IS_PARSERPAGE') /* Do not GZIP in this case!*/
+		) 
+	{
+		// This starts gzip compression!
+		@ob_start("ob_gzhandler");
+		$content['GzipCompressionEnabled'] = "yes";
+	}
+	else
+		$content['GzipCompressionEnabled'] = "no";
+	// --- 
+
+	// --- Try to extend the script timeout if possible!
+	$iTmp = GetConfigSetting("gen_maxexecutiontime", 30, CFGLEVEL_GLOBAL);
+	if ( $iTmp != $MaxExecutionTime && $iTmp > 10 )
+	{	//Try to extend the runtime in this case!
+		@ini_set("max_execution_time", $iTmp);
+	}
+	
+	// copy to display var!
+	$content['MaxExecutionTime'] = ini_get("max_execution_time");
+
+	// ---
 }
 
 function InitRuntimeInformations()
 {
 	global $content;
 
+	// --- OLD MYSQL STUFF? Do I NEED THIS ANYMORE? 
 	$content['sqltmpfile'] = $content['BASEPATH'] . "tmp.sql";
-
 	if ( strpos(PHP_OS, "WIN") !== false )
 	{
 		// Windows 
@@ -250,7 +368,7 @@ function InitRuntimeInformations()
 		// Try to create file if not there
 		if ( !is_file($content['sqltmpfile']) ) 
 		{
-			$handle = fopen( $content['sqltmpfile'] , "x");
+			$handle = @fopen( $content['sqltmpfile'] , "x");
 			fclose($handle);
 		}
 
@@ -265,6 +383,7 @@ function InitRuntimeInformations()
 
 // DEBUG TEST!
 	$content['MYSQL_BULK_MODE'] = false;
+	// ---
 }
 
 function CreateDebugModes()
@@ -310,27 +429,47 @@ function InitFrontEndVariables()
 {
 	global $content;
 
-	$content['MENU_FOLDER_OPEN'] = "image=" . $content['BASEPATH'] . "images/icons/folder_closed.png";
-	$content['MENU_FOLDER_CLOSED'] = "overimage=" . $content['BASEPATH'] . "images/icons/folder.png";
-	$content['MENU_HOMEPAGE'] = "image=" . $content['BASEPATH'] . "images/icons/home.png";
-	$content['MENU_LINK'] = "image=" . $content['BASEPATH'] . "images/icons/link.png";
-	$content['MENU_PREFERENCES'] = "image=" . $content['BASEPATH'] . "images/icons/preferences.png";
-	$content['MENU_ADMINENTRY'] = "image=" . $content['BASEPATH'] . "images/icons/star_blue.png";
-	$content['MENU_ADMINLOGOFF'] = "image=" . $content['BASEPATH'] . "images/icons/exit.png";
-	$content['MENU_ADMINUSERS'] = "image=" . $content['BASEPATH'] . "images/icons/businessmen.png";
-	$content['MENU_ADMINPLAYERS'] = "image=" . $content['BASEPATH'] . "images/icons/businessman_preferences.png";
-	$content['MENU_ADMINSERVERS'] = "image=" . $content['BASEPATH'] . "images/icons/server.png";
-	$content['MENU_SEARCH'] = "image=" . $content['BASEPATH'] . "images/icons/view.png";
-	$content['MENU_SEARCH'] = "image=" . $content['BASEPATH'] . "images/icons/view.png";
-	$content['MENU_SEARCH'] = "image=" . $content['BASEPATH'] . "images/icons/view.png";
-	$content['MENU_SELECTION_DISABLED'] = "image=" . $content['BASEPATH'] . "images/icons/selection.png";
-	$content['MENU_SELECTION_ENABLED'] = "image=" . $content['BASEPATH'] . "images/icons/selection_delete.png";
+	$content['MENU_FOLDER_OPEN'] = $content['BASEPATH'] . "images/icons/folder_closed.png";
+	$content['MENU_FOLDER_CLOSED'] = $content['BASEPATH'] . "images/icons/folder.png";
+	$content['MENU_HOMEPAGE'] = $content['BASEPATH'] . "images/icons/home.png";
+	$content['MENU_LINK'] = $content['BASEPATH'] . "images/icons/link.png";
+	$content['MENU_PREFERENCES'] = $content['BASEPATH'] . "images/icons/preferences.png";
+	$content['MENU_ADMINENTRY'] = $content['BASEPATH'] . "images/icons/star_blue.png";
+	$content['MENU_ADMINLOGOFF'] = $content['BASEPATH'] . "images/icons/exit.png";
+	$content['MENU_ADMINUSERS'] = $content['BASEPATH'] . "images/icons/businessmen.png";
+	$content['MENU_ADMINPLAYERS'] = $content['BASEPATH'] . "images/icons/businessman_preferences.png";
+	$content['MENU_ADMINSERVERS'] = $content['BASEPATH'] . "images/icons/server.png";
+	$content['MENU_ADMINSTREDITOR'] = $content['BASEPATH'] . "images/icons/preferences.png";
+	$content['MENU_SEARCH'] = $content['BASEPATH'] . "images/icons/view.png";
+	$content['MENU_SEARCH'] = $content['BASEPATH'] . "images/icons/view.png";
+	$content['MENU_SEARCH'] = $content['BASEPATH'] . "images/icons/view.png";
+	$content['MENU_SELECTION_DISABLED'] = $content['BASEPATH'] . "images/icons/selection.png";
+	$content['MENU_SELECTION_ENABLED'] = $content['BASEPATH'] . "images/icons/selection_delete.png";
+
+	$content['MENU_PAGER_BEGIN'] = $content['BASEPATH'] . "images/icons/media_beginning.png";
+	$content['MENU_PAGER_PREVIOUS'] = $content['BASEPATH'] . "images/icons/media_rewind.png";
+	$content['MENU_PAGER_NEXT'] = $content['BASEPATH'] . "images/icons/media_fast_forward.png";
+	$content['MENU_PAGER_END'] = $content['BASEPATH'] . "images/icons/media_end.png";
+	$content['MENU_NAV_LEFT'] = $content['BASEPATH'] . "images/icons/navigate_left.png";
+	$content['MENU_NAV_RIGHT'] = $content['BASEPATH'] . "images/icons/navigate_right.png";
+	$content['MENU_NAV_CLOSE'] = $content['BASEPATH'] . "images/icons/navigate_close.png";
+	$content['MENU_NAV_OPEN'] = $content['BASEPATH'] . "images/icons/navigate_open.png";
+	$content['MENU_PAGER_BEGIN_GREY'] = $content['BASEPATH'] . "images/icons/grey/media_beginning.png";
+	$content['MENU_PAGER_PREVIOUS_GREY'] = $content['BASEPATH'] . "images/icons/grey/media_rewind.png";
+	$content['MENU_PAGER_NEXT_GREY'] = $content['BASEPATH'] . "images/icons/grey/media_fast_forward.png";
+	$content['MENU_PAGER_END_GREY'] = $content['BASEPATH'] . "images/icons/grey/media_end.png";
+
+	$content['MENU_BULLET_BLUE'] = $content['BASEPATH'] . "images/icons/bullet_ball_glass_blue.png";
+	$content['MENU_BULLET_GREEN'] = $content['BASEPATH'] . "images/icons/bullet_ball_glass_green.png";
+	$content['MENU_BULLET_RED'] = $content['BASEPATH'] . "images/icons/bullet_ball_glass_red.png";
+	$content['MENU_BULLET_YELLOW'] = $content['BASEPATH'] . "images/icons/bullet_ball_glass_yellow.png";
+	$content['MENU_BULLET_GREY'] = $content['BASEPATH'] . "images/icons/bullet_ball_glass_grey.png";
 
 	// Get and Set ServerID Value!
 	if ( isset($_GET['serverid']) )
 	{
 		if ( intval($_GET['serverid']) > 0 )
-			$content['serverid'] = $_GET['serverid'];
+			$content['serverid'] = intval($_GET['serverid']);
 	}
 
 }
@@ -340,13 +479,13 @@ function GetAndReplaceLangStr( $strlang, $param1 = "", $param2 = "", $param3 = "
 {
 	$strfinal = str_replace ( "%1", $param1, $strlang );
 	if ( strlen($param2) > 0 )
-		$strfinal = str_replace ( "%1", $param2, $strfinal );
+		$strfinal = str_replace ( "%2", $param2, $strfinal );
 	if ( strlen($param3) > 0 )
-		$strfinal = str_replace ( "%1", $param3, $strfinal );
+		$strfinal = str_replace ( "%3", $param3, $strfinal );
 	if ( strlen($param4) > 0 )
-		$strfinal = str_replace ( "%1", $param4, $strfinal );
+		$strfinal = str_replace ( "%4", $param4, $strfinal );
 	if ( strlen($param5) > 0 )
-		$strfinal = str_replace ( "%1", $param5, $strfinal );
+		$strfinal = str_replace ( "%5", $param5, $strfinal );
 	
 	// And return
 	return $strfinal;
@@ -354,7 +493,7 @@ function GetAndReplaceLangStr( $strlang, $param1 = "", $param2 = "", $param3 = "
 
 function InitConfigurationValues()
 {
-	global $content, $LANG;
+	global $content, $gl_root_path, $LANG;
 
 	$result = DB_Query("SELECT * FROM " . STATS_CONFIG);
 	$rows = DB_GetAllRows($result, true, true);
@@ -362,7 +501,10 @@ function InitConfigurationValues()
 	if ( isset($rows ) )
 	{
 		for($i = 0; $i < count($rows); $i++)
+		{
 			$content[ $rows[$i]['name'] ] = $rows[$i]['value'];
+			$CFG[ $rows[$i]['name'] ] = $rows[$i]['value']; // Also copy into CFG Array!
+		}
 	}
 	// General defaults 
 	// --- Language Handling
@@ -397,11 +539,18 @@ function InitConfigurationValues()
 	{
 		if (	$content['gen_gameversion'] == COD || 
 				$content['gen_gameversion'] == CODUO || 
-				$content['gen_gameversion'] == COD2 )
+				$content['gen_gameversion'] == COD2 ||
+				$content['gen_gameversion'] == CODWW )
 			$content['gen_gameversion_picpath'] = "cod"; 
 		else if($content['gen_gameversion'] == COD4)
 			$content['gen_gameversion_picpath'] = "cod4"; 
 	}
+	// --- 
+
+	// --- SQL Workaround
+	if ( !isset($content['gen_bigselects']) ) { $content['gen_bigselects'] = "no"; }
+	if ( $content['gen_bigselects'] == "yes")
+		EnableBigSelects();
 	// --- 
 
 	// --- Parseby Type
@@ -413,18 +562,54 @@ function InitConfigurationValues()
 	if ( !isset($content['gen_phpdebug']) ) { $content['gen_phpdebug'] = "no"; }
 	// --- 
 
+	// --- Set DEFAULT GZIP Output!
+	if ( !isset($content['gen_gzipcompression']) ) { $content['gen_gzipcompression'] = "yes"; }
+	// --- 
+	
+	// --- Default Script Timeout!
+	if ( !isset($content['gen_maxexecutiontime']) ) { $content['gen_maxexecutiontime'] = 30; }
+	// --- 
+
 	// Web defaults 
 	// --- Theme Handling
-	if ( !isset($content['web_theme']) ) { $content['web_theme'] = "default"; }
+	if ( !isset($content['web_theme']) ) { $content['web_theme'] = "codww"; }
 	if ( isset($_SESSION['CUSTOM_THEME']) && VerifyTheme($_SESSION['CUSTOM_THEME']) )
 		$content['user_theme'] = $_SESSION['CUSTOM_THEME'];
 	else
 		$content['user_theme'] = $content['web_theme'];
 
-	//Init Theme About Info ^^
+	// --- Init Theme About Info ^^
 	InitThemeAbout($content['user_theme']);
 	// --- 
+
+	// --- Handle HTML Injection stuff
+	if ( strlen(GetConfigSetting("InjectHtmlHeader", false)) > 0 ) 
+		$content['EXTRA_HTMLHEAD'] .= $CFG['InjectHtmlHeader'];
+	else
+		$content['InjectHtmlHeader'] = ""; // Init Option
+	if ( strlen(GetConfigSetting("InjectBodyHeader", false)) > 0 ) 
+		$content['EXTRA_HEADER'] .= $CFG['InjectBodyHeader'];
+	else
+		$content['InjectBodyHeader'] = ""; // Init Option
+	if ( strlen(GetConfigSetting("InjectBodyFooter", false)) > 0 ) 
+		$content['EXTRA_FOOTER'] .= $CFG['InjectBodyFooter'];
+	else
+		$content['InjectBodyFooter'] = ""; // Init Option
+	// --- 
+
+	// --- Handle Optional Logo URL!
+	if ( strlen(GetConfigSetting("UltrastatsLogoUrl", false)) > 0 ) 
+		$content['EXTRA_ULTRASTATS_LOGO'] = $CFG['UltrastatsLogoUrl'];
+	else
+		$content['UltrastatsLogoUrl'] = ""; // Init Option
+	// --- 
+
+	// --- Init main langauge file now!
+	IncludeLanguageFile( $gl_root_path . '/lang/' . $LANG . '/main.php' );
+	// --- 
+
 	if ( !isset($content['web_toprounds']) ) { $content['web_toprounds'] = 50; }
+	if ( !isset($content['web_mainpageplayers']) ) { $content['web_mainpageplayers'] = 20; }
 	if ( !isset($content['web_topplayers']) ) { $content['web_topplayers'] = 50; }
 	if ( !isset($content['web_detaillistsplayers']) ) { $content['web_detaillistsplayers'] = 20; }
 	if ( !isset($content['web_minkills']) ) { $content['web_minkills'] = 25; }
@@ -432,6 +617,10 @@ function InitConfigurationValues()
 	if ( !isset($content['web_maxpages']) ) { $content['web_maxpages'] = 25; }
 	if ( !isset($content['web_maxmapsperpage']) ) { $content['web_maxmapsperpage'] = 10; }
 	if ( !isset($content['web_medals']) ) { $content['web_medals'] = "yes"; }
+
+	// Set default Player models!
+	if ( !isset($content['web_playermodel_killer']) ) { $content['web_playermodel_killer'] = "marine"; }
+	if ( !isset($content['web_playermodel_killedby']) ) { $content['web_playermodel_killedby'] = "german"; }
 
 	// Admin Interface
 	if ( !isset($content['admin_maxplayers']) ) { $content['admin_maxplayers'] = 30; }
@@ -533,23 +722,41 @@ function DieWithErrorMsg( $szerrmsg )
 	}
 	else if	( $RUNMODE == RUNMODE_WEBSERVER )
 	{
-		print("<html><head><link rel=\"stylesheet\" href=\"" . $content['BASEPATH'] . "admin/css/admin.css\" type=\"text/css\"></head><body>");
-		print("<table width=\"600\" align=\"center\" class=\"with_border\"><tr><td><center><H3><font color='red'>Critical Error occured</font></H3><br></center>");
-		print("<B>Errordetails:</B><BR>" .  $szerrmsg);
-		print("</td></tr></table>");
+		echo 
+			"<html><title>UltraStats :: Critical Error occured</title><head>" . 
+			"<link rel=\"stylesheet\" href=\"" . $gl_root_path . "themes/codww/main.css\" type=\"text/css\"></head><body><br><br>" .
+			"<table width=\"600\" align=\"center\" class=\"with_border_alternate ErrorMsg\"><tr>". 
+			"<td class=\"PriorityError\" align=\"center\" colspan=\"2\">" . 
+			"<H3>Critical Error occured</H3>" . 
+			"</td></tr>" . 
+			"<tr><td class=\"cellmenu1_naked\" align=\"left\">Errordetails:</td>" . 
+			"<td class=\"tableBackground\" align=\"left\">" . 
+			$szerrmsg . 
+			"</td></tr></table>" . 
+			"</body></html>";
+		exit;
 	}
+
+	// Abort further execution
 	exit;
 }
 
 function DieWithFriendlyErrorMsg( $szerrmsg )
 {
-	//TODO: Make with template
-	print("<html><body>");
-	print("<center><H3><font color='red'>Error occured</font></H3><br></center>");
-	print("<B>Errordetails:</B><BR>" .  $szerrmsg);
+	echo 
+		"<html><title>UltraStats :: Error occured</title><head>" . 
+		"<link rel=\"stylesheet\" href=\"" . $gl_root_path . "themes/default/main.css\" type=\"text/css\"></head><body><br><br>" .
+		"<table width=\"600\" align=\"center\" class=\"with_border_alternate ErrorMsg\"><tr>". 
+		"<td class=\"PriorityWarning\" align=\"center\" colspan=\"2\">" . 
+		"<H3>Error occured</H3>" . 
+		"</td></tr>" . 
+		"<tr><td class=\"cellmenu1_naked\" align=\"left\">Errordetails:</td>" . 
+		"<td class=\"tableBackground\" align=\"left\">" . 
+		$szerrmsg . 
+		"</td></tr></table>" . 
+		"</body></html>";
 	exit;
 }
-
 
 function InitTemplateParser()
 {
@@ -576,11 +783,11 @@ function IncludeLanguageFile( $langfile )
 	global $LANG, $LANG_EN; 
 
 	if ( file_exists( $langfile ) )
-		include( $langfile );
+		include_once( $langfile );
 	else
 	{
 		$langfile = str_replace( $LANG, $LANG_EN, $langfile );
-		include( $langfile );
+		include_once( $langfile );
 	}
 }
 
@@ -983,134 +1190,182 @@ function CleanUpArray(&$myArray)
 	unset($myArray);
 }
 
-// --- BEGIN Usermanagement Function --- 
-function StartPHPSession()
+// --- BEGIN Available Years and Month --- 
+function CreateAvailableYearsAndMonthFilters()
 {
-	global $RUNMODE;
-	if ( $RUNMODE == RUNMODE_WEBSERVER )
-	{
-		// This will start the session
-		if (session_id() == "")
-			session_start();
+	global $content;
+	
+	// NOT SURE if this is a good idea xD
+//	$content['TIMETABLE'][ "ALL-TIME" ] = array ( "Year" => "", "Month" => "");
 
-		if ( !isset($_SESSION['SESSION_STARTED']) )
-			$_SESSION['SESSION_STARTED'] = "true";
+	// Get available month and years from DB!
+	$sqlquery = " SELECT DISTINCT " . 
+					STATS_TIME . ".Time_Year, " . 
+					STATS_TIME . ".Time_Month " . 
+				" FROM " . STATS_TIME . 
+				" ORDER BY " . STATS_TIME . ".Time_Year DESC, " . STATS_TIME . ".Time_Month DESC";
+
+	$result = DB_Query($sqlquery);
+	$content['dbresults'] = DB_GetAllRows($result, true);
+	if ( isset($content['dbresults']) )
+	{
+		// This enables the time filter within the stats
+		$content['ENABLETIMEFILTER'] = true;
+		$content['ENABLETIMEFILTER_MONTH'] = false;
+
+		foreach ($content['dbresults'] as $myDate)
+		{
+			if ( !isset($content['TIMEYEARS'][ $myDate['Time_Year'] ]) ) 
+			{
+				$content['TIMEYEARS'][ $myDate['Time_Year'] ]['ID'] = $myDate['Time_Year'];
+				$content['TIMEYEARS'][ $myDate['Time_Year'] ]['DisplayName'] = $myDate['Time_Year'];
+
+				// Set selected state!
+				if ( isset($_SESSION['TIME_SELECTEDYEAR']) && $_SESSION['TIME_SELECTEDYEAR'] == $myDate['Time_Year'] )
+				{
+					$content['TIMEYEARS'][ $myDate['Time_Year'] ]['selected'] = "selected"; 
+
+					// Activate Month filter as well!
+					$content['ENABLETIMEFILTER_MONTH'] = true;
+				}
+				else
+					$content['TIMEYEARS'][ $myDate['Time_Year'] ]['selected'] = ""; 
+
+			}
+
+			// Add to MONTH array!
+			if ( $content['ENABLETIMEFILTER_MONTH'] && isset($_SESSION['TIME_SELECTEDYEAR']) && $_SESSION['TIME_SELECTEDYEAR'] == $myDate['Time_Year'] )
+			{
+				$content['TIMEMONTHS'][ $myDate['Time_Month'] ]['ID'] = $myDate['Time_Month'];
+				$content['TIMEMONTHS'][ $myDate['Time_Month'] ]['DisplayName'] = GetReadAbleMonth( $myDate['Time_Month'] );
+
+				// Set selected state!
+				if ( isset($_SESSION['TIME_SELECTEDMONTH']) && $_SESSION['TIME_SELECTEDMONTH'] == $myDate['Time_Month'] )
+					$content['TIMEMONTHS'][ $myDate['Time_Month'] ]['selected'] = "selected"; 
+				else
+					$content['TIMEMONTHS'][ $myDate['Time_Month'] ]['selected'] = ""; 
+			}
+		}
 	}
+	else
+	{
+		// This disables the time filter within the stats
+		$content['ENABLETIMEFILTER'] = false;
+		$content['ENABLETIMEFILTER_MONTH'] = false;
+	}
+
+	// Set Unix Filter Timestamps now!
+	SetUnixTimeStampFilters();
+
+//	print_r ( $content['TIMETABLE'] );
 }
 
-function CheckForUserLogin( $isloginpage, $isUpgradePage = false )
+function SetUnixTimeStampFilters($selectedYear = null, $selectedMonth = null)
 {
-	global $content; 
+	global $content;
+	
+	// Set the year we want to filter for!
+	if ( $selectedYear == null && isset($_SESSION['TIME_SELECTEDYEAR']) ) 
+		$selectedYear = $_SESSION['TIME_SELECTEDYEAR'];
 
-	if ( isset($_SESSION['SESSION_LOGGEDIN']) )
+	// Set the month we want to filter for!
+	if ( $selectedMonth == null && isset($_SESSION['TIME_SELECTEDMONTH']) ) 
+		$selectedMonth = $_SESSION['TIME_SELECTEDMONTH'];
+	
+	// 
+	if ( $selectedYear != null ) 
 	{
-		if ( !$_SESSION['SESSION_LOGGEDIN'] ) 
-			RedirectToUserLogin();
+		if ( $selectedMonth != null ) 
+		{
+			if ( $selectedMonth == 12 ) 
+			{
+				$monthEnd = 1;
+				$yearEnd = $selectedYear+1;
+			}
+			else
+			{
+				$monthEnd = $selectedMonth+1;
+				$yearEnd = $selectedYear;
+			}
+
+			// Set Start and End UNIX TImestamp!
+			$content['TIME_SELECTEDYEAR_UNIXSTART'] = mktime(0, 0, 0, $selectedMonth, 1, $selectedYear);
+			$content['TIME_SELECTEDYEAR_UNIXEND'] = mktime(0, 0, 0, $monthEnd, 1, $yearEnd);
+		}
 		else
 		{
-			$content['SESSION_LOGGEDIN'] = "true";
-			$content['SESSION_USERNAME'] = $_SESSION['SESSION_USERNAME'];
+			$content['TIME_SELECTEDYEAR_UNIXSTART'] = mktime(0, 0, 0, 1, 1, $selectedYear);
+			$content['TIME_SELECTEDYEAR_UNIXEND'] = mktime(0, 0, 0, 1, 1, $selectedYear+1);
 		}
-
-		// New, Check for database Version and may redirect to updatepage!
-		if (	isset($content['database_forcedatabaseupdate']) && 
-				$content['database_forcedatabaseupdate'] == "yes" && 
-				$isUpgradePage == false 
-			)
-				RedirectToDatabaseUpgrade();
-	}
-	else
-	{
-		if ( $isloginpage == false )
-			RedirectToUserLogin();
-	}
-
-}
-
-function CreateUserName( $username, $password, $access_level )
-{
-	$md5pass = md5($password);
-	$result = DB_Query("SELECT username FROM " . STATS_USERS . " WHERE username = '" . $username . "'");
-	$rows = DB_GetAllRows($result, true);
-	if ( isset($rows) )
-	{
-		DieWithFriendlyErrorMsg( "User $username already exists!" );
-
-		// User not created!
-		return false;
-	}
-	else
-	{
-		// Create User
-		$result = DB_Query("INSERT INTO " . STATS_USERS . " (username, password, access_level) VALUES ('$username', '$md5pass', $access_level)");
-		DB_FreeQuery($result);
-
-		// Success
-		return true;
 	}
 }
 
-function CheckUserLogin( $username, $password )
-{
-	global $content, $CFG;
-
-	// TODO: SessionTime and AccessLevel check
-
-	$md5pass = md5($password);
-	$sqlselect = "SELECT access_level FROM " . STATS_USERS . " WHERE username = '" . $username . "' and password = '" . $md5pass . "'";
-	$result = DB_Query($sqlselect);
-	$rows = DB_GetAllRows($result, true);
-	if ( isset($rows) )
-	{
-		$_SESSION['SESSION_LOGGEDIN'] = true;
-		$_SESSION['SESSION_USERNAME'] = $username;
-		$_SESSION['SESSION_ACCESSLEVEL'] = $rows[0]['access_level'];
-		
-		$content['SESSION_LOGGEDIN'] = "true";
-		$content['SESSION_USERNAME'] = $username;
-
-		// Success !
-		return true;
-	}
-	else
-	{
-		if ( $CFG['ShowDebugMsg'] == 1 )
-			DieWithFriendlyErrorMsg( "Debug Error: Could not login user '" . $username . "' <br><br><B>Sessionarray</B> <pre>" . var_export($_SESSION, true) . "</pre><br><B>SQL Statement</B>: " . $sqlselect );
-		
-		// Default return false
-		return false;
-	}
-}
-
-function DoLogOff()
+function GetTimeWhereQueryStringForRoundTable( )
 {
 	global $content;
 
-	unset( $_SESSION['SESSION_LOGGEDIN'] );
-	unset( $_SESSION['SESSION_USERNAME'] );
-	unset( $_SESSION['SESSION_ACCESSLEVEL'] );
+	// Init return value
+	$szReturn = "";
 
-	// Redir to Index Page
-	RedirectPage( "index.php");
+	if ( isset($content['TIME_SELECTEDYEAR_UNIXSTART']) && isset($content['TIME_SELECTEDYEAR_UNIXEND']) )
+	{
+		$szReturn .=	" AND " . STATS_ROUNDS . ".TIMEADDED >= " . $content['TIME_SELECTEDYEAR_UNIXSTART'] . 
+						" AND " . STATS_ROUNDS . ".TIMEADDED <= " . $content['TIME_SELECTEDYEAR_UNIXEND'];
+	}
+
+	// return result
+	return $szReturn;
 }
 
-function RedirectToUserLogin()
+function GetTimeWhereQueryString( $szTableName, $includeTimeFilter = true )
 {
-	// TODO Referer
-	header("Location: login.php?referer=" . $_SERVER['PHP_SELF']);
-	exit;
+	// Init return value
+	$szReturn = "";	
+	
+	// Only append time filter if wanted
+	if ( $includeTimeFilter ) 
+	{
+		if ( isset($_SESSION['TIME_SELECTEDYEAR']) ) 
+			$szReturn .= " AND " . $szTableName . ".Time_Year = " . $_SESSION['TIME_SELECTEDYEAR'] . " ";
+
+		if ( isset($_SESSION['TIME_SELECTEDMONTH']) ) 
+			$szReturn .= " AND " . $szTableName . ".Time_Month = " . $_SESSION['TIME_SELECTEDMONTH'] . " ";
+	}
+
+	// return result
+	return $szReturn;
 }
 
-function RedirectToDatabaseUpgrade()
+function GetTimeWhereConsolidatedQueryString( $szTableName )
 {
-	// TODO Referer
-	header("Location: upgrade.php"); // ?referer=" . $_SERVER['PHP_SELF']);
-	exit;
+	$szReturn = "";
+/*	TODO IMPLEMENT ADDING THIS DATA!
+
+	if ( isset($_SESSION['TIME_SELECTEDYEAR']) ) 
+	{
+		$szReturn .= " AND " . $szTableName . ".Time_Year = " . $_SESSION['TIME_SELECTEDYEAR'] . " ";
+		if ( isset($_SESSION['TIME_SELECTEDMONTH']) ) 
+			$szReturn .= " AND " . $szTableName . ".Time_Month = " . $_SESSION['TIME_SELECTEDMONTH'] . " ";
+		else
+			$szReturn .= " AND " . $szTableName . ".Time_Month = 0 "; 
+	}
+	else*/
+		$szReturn = " AND " . $szTableName . ".Time_Year = 0 AND " . $szTableName . ".Time_Month = 0 ";
+
+	// return result
+	return $szReturn;
 }
 
 
-// --- END Usermanagement Function --- 
+function TimeFilterUsed()
+{
+	if ( isset($_SESSION['TIME_SELECTEDYEAR']) ) 
+		return true;
+	else
+		return false;
+}
 
+// --- END Available Years and Month --- 
 
 // --- BEGIN Banned Player Filter --- 
 function CreateBannedPlayerFilter()
@@ -1160,5 +1415,185 @@ function GetBannedPlayerWhereQuery( $customtable, $customplayerfield, $withwhere
 	// --- 
 }
 // --- 
+
+/*
+*	Helpre function to obtain the right configuration setting
+*/
+function GetConfigSetting($szSettingName, $szDefaultValue = "", $DesiredConfigLevel = CFGLEVEL_GLOBAL)
+{
+	global $content, $CFG, $USERCFG;
+
+	// Check for a user based setting!
+	if ( $DesiredConfigLevel == CFGLEVEL_USER )
+	{
+		// only use user settings if desired by the user
+		if ( isset($USERCFG['UserOverwriteOptions']) && $USERCFG['UserOverwriteOptions'] == 1 ) 
+		{
+			// return user specific setting if available
+			if ( isset($USERCFG[$szSettingName]) ) 
+				return $USERCFG[$szSettingName];
+		}
+	}
+
+	// Either UserDB disabled, or global setting wanted - easier handling
+	if		( isset($CFG[$szSettingName]) ) 
+		return $CFG[$szSettingName];
+	else if ( isset($content[$szSettingName]) ) 
+		return $content[$szSettingName];
+	else
+		return $szDefaultValue;
+}
+
+/*
+*	Helper function to start PHP Sessions!
+*/
+function StartPHPSession()
+{
+	global $RUNMODE;
+	if ( $RUNMODE == RUNMODE_WEBSERVER )
+	{
+		// Start Session environment
+		@session_start();
+
+		if ( !isset($_SESSION['SESSION_STARTED']) )
+			$_SESSION['SESSION_STARTED'] = "true";
+	}
+}
+
+/*
+*	Helper function to initialize the page title!
+*/
+function InitPageTitle()
+{
+	global $content, $currentSourceID;
+
+	$content['PrependTitle'] = GetConfigSetting("PrependTitle", "", CFGLEVEL_GLOBAL);
+//	$tmpTitle = GetConfigSetting("PrependTitle", "", CFGLEVEL_USER);
+	if ( strlen($content['PrependTitle']) > 0 )
+		$szReturn = $content['PrependTitle'] . " :: ";
+	else
+		$szReturn = "";
+
+	if ( !defined('IS_ADMINPAGE') )
+	{
+		if ( isset($content['serverid']) && isset($content['myserver']['Name']) )
+			$szReturn .= "Server '" . $content['myserver']['Name'] . "' :: ";
+	}
+
+	// Append UltraStats
+	$szReturn .= "UltraStats";
+
+	if ( defined('IS_ADMINPAGE') )
+		$szReturn .= " :: " . $content['LN_ADMINCENTER']; // . " :: ";
+
+	// return result
+	return $szReturn;
+}
+
+/*
+*	Moved Helper function here
+*/
+function list_directories($directory) 
+{
+	$result = array();
+	if (! $directoryHandler = @opendir ($directory)) 
+		DieWithFriendlyErrorMsg( "list_directories: directory \"$directory\" doesn't exist!");
+
+	while (false !== ($fileName = @readdir ($directoryHandler))) 
+	{
+		if	( is_dir( $directory . $fileName ) && ( $fileName != "." && $fileName != ".." ))
+			@array_push ($result, $fileName);
+	}
+
+	if ( @count ($result) === 0 ) 
+		DieWithFriendlyErrorMsg( "list_directories: no directories in \"$directory\" found!");
+	else 
+	{
+		sort ($result);
+		return $result;
+	}
+}
+
+function GetReadAbleMonth( $nMonthID ) 
+{
+	switch ( $nMonthID ) 
+	{
+		case 1: 
+			return "January";
+			break;
+		case 2: 
+			return "February";
+			break;
+		case 3: 
+			return "March";
+			break;
+		case 4: 
+			return "April";
+			break;
+		case 5: 
+			return "May";
+			break;
+		case 6: 
+			return "June";
+			break;
+		case 7: 
+			return "July";
+			break;
+		case 8: 
+			return "August";
+			break;
+		case 9: 
+			return "September";
+			break;
+		case 10: 
+			return "October";
+			break;
+		case 11: 
+			return "November";
+			break;
+		case 12: 
+			return "December";
+			break;
+	}
+}
+
+function GetCustomServerWhereQuery( $customtable, $withwhere = true, $alsoreturnifempty = false, $customserverid = 0 )
+{
+	global $serverwherequery, $content;
+	
+	// Set ServerID which is going to be used
+	if ( $customserverid == 0) 
+	{
+		if ( isset($content['serverid']) ) 
+			$myServerID = $content['serverid'];
+		else
+			$myServerID = -1;
+	}
+	else
+		$myServerID = $customserverid;
+	
+	// --- Special Check for special cases
+	if ( $alsoreturnifempty && $myServerID == -1 ) 
+	{
+		if ( $withwhere )
+			return " WHERE ". $customtable. ".SERVERID = " . $myServerID;
+		else
+			return " AND ". $customtable. ".SERVERID = " . $myServerID;
+	}
+	// --- 
+
+	// --- Normal return 
+	if ( $myServerID != -1 ) /*&& isset($serverwherequery) )*/
+	{
+		if ( $withwhere )
+			return " WHERE ". $customtable. ".SERVERID = " . $myServerID;
+		else
+			return " AND ". $customtable. ".SERVERID = " . $myServerID;
+	}
+	else
+		return "";
+	// --- 
+}
+
 
 ?>

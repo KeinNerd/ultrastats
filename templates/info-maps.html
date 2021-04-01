@@ -1,11 +1,15 @@
 <!-- INCLUDE include_header.html --> 
 
-<br>
-
 <!-- IF iserror="true" -->
-	<center>
-	<h3><font color="red">{LN_ERROR_INVALIDMAP}</font></h3>
-	</center>
+<br><br>
+<center>
+	<div class="table_with_border_second ErrorMsg" style="width:600px">
+		<div class="PriorityError">{LN_ERROR_DETAILS}</div>
+		<p>{LN_ERROR_INVALIDMAP}</p>
+		</div>
+	<br><br>
+</center>
+<br><br>
 <!-- ENDIF iserror="true" -->
 
 <!-- IF mapsenabled="true" -->
@@ -14,7 +18,7 @@
 	<td width="10" valign="top" nowrap>&nbsp;</td>
 	<td width="50%" valign="top">
 
-		<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center">
+		<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" class="with_border_alternate">
 		<tr>
 			<td colspan="2" class="title" nowrap>{LN_MAP_DETAILS} '{MapDisplayName}'</td>
 		</tr>
@@ -22,9 +26,9 @@
 		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
 		<tr>
 			<td width="207" nowrap valign="top" class="line1">
-			<img src="{MapImage}" alt="{MapDisplayName}" width="200">
+			<img src="{MapImage}" alt="{MapDisplayName}">
 			</td>
-			<td width="100%" nowrap valign="top" class="line1" rowspan="3">
+			<td width="100%" nowrap valign="top" class="tableBackground" rowspan="3">
 				<table width="100%" cellpadding="2" cellspacing="0" border="0" align="center" >
 				<tr><td width="100%" class="cellmenu2" align="center"><B>{LN_MAP_DESCRIPTION}</B></td></tr>
 				</table>
@@ -50,12 +54,12 @@
 	<td width="50%" valign="top">
 			
 	<!-- IF lastroundsenable="true" -->
-		<table width="100%" cellpadding="1" cellspacing="0" border="0" align="center">
+		<table width="100%" cellpadding="1" cellspacing="0" border="0" align="center" class="with_border_alternate">
 		<tr>
 			<td class="title" nowrap>{LN_MAP_LASTROUNDS} '{MapDisplayName}'</td>
 		</tr>
 		</table>
-		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
+		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
 		<tr>
 			<td width="25" class="cellmenu1" align="center" nowrap><B>{LN_TOPPLAY_NUM}</B></td>
 			<td colspan="2" width="210" class="cellmenu1" align="center" nowrap><B>{LN_LROUNDS_TIME}</B></td>

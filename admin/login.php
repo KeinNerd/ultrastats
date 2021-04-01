@@ -1,32 +1,47 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006!								*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Admin main File											*
-	*																	*
-	* -> Helps the admin to manage his UltraStats		*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Login File													
+	*		This page does the user login
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
 
-// --- Default includes	and procedures --- //
+
+// *** Default includes	and procedures *** //
 define('IN_ULTRASTATS', true);
 $gl_root_path = './../';
-include($gl_root_path . 'include/functions_db.php');
 include($gl_root_path . 'include/functions_common.php');
-include($gl_root_path . 'include/class_template.php');
+
+// Set PAGE to be ADMINPAGE!
+define('IS_ADMINPAGE', true);
+$content['IS_ADMINPAGE'] = true;
 
 InitUltraStats();
 CheckForUserLogin( true );
-// ---					--- //
+IncludeLanguageFile( $gl_root_path . 'lang/' . $LANG . '/admin.php' );
+// ***					*** //
+
+// --- BEGIN CREATE TITLE
+$content['TITLE'] = InitPageTitle();
+$content['TITLE'] .= " :: Login";
+// --- END CREATE TITLE
+
 
 // --- BEGIN Custom Code
-
 // Set Defaults
 $content['uname'] = "";
 $content['pass'] = "";
@@ -63,7 +78,7 @@ if ( isset($_POST['op']) )
 			if ( !CheckUserLogin( $content['uname'], $content['pass']) )
 			{
 				$content['ISERROR'] = "true";
-				$content['ERROR_MSG'] = "*Wrong username or password!";
+				$content['ERROR_MSG'] = $content['LN_LOGIN_ERRORWRONGUSER'];
 			}
 			else
 				RedirectPage( $szRedir );
@@ -71,7 +86,7 @@ if ( isset($_POST['op']) )
 		else
 		{
 			$content['ISERROR'] = "true";
-			$content['ERROR_MSG'] = "*Username or password not given";
+			$content['ERROR_MSG'] = $content['LN_LOGIN_ERRORUSERPASSNOTGIVEN'];
 		}
 	}
 }
@@ -81,16 +96,13 @@ if ( isset($_GET['op']) && $_GET['op'] == "logoff" )
 	// logoff in this case
 	DoLogOff();
 }
+
+// --- Set redir var
+$content['REDIR_LOGIN'] = $szRedir;
+
 // --- END Custom Code
 
-// --- CONTENT Vars
-$content['REDIR_LOGIN'] = $szRedir;
-$content['TITLE'] = "Ultrastats - Admin Login";	// Title of the Page 
-// --- 
-
 // --- Parsen and Output
-IncludeLanguageFile( $gl_root_path . 'lang/' . $LANG . '/admin.php' );
-
 InitTemplateParser();
 $page -> parser($content, "admin/login.html");
 $page -> output(); 

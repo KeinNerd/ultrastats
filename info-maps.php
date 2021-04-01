@@ -1,38 +1,42 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006, 2007, 2008						*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Map Info File														*
-	*																	*
-	* -> Display Map Informations										*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Map Info File
+	*		Shows details and played rounds by map
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
 
 // *** Default includes	and procedures *** //
 define('IN_ULTRASTATS', true);
 $gl_root_path = './';
-include($gl_root_path . 'include/functions_db.php');
 include($gl_root_path . 'include/functions_common.php');
-include($gl_root_path . 'include/class_template.php');
 include($gl_root_path . 'include/functions_frontendhelpers.php');
 
 InitUltraStats();
-IncludeLanguageFile( $gl_root_path . '/lang/' . $LANG . '/main.php' );
 InitFrontEndDefaults();	// Only in WebFrontEnd
 // ***					*** //
 
-// --- CONTENT Vars
-if ( isset($content['myserver']) ) 
-	$content['TITLE'] = "Ultrastats :: MapInfo :: Server '" . $content['myserver']['Name'] . "'";	// Title of the Page 
-else
-	$content['TITLE'] = "Ultrastats :: MapInfo";
-// --- 
+// --- BEGIN CREATE TITLE
+$content['TITLE'] = InitPageTitle();
+
+// Append custom title part!
+$content['TITLE'] .= " :: Mapdetails ";
+// --- END CREATE TITLE
+
 
 // --- BEGIN Custom Code
 
@@ -68,10 +72,13 @@ if ( isset($_GET['id']) )
 			$content['MapDisplayName'] = $mapvars['MAPNAME'];
 		// --- 
 
+		// Append to title
+		$content['TITLE'] .= " for '" . $content['MapDisplayName'] . "'";
+
 		// --- Set Mapimage
 		$content['MapImage'] = $gl_root_path . "images/maps/middle/" . $mapvars['MAPNAME'] . ".jpg";
 		if ( !is_file($content['MapImage']) )
-			$content['MapImage'] = $gl_root_path . "images/maps/no-pic.jpg";
+			$content['MapImage'] = $gl_root_path . "images/maps/no-pic.png";
 		// --- 
 
 		// --- Copy other values
@@ -120,7 +127,7 @@ if ( isset($_GET['id']) )
 				// --- Set Mapimage
 				$content['lastrounds'][$i]['MapImage'] = $gl_root_path . "images/maps/thumbs/" . $content['lastrounds'][$i]['MAPNAME'] . ".jpg";
 				if ( !is_file($content['lastrounds'][$i]['MapImage']) )
-					$content['lastrounds'][$i]['MapImage'] = $gl_root_path . "images/maps/no-pic.jpg";
+					$content['lastrounds'][$i]['MapImage'] = $gl_root_path . "images/maps/thumbs/no-pic.png";
 				// --- 
 
 				// --- Set GametypeName 

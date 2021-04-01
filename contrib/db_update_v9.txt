@@ -1,0 +1,19 @@
+-- --------------------------------------------------------
+
+-- --------------------------------------------------------
+-- New Database Structure Updates
+
+-- --------------------------------------------------------
+-- Replace existing data, this automatically INSERTS or UPDATES!
+
+-- Replace new Maps
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_docks', 'Sub Pens', 'mp_subway_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_kneedeep', 'Knee Deep', 'mp_kneedeep_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_kwai', 'Banzai', 'mp_kwai_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_makin_day', 'Makin Day', 'mp_makin_day_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_nachtfeuer', 'Nightfire', 'mp_nachtfeuer_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_stalingrad', 'Corrosion', 'mp_stalingrad_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_subway', 'Subway', 'mp_subway_description', ''); -- Codww only%$&1337&%&;
+
+-- New Insert stuff
+-- Updated data records stuff

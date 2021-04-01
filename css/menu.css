@@ -1,0 +1,92 @@
+
+#menu {
+/*	width: 16px; /* set width of menu */
+} 
+
+#menu ul { /* remove bullets and list indents */
+	z-index: 1;
+	position: relative;
+	list-style: none;
+	white-space:nowrap;
+	margin: 0;
+	padding: 0;
+	vertical-align: text-top;
+}
+
+/* style, color and size links and headings to suit */
+#menu a, #menu h2 {
+	display: block;
+	margin: 0px;
+	padding: 1px 1px; 
+}
+
+#menu h2 {
+	font-size: 10px;
+	font-weight: bold;
+/*	text-align: center; */
+}
+
+#menu a {
+	text-decoration: none;
+}
+
+#menu a:hover {
+	text-decoration: none;
+}
+
+#menu li {
+	/* make the list elements a containing block for the nested lists */
+	position: relative;
+} 
+
+#menu ul li ul li {
+/*	border-width: 1px;
+	border-style: solid;
+	border-color: #44617D #203040 #203040 #44617D; */
+} 
+
+#menu ul ul {
+	z-index: 2;
+	white-space: nowrap;
+	position: absolute;
+	top: 14px; /*14px; */
+	left: 0px; /*24px; /* to position them to the right of their containing block */
+
+	width: auto;
+	min-width: 175px; /* workaround for FF */
+}
+
+#menu ul ul li {
+	z-index: 3;
+	width: auto;
+	min-width: 175px; /* workaround for FF */
+}
+
+#menu ul ul ul {
+	z-index: 3;
+	white-space: nowrap;
+
+	position: absolute;
+	top: -2px; /*14px; */
+	left: 99%; /*24px; /* to position them to the right of their containing block */
+	/* width: 350; width is based on the containing block */
+}
+
+#menu ul img {
+	cursor: hand;
+}
+
+
+#menu ul ul, 
+#menu ul li:hover ul ul, 
+#menu ul ul li:hover ul ul ul
+{
+	display: none;
+}
+
+#menu ul li:hover ul,
+#menu ul ul li:hover ul, 
+#menu ul ul ul li:hover ul 
+{
+	display: block;
+}

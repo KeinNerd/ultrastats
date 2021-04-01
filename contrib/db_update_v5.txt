@@ -1,0 +1,10 @@
+-- New Database Structure Updates
+ALTER TABLE `stats_servers` ADD `LastLogLineChecksum` INT NOT NULL DEFAULT '0' AFTER `LastLogLine` , ADD `PlayedSeconds` INT NOT NULL DEFAULT '0' AFTER `LastLogLineChecksum` ;
+
+-- New Insert stuff
+-- ID's are auto generated
+
+-- Updated data records stuff
+UPDATE `stats_maps` SET `DisplayName` = 'Creek', `Gametypes` = 'DM, WAR, KOTH, SAB, DOM, SD' WHERE `stats_maps`.`MAPNAME` = 'mp_creek' LIMIT 1; -- Cod4 only%$&1337&%&;
+UPDATE `stats_maps` SET `DisplayName` = 'Broadcast', `Gametypes` = 'DM, WAR, KOTH, SAB, DOM, SD' WHERE `stats_maps`.`MAPNAME` = 'mp_broadcast' LIMIT 1; -- Cod4 only%$&1337&%&;
+UPDATE `stats_maps` SET `DisplayName` = 'Killhouse', `Gametypes` = 'DM, WAR, KOTH, SAB, DOM, SD' WHERE `stats_maps`.`MAPNAME` = 'mp_killhouse' LIMIT 1; -- Cod4 only%$&1337&%&;

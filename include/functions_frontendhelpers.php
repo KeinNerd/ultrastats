@@ -1,17 +1,23 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006!								*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Helperfunctions for the web frontend								*
-	*																	*
-	* -> 		*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Frontend Functions File
+	*		Contains Frontend Helpers 
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
 
 // --- Avoid directly accessing this file! 
@@ -21,21 +27,6 @@ if ( !defined('IN_ULTRASTATS') )
 	exit;
 }
 // --- 
-
-function CreateTopPlayersArray($maxnumber, $arrayname, $topname)
-{
-	global $content;
-
-	for($i = 0; $i < $maxnumber; $i++)
-	{
-		$content[$arrayname][$i]['Number'] = $i;
-
-		if ( $content[$topname] == $i )
-			$content[$arrayname][$i]['selected'] = "selected";
-		else
-			$content[$arrayname][$i]['selected'] = "";
-	}
-}
 
 function InitFrontEndDefaults()
 {
@@ -47,6 +38,9 @@ function InitFrontEndDefaults()
 
 	// Create Damagetype Array
 	CreateDamagetypeArray();
+
+	// Create Attachments Array
+	CreateAttachmentArray();
 
 	// Create Gametypes
 	CreateGameTypeArray();
@@ -65,7 +59,22 @@ function InitFrontEndDefaults()
 	// --- END Main Info Area
 	
 	// Check if install file still exists
-	InstallFileReminder();
+//NOT NEEDED ANYMORE !	InstallFileReminder();
+}
+
+function CreateTopPlayersArray($maxnumber, $arrayname, $topname)
+{
+	global $content;
+
+	for($i = 0; $i < $maxnumber; $i++)
+	{
+		$content[$arrayname][$i]['Number'] = $i;
+
+		if ( $content[$topname] == $i )
+			$content[$arrayname][$i]['selected'] = "selected";
+		else
+			$content[$arrayname][$i]['selected'] = "";
+	}
 }
 
 function InstallFileReminder()
@@ -102,6 +111,21 @@ function CreateGameTypeArray()
 	//--- Set Displayname
 }
 
+// Helper to obtain the weapontype display name
+function GetWeapontypeDisplayName($weapontypeid)
+{
+	global $content;
+
+	foreach( $content['weapontypes'] as $myWeaponType)
+	{
+		if ( $myWeaponType['ID'] == $weapontypeid )
+			return $myWeaponType['Name'];
+	}
+	
+	// default return
+	return $content['LN_WEAPONTYPE_MISC'];
+}
+
 function AddToWeaponArray($weapontypeid, $weapontypename)
 {
 	global $content;
@@ -126,6 +150,28 @@ function CreateDamagetypeArray()
 						" ORDER BY " . STATS_DAMAGETYPES . ".DisplayName, " . STATS_DAMAGETYPES . ".DAMAGETYPE";
 	$result = DB_Query($sqlquery, true, true); // Critical!
 	$content['damagetypes_menu'] = DB_GetAllRows($result, true);
+}
+
+function CreateAttachmentArray()
+{
+	global $content;
+	
+	// Only create attachment list if we have at least Version 6 installed
+	if ( $content['database_installedversion'] >= 6 ) 
+	{
+		// Get Damagetypes from DB!
+		$sqlquery = "SELECT " .
+							STATS_ATTACHMENTS . ".ID  , " . 
+							STATS_ATTACHMENTS . ".DisplayName, " . 
+							STATS_ATTACHMENTS . ".Description_id " . 
+							" FROM " . STATS_ATTACHMENTS . 
+							" ORDER BY " . STATS_ATTACHMENTS . ".DisplayName"; 
+		$result = DB_Query($sqlquery, true, true); // Critical!
+		$tmpArray = DB_GetAllRows($result, true);
+		
+		foreach ( $tmpArray as $myEntry )
+			$content['attachments'][$myEntry['ID']] = $myEntry;
+	}
 }
 
 function CreateWeaponArray()
@@ -164,6 +210,19 @@ function CreateWeaponArray()
 		AddToWeaponArray(WEAPONTYPE_STANDWEAPON, $content['LN_WEAPONTYPE_STANDWEAPON']);
 		AddToWeaponArray(WEAPONTYPE_SPECIAL, $content['LN_WEAPONTYPE_SPECIAL']);
 		AddToWeaponArray(WEAPONTYPE_MISC, $content['LN_WEAPONTYPE_MISC']);
+	}
+	else if ( $content['gen_gameversion'] == CODWW ) 
+	{
+		AddToWeaponArray(WEAPONTYPE_MACHINEGUN, $content['LN_WEAPONTYPE_SUBMACHINEGUN']);
+		AddToWeaponArray(WEAPONTYPE_RIFLES, $content['LN_WEAPONTYPE_RIFLES']);
+		AddToWeaponArray(WEAPONTYPE_ASSAULT, $content['LN_WEAPONTYPE_ASSAULT']);
+		AddToWeaponArray(WEAPONTYPE_HEAVYWEAPONS, $content['LN_WEAPONTYPE_HEAVYWEAPONS']);
+		AddToWeaponArray(WEAPONTYPE_SHOTGUN, $content['LN_WEAPONTYPE_SHOTGUN']);
+		AddToWeaponArray(WEAPONTYPE_PISTOL, $content['LN_WEAPONTYPE_PISTOL']);
+		AddToWeaponArray(WEAPONTYPE_GRENADE, $content['LN_WEAPONTYPE_GRENADE']);
+		AddToWeaponArray(WEAPONTYPE_SECONDARYGRENADE, $content['LN_WEAPONTYPE_SECONDARYGRENADE']);
+		AddToWeaponArray(WEAPONTYPE_TANK, $content['LN_WEAPONTYPE_TANK']);
+		AddToWeaponArray(WEAPONTYPE_SPECIAL, $content['LN_WEAPONTYPE_MISC']);
 	}
 
 	// Main Menu Copy!
@@ -249,7 +308,7 @@ function CreateCurrentUrl()
 		$counter = 0;
 		for ( $i = 0; $i < count($queries); $i++ )	// Fixed from $i = 0 to $i = 1
 		{
-			if ( strpos($queries[$i], "serverid") === false ) 
+			if ( strpos($queries[$i], "serverid") === false && strpos($queries[$i], "=") !== false ) 
 			{
 				$tmpvars = explode ("=", $queries[$i]);
 				// 4Server Selector
@@ -283,6 +342,10 @@ function CreateServerListArray()
 		// Resort the Array
 		array_unshift( $content['serverlist'], $splitter );
 		array_unshift( $content['serverlist'], $allservers );
+		
+		// Add selected value
+		foreach($content['serverlist'] as $myKey => $myServer)
+			$content['serverlist'][$myKey]['selected'] = "";
 	}
 	else
 	{
@@ -291,34 +354,12 @@ function CreateServerListArray()
 	}
 }
 
-function GetCustomServerWhereQuery( $customtable , $withwhere = true, $alsoreturnifempty = false )
-{
-	global $serverwherequery, $content;
-	
-	// --- Special Check for special cases
-	if ( $alsoreturnifempty && !(isset($content['serverid'])) ) 
-	{
-		if ( $withwhere )
-			return " WHERE ". $customtable. ".SERVERID = -1 ";
-		else
-			return " AND ". $customtable. ".SERVERID = -1 ";
-	}
-	// --- 
-
-	if ( isset($content['serverid']) && isset($serverwherequery) )
-	{
-		if ( $withwhere )
-			return " WHERE ". $customtable. ".SERVERID = " . $content['serverid'];
-		else
-			return " AND ". $customtable. ".SERVERID = " . $content['serverid'];
-	}
-	else
-		return "";
-}
-
 function GetAndSetCurrentServer()
 {
 	global $content, $serverwherequery, $serverwherequery_and;
+	
+	// Default for helper variable
+	$content['serverselected'] = false;
 
 	if ( isset($content['serverid']) )
 	{
@@ -332,6 +373,9 @@ function GetAndSetCurrentServer()
 			$serverwherequery = " WHERE SERVERID = " . $content['serverid'];
 			$serverwherequery_and = " AND SERVERID = " . $content['serverid'];
 			
+			// Helper variable for frontend
+			$content['serverselected'] = true;
+
 			// Needed for preselection
 			for($i = 0; $i < count($content['serverlist']); $i++)
 			{
@@ -391,6 +435,11 @@ function FindAndFillTopAliases(&$myplayers, $idfield, $AliasField, $AliasHtmlFie
 		else
 			$playerguids = "";	// INIT!
 		$playerguids .= $myplayers[$i][$idfield];
+		
+		// PreINIT fields!
+		$myplayers[$i][$AliasField] = "-Topalias unknown-"; 
+		$myplayers[$i][$AliasHtmlField] = "<i>-Topalias unknown-</i>";
+
 	}
 
 	// No GUIDS, then we do not need to run thissql query!
@@ -408,7 +457,7 @@ function FindAndFillTopAliases(&$myplayers, $idfield, $AliasField, $AliasHtmlFie
 				STATS_ALIASES . ".Alias, " . 
 				STATS_ALIASES . ".AliasAsHtml " .
 				" FROM " . STATS_ALIASES . 
-				" INNER JOIN (" . STATS_PLAYERS_TOPALIASES . 
+				" LEFT OUTER JOIN (" . STATS_PLAYERS_TOPALIASES . 
 				") ON (" . 
 //				STATS_ALIASES . ".PLAYERID=" . STATS_PLAYERS_TOPALIASES . ".GUID) " . 
 				STATS_ALIASES . ".ID=" . STATS_PLAYERS_TOPALIASES . ".ALIASID) " . 
@@ -465,7 +514,7 @@ function FillPlayerWithTime(&$myplayer, $idfield)
 						"sum(" . STATS_TIME . ".TIMEPLAYED) as TotalSeconds " . 
 						" FROM " . STATS_TIME . 
 						" WHERE " . STATS_TIME . ".PLAYERID=" . $myplayer[$idfield] .
-						GetCustomServerWhereQuery( STATS_TIME, false) . 
+						GetTimeWhereQueryString(STATS_TIME) . 
 						" GROUP BY " . STATS_TIME . ".PLAYERID ";
 	$result = DB_Query($sqlquery);
 	$timevars = DB_GetSingleRow($result, true);
@@ -499,7 +548,7 @@ function FindAndFillWithTime(&$myplayers, $idfield, $TimeSecondsField, $TimeStri
 						"sum(" . STATS_TIME . ".TIMEPLAYED) as TotalSeconds " . 
 						" FROM " . STATS_TIME . 
 						" WHERE " . STATS_TIME . ".PLAYERID IN (" . $playerguids . ")" . 
-						GetCustomServerWhereQuery( STATS_TIME, false) . 
+						GetTimeWhereQueryString(STATS_TIME) . 
 						" GROUP BY " . STATS_TIME . ".PLAYERID ";
 //						" ORDER BY Count DESC";
 	$result = DB_Query($sqlquery);
@@ -535,7 +584,6 @@ function GetAndSetMaxKillRation()
 
 // !!!! TODO! Make a new PLAYER Table where we store a total skill value per server
 
-
 	// --- Lets get the MAX KillRatio first
 	$sqlquery = "SELECT " .
 						"sum(" . STATS_PLAYERS . ".Kills) as Kills, " .
@@ -546,6 +594,7 @@ function GetAndSetMaxKillRation()
 						" WHERE Kills > " . $content['web_minkills'] .
 						GetCustomServerWhereQuery(STATS_PLAYERS, false) . 
 						GetBannedPlayerWhereQuery(STATS_PLAYERS, "GUID", false) . 
+						GetTimeWhereQueryString(STATS_PLAYERS) . 
 						" GROUP BY " . STATS_PLAYERS . ".GUID " . 
 						" ORDER BY MaxKillRatio DESC LIMIT 1";
 	$result = DB_Query($sqlquery);
@@ -563,6 +612,13 @@ function GetAndSetGlobalInfo()
 {
 	global $content;
 
+	// Set default for global_lastupdate_TimeFormat
+	$content['global_lastupdate_TimeFormat'] = "Never";
+
+	// --- Create TIME Where query!
+	$szTimeWhere = GetTimeWhereConsolidatedQueryString( STATS_CONSOLIDATED );
+	// ---
+
 	// --- Get Total Values
 	$sqlquery = "SELECT " .
 						STATS_CONSOLIDATED . ".NAME, " . 
@@ -576,6 +632,7 @@ function GetAndSetGlobalInfo()
 						") ON (" . 
 						STATS_LANGUAGE_STRINGS . ".STRINGID =" . STATS_CONSOLIDATED . ".DescriptionID) " . 
 						" WHERE " . STATS_CONSOLIDATED . ".NAME LIKE 'global_%' " .
+						$szTimeWhere . 
 						" ORDER BY " . STATS_CONSOLIDATED . ".SortID";
 	$result = DB_Query($sqlquery);
 
@@ -591,7 +648,6 @@ function GetAndSetGlobalInfo()
 	// --- 
 
 	// --- Get Total Server Values
-
 	$serverwheresql = GetCustomServerWhereQuery( STATS_CONSOLIDATED, false);
 	if ( strlen($serverwheresql) <= 0 ) 
 		$serverwheresql = " AND " . STATS_CONSOLIDATED . ".SERVERID = -1 ";
@@ -604,6 +660,7 @@ function GetAndSetGlobalInfo()
 						" FROM " . STATS_CONSOLIDATED .
 						" WHERE " . STATS_CONSOLIDATED . ".NAME LIKE 'server_total%' " .
 						$serverwheresql . 
+						$szTimeWhere . 
 						" ORDER BY " . STATS_CONSOLIDATED . ".SortID";
 	$result = DB_Query($sqlquery);
 
@@ -635,6 +692,8 @@ function GetTextFromDescriptionID( $szDescriptionID, $szDefault )
 {
 	global $content, $LANG, $LANG_EN;
 
+	$szReturn = "";
+
 	// --- Try to get the text in custom language! 
 	$sqlquery = "SELECT " .
 						STATS_LANGUAGE_STRINGS . ".STRINGID, " .
@@ -645,7 +704,7 @@ function GetTextFromDescriptionID( $szDescriptionID, $szDefault )
 	$result = DB_Query($sqlquery);
 	$textvars = DB_GetSingleRow($result, true);
 	if ( isset($textvars['STRINGID']) )
-		return $textvars['Description'];
+		$szTxtReturn = $textvars['Description'];
 	else
 	{
 		// FallBack, try to optain ENGLISH String!
@@ -658,20 +717,75 @@ function GetTextFromDescriptionID( $szDescriptionID, $szDefault )
 		$result = DB_Query($sqlquery);
 		$textvars = DB_GetSingleRow($result, true);
 		if ( isset($textvars['STRINGID']) )
-			return $textvars['Description'];
+			$szTxtReturn = $textvars['Description'];
 		else
 			return $szDefault;
 	}
+	
+	// Search and replace links, so a new window opens if clicked!
+	$szTxtReturn = preg_replace("/<a.+?href=\"([^\"]*?)\"[^>]*?>([^<]*?)<[^>]*?>/i", '<a href="\\1" target="_blank">\\2</a>', $szTxtReturn);
+		
+	// Now return results
+	return $szTxtReturn;
 }
 
 function ReturnWeaponBaseName($weaponnameid)
 {
-	$arraySearch = array ("_grip",	"_acog","_gl",	"_silencer","_reflex",	"_crouch",	"_stand",	"_20mm",	"_ffar",	"_bipod");
-	$arrayReplace = array ("",		"",		"",		"",			"",			"",			"",			"",			"",			"");
-	
+	// Currently HARDCODED!
+	$arraySearch = array (	"_grip",
+							"_acog",
+							"_bigammo", 
+							"_scoped", 
+							"_aperture", 
+							"_bayonet", 
+							"_bipod",	
+							"_prone",
+							"_crouch",
+							"_stand",
+							"_silenced", 
+							"_sawoff",	
+							"_singleshot", 
+							"_selectfire", 
+							"_fullauto", 
+							"_flash", 
+							"_gl",	
+							"_silencer",
+							"_reflex",
+							"_crouch",	
+							"_stand",	
+							"_20mm",	
+							"_ffar",	
+							"_turret",	
+							"_gunner",
+							"_front", 
+							"_defuse", 
+							"_telescopic",	
+							"_explosion_mp", 
+						);
+	$arrayReplace = array ("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "");
+
 	// return result
-	$stReturn = str_replace($arraySearch, $arrayReplace, $weaponnameid);
+	$stReturn = str_replace($arraySearch, "", $weaponnameid);
+	
+	// Extra replace!
+	$stReturn = str_replace(array( "type99_lmg_mp" ), array ("type99lmg_mp"), $stReturn);
+		
 	return $stReturn;
+}
+
+function ObtainAttachmentNameFromWeapon($weaponnameid)
+{
+	global $content;
+	
+	// Loop through attachments and search
+	foreach($content['attachments'] as $myAttachment)
+	{
+		if ( strpos( $weaponnameid, $myAttachment['ID'] ) !== false ) 
+			return $myAttachment['ID'];
+	}
+	
+	// None perk then!
+	return "none";
 }
 
 ?>

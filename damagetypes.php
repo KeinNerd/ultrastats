@@ -1,41 +1,44 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006, 2007, 2008						*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Weapon Detail	File												*
-	*																	*
-	* -> Display statistics per Weapon									*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Damage Types File
+	*		Shows Stats for specific damage types
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
 
 // *** Default includes	and procedures *** //
 define('IN_ULTRASTATS', true);
 $gl_root_path = './';
-include($gl_root_path . 'include/functions_db.php');
 include($gl_root_path . 'include/functions_common.php');
-include($gl_root_path . 'include/class_template.php');
 include($gl_root_path . 'include/functions_frontendhelpers.php');
 
 InitUltraStats();
-IncludeLanguageFile( $gl_root_path . '/lang/' . $LANG . '/main.php' );
 InitFrontEndDefaults();	// Only in WebFrontEnd
 // ***					*** //
 
-// --- CONTENT Vars
-if ( isset($content['myserver']) ) 
-	$content['TITLE'] = "Ultrastats :: Damagetype :: Server '" . $content['myserver']['Name'] . "'";	// Title of the Page 
-else
-	$content['TITLE'] = "Ultrastats :: Damagetype ";
-// --- 
+// --- BEGIN CREATE TITLE
+$content['TITLE'] = InitPageTitle();
+
+// Append custom title part!
+$content['TITLE'] .= " :: Damagetypedetails ";
+// --- END CREATE TITLE
+
 
 // --- BEGIN Custom Code
-
 // --- Read Vars
 if ( isset($_GET['mostkills_start']) )
 	$content['current_mostkills_pagebegin'] = intval(DB_RemoveBadChars($_GET['mostkills_start']));
@@ -75,9 +78,9 @@ if ( isset($_GET['id']) )
 		else
 			$content['DamagetypeDisplayName'] = $damagetypevars['DAMAGETYPE'];
 		// --- 
-
-		// Append to title!
-		$content['TITLE'] .= " :: '" . $content['DamagetypeDisplayName'] . "' damagetype";
+		
+		// Append to title
+		$content['TITLE'] .= " for '" . $content['DamagetypeDisplayName'] . "'";
 
 		// Set language strings
 		$content['LN_DAMAGETYPE_DETAILS'] = GetAndReplaceLangStr( $content['LN_DAMAGETYPE_DETAILS'], $content['DamagetypeDisplayName'] );
@@ -102,13 +105,19 @@ if ( isset($_GET['id']) )
 								"count(" . STATS_PLAYER_KILLS . ".PLAYERID) as AllPlayersCount, " . 
 								"sum(" . STATS_PLAYER_KILLS . ".Kills) as AllKills " . 
 								" FROM " . STATS_PLAYER_KILLS . 
-								" INNER JOIN (" . STATS_DAMAGETYPES . 
+								" INNER JOIN (" . STATS_DAMAGETYPES . ", " . STATS_ROUNDS . 
+// ", " . STATS_ROUNDS . ", " . STATS_TIME . 
 								") ON (" . 
-								STATS_DAMAGETYPES . ".ID=" . STATS_PLAYER_KILLS . ".DAMAGETYPEID) " . 
+								STATS_DAMAGETYPES . ".ID=" . STATS_PLAYER_KILLS . ".DAMAGETYPEID AND " . 
+								STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID " . 
+// " AND " . STATS_ROUNDS . ".ID=" . STATS_PLAYER_KILLS . ".ROUNDID AND " . 
+// STATS_ROUNDS . ".ID=" . STATS_TIME . ".ROUNDID " . 
+								") " . 
 								" WHERE " . STATS_DAMAGETYPES . ".DAMAGETYPE = '" . $content['damageid'] . "' " . 
 								GetCustomServerWhereQuery(STATS_PLAYER_KILLS, false) . 
 								GetBannedPlayerWhereQuery(STATS_PLAYER_KILLS, "PLAYERID", false) . 
-								" GROUP BY PLAYERID" . 
+								GetTimeWhereQueryStringForRoundTable() . 
+								" GROUP BY " . STATS_PLAYER_KILLS . ".PLAYERID" . 
 								" ORDER BY AllKills DESC ";
 			$result = DB_Query($sqlquery);
 			$content['mostkills_count'] = DB_GetRowCountByResult( $result );
@@ -136,12 +145,15 @@ if ( isset($_GET['id']) )
 							STATS_PLAYER_KILLS . ".PLAYERID, " . 
 							"sum(" . STATS_PLAYER_KILLS . ".Kills) as AllKills " . 
 							" FROM " . STATS_PLAYER_KILLS . 
-							" INNER JOIN (" . STATS_DAMAGETYPES . 
+							" INNER JOIN (" . STATS_DAMAGETYPES . ", " . STATS_ROUNDS . 
 							") ON (" . 
-							STATS_DAMAGETYPES . ".ID=" . STATS_PLAYER_KILLS . ".DAMAGETYPEID) " . 
+							STATS_DAMAGETYPES . ".ID=" . STATS_PLAYER_KILLS . ".DAMAGETYPEID AND " . 
+							STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID " . 
+							") " . 
 							" WHERE " . STATS_DAMAGETYPES . ".DAMAGETYPE = '" . $content['damageid'] . "' " . 
 							GetCustomServerWhereQuery(STATS_PLAYER_KILLS, false) . 
 							GetBannedPlayerWhereQuery(STATS_PLAYER_KILLS, "PLAYERID", false) . 
+							GetTimeWhereQueryStringForRoundTable() . 
 							" GROUP BY PLAYERID" . 
 							" ORDER BY AllKills DESC " . 
 							" LIMIT " . $content['current_mostkills_pagebegin'] . " , " . $content['web_detaillistsplayers'];
@@ -217,12 +229,15 @@ if ( isset($_GET['id']) )
 								"count(" . STATS_PLAYER_KILLS . ".ENEMYID) as AllPlayersCount, " . 
 								"sum(" . STATS_PLAYER_KILLS . ".Kills) as AllKills " . 
 								" FROM " . STATS_PLAYER_KILLS . 
-								" INNER JOIN (" . STATS_DAMAGETYPES . 
+								" INNER JOIN (" . STATS_DAMAGETYPES . ", " . STATS_ROUNDS . 
 								") ON (" . 
-								STATS_DAMAGETYPES . ".ID=" . STATS_PLAYER_KILLS . ".DAMAGETYPEID) " . 
+								STATS_DAMAGETYPES . ".ID=" . STATS_PLAYER_KILLS . ".DAMAGETYPEID AND " . 
+								STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID " . 
+								") " . 
 								" WHERE " . STATS_DAMAGETYPES . ".DAMAGETYPE = '" . $content['damageid'] . "' " . 
 								GetCustomServerWhereQuery(STATS_PLAYER_KILLS, false) . 
 								GetBannedPlayerWhereQuery(STATS_PLAYER_KILLS, "ENEMYID", false) . 
+								GetTimeWhereQueryStringForRoundTable() . 
 								" GROUP BY ENEMYID" . 
 								" ORDER BY AllKills DESC ";
 			$result = DB_Query($sqlquery);
@@ -250,12 +265,15 @@ if ( isset($_GET['id']) )
 							STATS_PLAYER_KILLS . ".ENEMYID, " . 
 							"sum(" . STATS_PLAYER_KILLS . ".Kills) as AllKills " . 
 							" FROM " . STATS_PLAYER_KILLS . 
-							" INNER JOIN (" . STATS_DAMAGETYPES . 
+							" INNER JOIN (" . STATS_DAMAGETYPES . ", " . STATS_ROUNDS . 
 							") ON (" . 
-							STATS_DAMAGETYPES . ".ID=" . STATS_PLAYER_KILLS . ".DAMAGETYPEID) " . 
+							STATS_DAMAGETYPES . ".ID=" . STATS_PLAYER_KILLS . ".DAMAGETYPEID AND " . 
+							STATS_PLAYER_KILLS . ".ROUNDID=" . STATS_ROUNDS . ".ID " . 
+							") " . 
 							" WHERE " . STATS_DAMAGETYPES . ".DAMAGETYPE = '" . $content['damageid'] . "' " . 
 							GetCustomServerWhereQuery(STATS_PLAYER_KILLS, false) . 
 							GetBannedPlayerWhereQuery(STATS_PLAYER_KILLS, "ENEMYID", false) . 
+							GetTimeWhereQueryStringForRoundTable() . 
 							" GROUP BY ENEMYID" . 
 							" ORDER BY AllKills DESC " . 
 							" LIMIT " . $content['current_killedby_pagebegin'] . " , " . $content['web_detaillistsplayers'];
@@ -328,12 +346,110 @@ if ( isset($_GET['id']) )
 
 	}
 	else
+	{
 		$content['iserror'] = "true";
+		$content['ERROR_DETAILS'] = $content['LN_ERROR_INVALIDDAMAGETYPE'];
+	}
 }
 else
 {
-	// Invalid ID!
-	$content['iserror'] = "true";
+	// No weapon ID means we list all weapons!
+
+	// Append to Title
+	$content['TITLE'] .= " - All Damagetypes";
+
+	// Now the real Query begins
+	$sqlquery = "SELECT " .
+						STATS_DAMAGETYPES . ".ID as DAMAGETYPEID, " .
+						STATS_DAMAGETYPES . ".DAMAGETYPE, " . 
+						STATS_DAMAGETYPES . ".DisplayName as DamageTypeDisplayName, " . 
+						" sum(" . STATS_DAMAGETYPES_KILLS . ".PlayersCount) as PlayersCount, " . 
+						" sum(" . STATS_DAMAGETYPES_KILLS . ".Kills) as DamageKills " . 
+
+//						"count(" . STATS_PLAYER_KILLS . ".PLAYERID) as PlayerCount, " . 
+//						"sum(" . STATS_PLAYER_KILLS . ".Kills) as DamageKills " . 
+						" FROM " . STATS_DAMAGETYPES . 
+						" LEFT OUTER JOIN (" . STATS_DAMAGETYPES_KILLS . ") " . 
+						" ON (" . STATS_DAMAGETYPES . ".ID=" . STATS_DAMAGETYPES_KILLS . ".DAMAGETYPEID " . " )" . 
+						" WHERE 1=1 " . /* dummy where appended */
+						GetCustomServerWhereQuery(STATS_DAMAGETYPES_KILLS, false) . 
+//						GetBannedPlayerWhereQuery(STATS_PLAYER_KILLS, "PLAYERID", false) . 
+						GetTimeWhereQueryString(STATS_DAMAGETYPES_KILLS) . 
+						" GROUP BY " . STATS_DAMAGETYPES . ".ID " . 
+						" ORDER BY DisplayName DESC ";
+
+	$result = DB_Query($sqlquery);
+	$content['damagetypeslist'] = DB_GetAllRows($result, true);
+	if ( isset($content['damagetypeslist']) )
+	{
+		// enable damagelist
+		$content['damagelist'] = "true";
+
+		// Preprocess weapons first!
+		$content['BarImageKillCount'] = $gl_root_path . "images/bars/bar-small/green_middle_9.png";
+		$content['BarImagePlayerCount'] = $gl_root_path . "images/bars/bar-small/blue_middle_9.png";
+		$content['AllPlayerCount'] = 0;
+
+		// --- Loop through damagetypes | First time 
+		for($i = 0; $i < count($content['damagetypeslist']); $i++)
+		{
+			// Set MaxKillCount
+			if ( !isset($content['MaxKillCount']) || $content['damagetypeslist'][$i]['DamageKills'] > $content['MaxKillCount'] )
+				$content['MaxKillCount'] = $content['damagetypeslist'][$i]['DamageKills'];
+
+			// Set MaxPlayerCount
+			if ( !isset($content['MaxPlayerCount']) || $content['damagetypeslist'][$i]['PlayersCount'] > $content['MaxPlayerCount'] )
+				$content['MaxPlayerCount'] = $content['damagetypeslist'][$i]['PlayersCount'];
+
+			// Init DamageKills 
+			if ( !isset($content['damagetypeslist'][$i]['DamageKills']) ) 
+				$content['damagetypeslist'][$i]['DamageKills'] = 0;
+		}
+		// ---
+
+		// --- Loop through weapontypes | Second Time!
+		for($i = 0; $i < count($content['damagetypeslist']); $i++)
+		{
+			// --- Set Damagetype Icon
+			// Do some replacements for same weapons ^^!
+			$content['damagetypeslist'][$i]['DamageImage'] = $gl_root_path . "images/damagetypes/thumbs/" . $content['damagetypeslist'][$i]['DAMAGETYPE'] . ".png";
+			if ( !is_file($content['damagetypeslist'][$i]['DamageImage'] ) )
+				$content['damagetypeslist'][$i]['DamageImage'] = $gl_root_path . "images/damagetypes/thumbs/no-pic.png";
+			// --- 
+
+			// --- Set Popupdetails Text
+			$content['damagetypeslist'][$i]['KillCountText'] = GetAndReplaceLangStr( $content['LN_DAMAGETYPE_KILLCOUNT_TEXT'], $content['damagetypeslist'][$i]['DamageKills'] );
+			$content['damagetypeslist'][$i]['PlayerCountText'] = GetAndReplaceLangStr( $content['LN_DAMAGETYPE_PLAYERCOUNT_TEXT'], $content['damagetypeslist'][$i]['PlayersCount'] );
+			// ---
+
+			// --- Set CSS Class
+			if ( $i % 2 == 0 )
+				$content['damagetypeslist'][$i]['cssclass'] = "line1";
+			else
+				$content['damagetypeslist'][$i]['cssclass'] = "line2";
+			// ---
+			
+			// --- Generate weapon usage bars!
+			// Set KillRatioWidth Bars
+			if ( $content['damagetypeslist'][$i]['DamageKills'] > 0 )
+				$content['damagetypeslist'][$i]['KillRatioWidth'] = intval( $content['damagetypeslist'][$i]['DamageKills'] / ($content['MaxKillCount'] / 100) );
+			else
+				$content['damagetypeslist'][$i]['KillRatioWidth'] = 1;
+
+			// Set PlayerCountWidth Bars
+			if ( $content['damagetypeslist'][$i]['PlayersCount'] > 0 )
+				$content['damagetypeslist'][$i]['PlayerCountWidth'] = intval( $content['damagetypeslist'][$i]['PlayersCount'] / ($content['MaxPlayerCount'] / 100) );
+			else
+				$content['damagetypeslist'][$i]['PlayerCountWidth'] = 1;
+			// ---
+		}
+		// ---
+	}
+	else
+	{
+		$content['iserror'] = "true";
+		$content['ERROR_DETAILS'] = $content['LN_ERROR_NOSTATSDATAFOUND'];
+	}
 }
 // --- 
 

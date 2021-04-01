@@ -1,36 +1,48 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006!								*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* This is the main Parser File										*
-	*																	*
-	* -> This is some kind of a wrapper for the core core parser		*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Parser File													
+	*		This file wraps the parser 
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
+
 
 // *** Default includes	and procedures *** //
 define('IN_ULTRASTATS', true);
 $gl_root_path = './../';
-include($gl_root_path . 'include/functions_db.php');
 include($gl_root_path . 'include/functions_common.php');
-include($gl_root_path . 'include/class_template.php');
+
+// Set PAGE to be ADMINPAGE!
+define('IS_ADMINPAGE', true);
+$content['IS_ADMINPAGE'] = true;
 
 InitUltraStats();
 CheckForUserLogin( false );
+IncludeLanguageFile( $gl_root_path . 'lang/' . $LANG . '/admin.php' );
 // ***					*** //
 
-// --- CONTENT Vars
-$content['TITLE'] = "Ultrastats - Admin Center - Parser";	// Title of the Page 
-// --- 
+
+// --- BEGIN CREATE TITLE
+$content['TITLE'] = InitPageTitle();
+$content['TITLE'] .= " :: Parser ";
+// --- END CREATE TITLE
+
 
 // --- BEGIN Custom Code
-
 // Now the processing Part
 if ( isset($_GET['op']) )
 	$content['parseroperation'] = DB_RemoveBadChars($_GET['op']);
@@ -74,6 +86,8 @@ if ( isset($_GET['op']) )
 				$content['parseroperation'] == 'runtotals' ||
 				$content['parseroperation'] == 'createaliases' ||
 				$content['parseroperation'] == 'calcmedalsonly' ||
+				$content['parseroperation'] == 'calcdamagetypekills' ||
+				$content['parseroperation'] == 'calcweaponkills' ||
 				$content['parseroperation'] == 'databaseopt'
 			) 
 	{
@@ -89,8 +103,6 @@ if ( isset($_GET['op']) )
 // --- 
 
 // --- Parsen and Output
-IncludeLanguageFile( $gl_root_path . 'lang/' . $LANG . '/admin.php' );
-
 InitTemplateParser();
 $page -> parser($content, "admin/parser.html");
 $page -> output(); 

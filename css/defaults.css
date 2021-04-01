@@ -1,0 +1,156 @@
+/* Generic Style definitions */
+.ExpansionPlus
+{
+	background-image: url("../images/icons/navigate_plus.png");
+	background-repeat: no-repeat;
+	background-position: left center;
+	padding-left: 20px;
+}
+
+.ExpansionMinus
+{
+	background-image: url("../images/icons/navigate_minus.png");
+	background-repeat: no-repeat;
+	background-position: left center;
+	padding-left: 20px;
+}
+
+.HiddenContent
+{
+	visibility: hidden;
+/*		position: relative; */
+	display: none;
+}
+
+.ShownContent
+{
+	visibility: visible;
+	display: inline;
+}
+
+.borderless
+{ 
+	border:0px solid;
+	background-color: transparent; 
+}
+
+.borderlessbuttons
+{ 
+	border:0px solid;
+	background-color: transparent; 
+	width:20px; 
+	padding: 0px;
+}
+
+.ErrorMsg 
+{
+	font: bold 12px Verdana, Arial, Helvetica, sans-serif; 
+	COLOR: #FF0000;
+}
+
+.PriorityEmergency
+{
+	color: #FFFFFF;
+	background-color: #ff4444;
+	border-top: black 1px solid;
+	border-bottom: black 1px solid;
+	border-right: gray 1px solid;
+}
+
+/* Debug Colours */
+.debugerror
+{
+	border:1px solid;
+	border-color: #999999 #555555 #555555 #999999;
+	color: #FFFFFF;
+	background-color: #C1003C;
+}
+.debugwarn
+{
+	border:1px solid;
+	border-color: #999999 #555555 #555555 #999999;
+	color: #000000;
+	background-color: #F6B15A;
+}
+.debuginfo
+{
+	border:1px solid;
+	border-color: #999999 #555555 #555555 #999999;
+	color: #000000;
+	background-color: #63A4ED;
+}
+.debugdebug
+{
+	border:1px solid;
+	border-color: #999999 #555555 #555555 #999999;
+	color: #FFFFFF;
+	background-color: #09589F;
+}
+.debugultradebug
+{
+	border:1px solid;
+	border-color: #999999 #555555 #555555 #999999;
+	color: #FFFFFF;
+	background-color: #127C2A;
+}
+
+/*
+* POPUP Helper Styles
+*/
+
+/*
+.popupdetails, a.popupdetails, a.popupdetails:link, a.popupdetails:active, a.popupdetails:visited
+{
+	font-weight:normal;
+    text-decoration:none;
+    position:absolute;
+	overflow:visible;
+}
+.popupdetails
+{
+    position:absolute;
+	overflow:visible;
+	z-index:4;
+
+	visibility: hidden;
+}
+*/
+
+.popupdetails
+{
+	position: absolute;
+	visibility: hidden;
+	z-index:4
+
+/*
+	display: none;
+    position: fixed;
+	overflow: visible;
+	z-index:-1;
+	visibility: hidden;
+*/
+}
+.popupdetails:hover
+{
+	position: absolute;
+	visibility: hidden;
+	z-index: 5;
+
+/*	display: none;
+    position: fixed; 
+	z-index:5; */
+}
+
+.popupdetails_popup
+{ 
+/*    display: block; */
+
+	position: absolute;
+	visibility: visible;
+	z-index: 5;
+/*
+	position: fixed;
+	overflow: auto;
+	z-index: 5;
+*/
+}

@@ -3,26 +3,33 @@
 <head>
 	<title>{TITLE}</title>
 	{EXTRA_METATAGS}
+	<link rel="stylesheet" href="{BASEPATH}css/defaults.css" type="text/css">
+	<link rel="stylesheet" href="{BASEPATH}css/menu.css" type="text/css">
+	<link rel="stylesheet" href="{BASEPATH}themes/{user_theme}/main.css" type="text/css">
+	{EXTRA_STYLESHEET}
 
-	<link rel="stylesheet" href="themes/{user_theme}/main.css" type="text/css">
 	<script type='text/javascript' src='{BASEPATH}js/common.js'></script>
+	{EXTRA_JAVASCRIPT}
+	{EXTRA_HTMLHEAD}
 </head>
 <body TOPMARGIN="0" LEFTMARGIN="0" MARGINWIDTH="0" MARGINHEIGHT="0">
+{EXTRA_HEADER}
 
 <table width="100%" border="0" cellspacing="0" cellpadding="0" class="mainheader">
 <tr> 
-	<td rowspan="4" width="400" align="left"><a href="index.php"><img src="{BASEPATH}images/main/Header-Logo.png" style="filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='{BASEPATH}images/main/Header-Logo.png', sizingMethod='scale')" width="297" height="100" name="HeaderLogo"></a><script>CheckAlphaPNGImage('HeaderLogo', '{BASEPATH}images/main/space.gif');</script></td>
-	<td width="100%" align="center" valign="top" height="16">
+	<td rowspan="4" width="400" align="left"><a href="{BASEPATH}index.php"><img src="{EXTRA_ULTRASTATS_LOGO}" width="400" height="100" name="HeaderLogo"></a></td>
+	<td width="100%" align="center" valign="top" height="20">
 
+	<!-- IF IS_LOGINPAGE!="true" -->
 	<form action="{CURRENTURL}" method="get" name="serveridform">
 	<table width="350" border="0" cellspacing="0" cellpadding="0" class="with_border" align="right">
 	<tr> 
-		<td class="cellmenu1" nowrap width="125"><B>&nbsp;{LN_MAINSELECTSERVER}&nbsp;</B></td>
+		<td class="cellmenu1" nowrap width="150"><B>&nbsp;{LN_MAINSELECTSERVER}&nbsp;</B></td>
 		<td align="right" class="cellmenu2">
 			<!-- BEGIN HIDDENVARS -->
 			<input type="hidden" name="{varname}" value="{varvalue}">
 			<!-- END HIDDENVARS -->
-			<select name="serverid" size="1" OnChange="document.serveridform.submit();">
+			<select name="serverid" size="1" OnChange="document.serveridform.submit();" STYLE="width: 190px">
 				<!-- BEGIN serverlist -->
 				<option {selected} value="{ID}">{Name}</option>
 				<!-- END serverlist -->
@@ -31,41 +38,45 @@
 	</tr>
 	</table>
 	</form>
+	<!-- ENDIF IS_LOGINPAGE!="true" -->
 
 	</td>
 	<td rowspan="4" width="10" align="center" nowrap>&nbsp;</td>
 </tr>
 <tr> 
-	<td width="100%" align="center" valign="top" height="16">
+	<td width="100%" align="center" valign="top" height="20">
 
+	<!-- IF IS_LOGINPAGE!="true" -->
 	<form action="userchange.php" method="get" name="langidform">
 	<table width="350" border="0" cellspacing="0" cellpadding="0" class="with_border" align="right">
 	<tr> 
-		<td class="cellmenu1" nowrap width="125"><B>&nbsp;{LN_GEN_LANGUAGE}&nbsp;</B></td>
+		<td class="cellmenu1" nowrap width="150"><B>&nbsp;{LN_GEN_LANGUAGE}&nbsp;</B></td>
 		<td align="right" class="cellmenu2">
 			<input type="hidden" name="op" value="changelang">
-			<select name="langcode" size="1" OnChange="document.langidform.submit();">
+			<select name="langcode" size="1" OnChange="document.langidform.submit();" STYLE="width: 190px">
 				<!-- BEGIN USERLANG -->
-				<option {is_selected} value="{langcode}">{langcode}</option>
+				<option {is_selected} value="{langcode}">{DisplayName}</option>
 				<!-- END USERLANG -->
 			</select>
 		</td>
 	</tr>
 	</table>
 	</form>
+	<!-- ENDIF IS_LOGINPAGE!="true" -->
 
 	</td>
 </tr>
 <tr> 
-	<td width="100%" align="center" valign="top" height="16">
+	<td width="100%" align="center" valign="top" height="20">
 
+	<!-- IF IS_LOGINPAGE!="true" -->
 	<form action="userchange.php" method="get" name="styleidform">
 	<table width="350" border="0" cellspacing="0" cellpadding="0" class="with_border" align="right">
 	<tr> 
-		<td class="cellmenu1" nowrap width="125"><B>&nbsp;{LN_MAIN_SELECTSTYLE}&nbsp;</B></td>
+		<td class="cellmenu1" nowrap width="150"><B>&nbsp;{LN_MAIN_SELECTSTYLE}&nbsp;</B></td>
 		<td align="right" class="cellmenu2">
 			<input type="hidden" name="op" value="changestyle">
-			<select name="stylename" size="1" OnChange="document.styleidform.submit();">
+			<select name="stylename" size="1" OnChange="document.styleidform.submit();" STYLE="width: 190px">
 				<!-- BEGIN USERSTYLES -->
 				<option {is_selected} value="{StyleName}">{StyleName}</option>
 				<!-- END USERSTYLES -->
@@ -74,6 +85,7 @@
 	</tr>
 	</table>
 	</form>
+	<!-- ENDIF IS_LOGINPAGE!="true" -->
 
 	</td>
 </tr>
@@ -81,14 +93,16 @@
 <tr> 
 	<td width="100%" align="center" valign="top" height="100%">
 
+	<!-- IF IS_LOGINPAGE!="true" -->
 	<table width="350" border="0" cellspacing="0" cellpadding="0" class="with_border" align="right">
 	<tr> 
-		<td class="cellmenu1" nowrap width="125"><B>&nbsp;{LN_GEN_SKINMADEBY}&nbsp;</B></td>
+		<td class="cellmenu1" nowrap width="150"><B>&nbsp;{LN_GEN_SKINMADEBY}&nbsp;</B></td>
 		<td align="right" class="cellmenu2">
-		<a href="{theme_madebylink}" target="_blank">{theme_madeby}</a>
+		<a href="{theme_madebylink}" target="_blank" class="cellmenu2_link">{theme_madeby}</a>
 		</td>
 	</tr>
 	</table>
+	<!-- ENDIF IS_LOGINPAGE!="true" -->
 
 	</td>
 </tr>
@@ -100,11 +114,14 @@
 <!-- ENDIF theme_madebyenable="false" -->
 </table>
 
+<!-- INCLUDE include_menu.html -->
 
-<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_with_border">
-<tr> 
-	<td><!-- INCLUDE include_menu.html --></td>
-	<td width="10">&nbsp;</td>
+<!-- INCLUDE include_pager.html -->
+
+<table class="popupdetails with_border" id="popupdetails" OnMouseOver="HoveringPopup(event,this);" OnMouseOut="FinishHoveringPopup(event,this);" OnMouseMove="disableEventPropagation();" cellpadding="2" cellspacing="0" border="0">
+<tr><td width="100%" class="cellmenu1" id="popuptitle" align="center" nowrap>&nbsp;</td></tr>
+<tr>
+	<td width="100%" class="popupcontent" id="popupcontent">&nbsp;</td>
 </tr>
 </table>
 

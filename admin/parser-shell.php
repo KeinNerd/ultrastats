@@ -1,39 +1,47 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006!								*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* This is the Parser File for the command shell only!				*
-	*																	*
-	* -> This is the core of the parser, highly l33t part				*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Parser Shell File													
+	*		This file is used to run the parser on cronjobs 
+	*		and for ssh access. 
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
+
 
 // *** Default includes	and procedures *** //
 define('IN_ULTRASTATS', true);
 $gl_root_path = './../';
-include($gl_root_path . 'include/functions_db.php');
 include($gl_root_path . 'include/functions_common.php');
-//include($gl_root_path . 'include/class_template.php');
+
+// Set PAGE to be ADMINPAGE!
+define('IS_ADMINPAGE', true);
+$content['IS_ADMINPAGE'] = true;
 
 InitUltraStats();
+IncludeLanguageFile( $gl_root_path . 'lang/' . $LANG . '/admin.php' );
 // ***					*** //
 
-// --- BEGIN Custom Code
 
+// --- BEGIN Custom Code
 // Additional Includes
 include($gl_root_path . 'include/functions_parser.php');
 include($gl_root_path . 'include/functions_parser-helpers.php');
 include($gl_root_path . 'include/functions_parser-medals.php');
 include($gl_root_path . 'include/functions_parser-consolidation.php');
-
-// Include languages as well!
-IncludeLanguageFile( $gl_root_path . 'lang/' . $LANG . '/admin.php' );
 
 if ( $RUNMODE == RUNMODE_COMMANDLINE )
 {

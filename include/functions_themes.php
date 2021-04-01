@@ -1,17 +1,23 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006!								*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Theme specific functions											*
-	*																	*
-	* -> 		*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Theme  Functions File
+	*		Contains Theme Helper functions 
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
 
 // --- Avoid directly accessing this file! 
@@ -45,6 +51,9 @@ function CreateLanguageList()
 			$content['USERLANG'][$i]['is_selected'] = "";
 		// ---
 
+		// Init Language DisplayName
+		$content['USERLANG'][$i]['DisplayName'] = GetLanguageDisplayName( $alldirectories[$i] );
+		$content['LANGUAGES'][$i]['DisplayName'] = $content['USERLANG'][$i]['DisplayName'];
 	}
 }
 
@@ -73,34 +82,13 @@ function CreateThemesList()
 	}
 }
 
-function list_directories($directory) 
-{
-	$result = array();
-	if (! $directoryHandler = @opendir ($directory)) 
-		DieWithFriendlyErrorMsg( "list_directories: directory \"$directory\" doesn't exist!");
-
-	while (false !== ($fileName = @readdir ($directoryHandler))) 
-	{
-		if	( is_dir( $directory . $fileName ) && ( $fileName != "." && $fileName != ".." ))
-			@array_push ($result, $fileName);
-	}
-
-	if ( @count ($result) === 0 ) 
-		DieWithFriendlyErrorMsg( "list_directories: no directories in \"$directory\" found!");
-	else 
-	{
-		sort ($result);
-		return $result;
-	}
-}
-
 function InitThemeAbout( $themename ) 
 {
 	global $content, $gl_root_path;
 	$szAboutFile = $gl_root_path . "themes/" . $themename . "/about.txt";
 	if ( is_file( $szAboutFile ) )
 	{	//Read About Info!
-		$aboutfile  = fopen($szAboutFile, 'r');
+		$aboutfile  = @fopen($szAboutFile, 'r');
 		if (!feof ($aboutfile)) 
 		{
 			while (!feof ($aboutfile))
@@ -134,6 +122,29 @@ function VerifyTheme( $newtheme )
 	}
 	else
 		return false;
+}
+
+function GetLanguageDisplayName( $szLangID ) 
+{
+	global $content, $gl_root_path;
+	$szInfoFile = $gl_root_path . "lang/" . $szLangID . "/info.txt";
+	if ( is_file( $szInfoFile ) )
+	{	
+		//Read InfoFile!
+		$infofile  = @fopen($szInfoFile, 'r');
+		if (!feof ($infofile)) 
+		{
+			while (!feof ($infofile))
+			{
+				// Return max 32 characters
+				$tmpline = fgets($infofile, 1024);
+				return substr( trim($tmpline), 0, 32);
+			}
+		}
+		fclose($infofile);
+	}
+	else // No Info, return ID as DisplayName
+		return $szLangID;
 }
 
 ?>

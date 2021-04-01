@@ -4,14 +4,19 @@
 	<title>{TITLE}</title>
 	{EXTRA_METATAGS}
 
-	<link rel="stylesheet" href="css/admin.css" type="text/css">
+	<link rel="stylesheet" href="{BASEPATH}css/defaults.css" type="text/css">
+	<link rel="stylesheet" href="{BASEPATH}css/menu.css" type="text/css">
+	<link rel="stylesheet" href="{BASEPATH}themes/{web_theme}/main.css" type="text/css">
+	{EXTRA_STYLESHEET}
+
 	<script type='text/javascript' src='{BASEPATH}js/common.js'></script>
+	{EXTRA_JAVASCRIPT}
 </head>
 <body TOPMARGIN="0" LEFTMARGIN="0" MARGINWIDTH="0" MARGINHEIGHT="0">
 
-<table width="100%" border="0" cellspacing="0" cellpadding="2" class="mainheader">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="mainheader">
 <tr> 
-	<td rowspan="4" width="400" align="left"><a href="../index.php"><img src="{BASEPATH}images/main/Header-Logo.png" style="filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='{BASEPATH}images/main/Header-Logo.png', sizingMethod='scale');" width="297" height="100" name="HeaderLogo"></a><script>CheckAlphaPNGImage('HeaderLogo', '{BASEPATH}images/main/space.gif');</script></td>
+	<td rowspan="4" width="400" align="left"><a href="{BASEPATH}index.php"><img src="{EXTRA_ULTRASTATS_LOGO}" width="400" height="100" name="HeaderLogo"></a></td>
 	<td width="100%" align="center" valign="top" height="20">&nbsp;</td>
 	<td rowspan="4" width="10" align="center" nowrap>&nbsp;</td>
 </tr>
@@ -26,13 +31,30 @@
 </tr>
 </table>
 
-<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_with_border">
-<tr> 
-	<td><!-- INCLUDE admin/admin_menu.html --></td>
+<!-- INCLUDE admin/admin_menu.html -->
+
+<table class="popupdetails with_border" id="popupdetails" OnMouseOver="HoveringPopup(event,this);" OnMouseOut="FinishHoveringPopup(event,this);" OnMouseMove="disableEventPropagation();" cellpadding="2" cellspacing="0" border="0">
+<tr><td width="100%" class="cellmenu1" id="popuptitle" align="center" nowrap>&nbsp;</td></tr>
+<tr>
+	<td width="100%" class="popupcontent" id="popupcontent">&nbsp;</td>
 </tr>
 </table>
 
 <table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_with_border">
 <tr> 
 	<td>
+<!-- IF isupdateavailable="true" -->
 	<br>
+<center>
+	<div class="table_with_border_second ErrorMsg" style="width:800px">
+		<div class="PriorityError">{LN_UPDATE_AVAILABLE}</div>
+		<p>
+		{UPDATE_AVAILABLETEXT}
+		<br>
+		<a href="{isupdateavailable_updatelink}" target="_blank">{LN_UPDATE_LINK}</a>
+		</p>
+	</div>
+</center>
+<!-- ENDIF isupdateavailable="true" -->
+	<br>
+

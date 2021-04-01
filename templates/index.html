@@ -1,11 +1,15 @@
 <!-- INCLUDE include_header.html --> 
 
-<br>
-
 <!-- IF error_noserver="true" -->
-	<center>
-	<h3><br><br><font color="red">{LN_ERROR_NOSERVERS}</font></h3>
-	</center>
+<br><br>
+<center>
+	<div class="table_with_border_second ErrorMsg" style="width:600px">
+		<div class="PriorityError">{LN_ERROR_DETAILS}</div>
+		<p>{LN_ERROR_NOSERVERS}</p>
+		</div>
+	<br><br>
+</center>
+<br><br>
 <!-- ENDIF error_noserver="true" -->
 
 <table width="100%" cellpadding="0" cellspacing="5" border="0" align="center">
@@ -16,18 +20,17 @@
 	<td width="10" valign="top" rowspan="2">&nbsp;</td>
 	<td width="50%" valign="top" rowspan="2">
 
-		<table width="100%" cellpadding="1" cellspacing="0" border="0" align="center">
-		<tr>
-			<td class="title" width="350" nowrap>{LN_GLOBAL_STATS}</td>
-		</tr>
-		</table>
 		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
-			<td class="line1" valign="top">
-				<img src="{serverlogoimg}" style="filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='{serverlogoimg}', sizingMethod='scale')" width="300" height="200" name="server_logo" align="center">
-				<script>CheckAlphaPNGImage('server_logo', '{BASEPATH}images/main/space.gif');</script>
+			<td class="title" width="350" colspan="2" nowrap>{LN_GLOBAL_STATS}</td>
+		</tr>
+		</table>
+		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
+		<tr>
+			<td class="tableBackground" valign="top" width="300" nowrap>
+				<img src="{serverlogoimg}" width="300" height="200" name="server_logo" align="center">
 			</td>
-			<td class="line1" valign="top">
+			<td class="tableBackground" valign="top" width="100%">
 				<br>
 				<table cellpadding="0" cellspacing="0" border="0" align="center" class="with_border">
 				<tr>
@@ -48,12 +51,12 @@
 	<td width="10" valign="top" rowspan="2">&nbsp;</td>
 
 	<td width="50%" valign="top">
-		<table width="100%" cellpadding="1" cellspacing="0" border="0" align="center">
+		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
-			<td class="title" width="350" nowrap>Server Details for {server_name}</td>
+			<td class="title" width="350" colspan="2" nowrap>Server Details for {server_name}</td>
 		</tr>
 		</table>
-		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
+		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
 		<tr>
 			<td width="50%" valign="top">
 
@@ -64,7 +67,7 @@
 			</tr>
 			<tr>
 				<td width="100" class="cellmenu1" align="left" nowrap><B>{LN_SERVER_IP}</B></td>
-				<td width="100%" class="line1" align="left">{server_ipport}</td>
+				<td width="100%" class="line2" align="left">{server_ipport}</td>
 			</tr>
 			<tr>
 				<td width="100" class="cellmenu1" align="left" nowrap><B>{LN_SERVER_Description}</B></td>
@@ -72,7 +75,7 @@
 			</tr>
 			<tr>
 				<td width="100" class="cellmenu1" align="left" nowrap><B>{LN_SERVER_ModName}</B></td>
-				<td width="100%" class="line1" align="left">{server_modname}</td>
+				<td width="100%" class="line2" align="left">{server_modname}</td>
 			</tr>
 			<tr>
 				<td width="100" class="cellmenu1" align="left" nowrap><B>{LN_SERVER_AdminName}</B></td>
@@ -80,7 +83,7 @@
 			</tr>
 			<tr>
 				<td width="100" class="cellmenu1" align="left" nowrap><B>{LN_SERVER_ClanName}</B></td>
-				<td width="100%" class="line1" align="left">{server_clanname}</td>
+				<td width="100%" class="line2" align="left">{server_clanname}</td>
 			</tr>
 			</table>
 
@@ -91,6 +94,7 @@
 			<tr>
 				<td colspan="2" class="cellmenu1" align="center" nowrap><B>{LN_SERVER_MostValues}</B></td>
 			</tr>
+
 			<!-- BEGIN server_totals -->
 			<tr>
 				<td class="cellmenu2" align="left" nowrap><B>{DisplayName}</B></td>
@@ -115,12 +119,12 @@
 	<td valign="top">
 
 		<!-- IF servertopsenable="true" -->
-		<table width="100%" cellpadding="1" cellspacing="0" border="0" align="center">
+		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
-			<td colspan="4" class="title" width="350" nowrap>{LN_SERVER_TopValues} for {server_name}</td>
+			<td class="title" width="350" colspan="4" nowrap>{LN_SERVER_TopValues} for {server_name}</td>
 		</tr>
 		</table>
-		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
+		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
 		<tr>
 			<td colspan="2" width="50%" class="cellmenu1" align="center" nowrap><B>{LN_SERVER_Top_Map}</B></td>
 			<td colspan="2" width="50%" class="cellmenu1" align="center" nowrap><B>{LN_SERVER_Top_Gametype}</B></td>
@@ -160,19 +164,17 @@
 	<td width="10" valign="top">&nbsp;</td>
 	<td width="50%" valign="top">
 
-		<table width="100%" cellpadding="1" cellspacing="0" border="0" align="center">
-		<tr>
-			<td class="title" width="350" nowrap>{LN_GLOBAL_STATS}</td>
-		</tr>
-		</table>
 		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
-			<td class="line1" valign="top">
-			<img src="{BASEPATH}images/main/ultrastatslogo.png" style="filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='{BASEPATH}images/main/ultrastatslogo.png', sizingMethod='scale')" width="300" height="200" name="ultrastats_logo" align="center">
-			<script>CheckAlphaPNGImage('ultrastats_logo', '{BASEPATH}images/main/space.gif');</script>
-			
+			<td class="title" width="350" colspan="2" nowrap>{LN_GLOBAL_STATS}</td>
+		</tr>
+		</table>
+		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
+		<tr>
+			<td class="tableBackground" valign="top" width="300" nowrap>
+			<img src="{BASEPATH}images/main/ultrastatslogo.png" width="300" height="200" name="ultrastats_logo" align="center">
 			</td>
-			<td class="line1" valign="top">
+			<td class="tableBackground" valign="top" width="100%">
 				<br>
 				<table cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
 				<tr>
@@ -183,7 +185,6 @@
 				</tr>
 
 				<!-- BEGIN GLOBALTOTALS -->
-
 				<!-- IF VALUE_INT="" -->
 				<tr>
 					<td class="cellmenu1" colspan="2" align="center" nowrap><B>{DisplayName}</B></td>
@@ -214,6 +215,8 @@
 		<tr>
 			<td colspan="4" class="title" width="350" nowrap>{LN_GLOBAL_SERVERLIST}</td>
 		</tr>
+		</table>
+		<table width="100%" cellpadding="1" cellspacing="1" border="0" align="center" class="with_border">
 		<tr>
 			<td colspan="2" align="center" width="200" class="cellmenu1"><b>{LN_SERVER_NAME}</b></td>
 			<td align="center" width="50%" class="cellmenu1"><b>{LN_SERVER_IP}</b></td>
@@ -245,12 +248,12 @@
 	<tr>
 		<td width="50%" valign="top">
 
-			<table width="100%" cellpadding="1" cellspacing="0" border="0" align="center">
+			<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
 			<tr>
-				<td class="title" width="350" nowrap>10 {LN_MAINLASTROUNDS}</td>
+				<td class="title" width="350" colspan="9" nowrap>{MAINLASTROUNDS}</td>
 			</tr>
 			</table>
-			<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
+			<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
 
 			<!-- BEGIN lastrounds -->
 			<tr>
@@ -308,12 +311,12 @@
 	<td width="50%" valign="top">
 
 	<!-- IF topplayersenable="true" -->
-		<table width="100%" cellpadding="1" cellspacing="0" border="0" align="center">
+		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
-			<td colspan="4" class="title" width="350" nowrap>20 {LN_MAINTOPPLAYERS}</td>
+			<td class="title" width="350" colspan="6" nowrap>{web_mainpageplayers} {LN_MAINTOPPLAYERS}</td>
 		</tr>
 		</table>
-		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
+		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
 		<tr>
 			<td width="20" class="cellmenu1" align="center" nowrap><B>{LN_TOPPLAY_NUM}</B></td>
 			<td width="100%" class="cellmenu1" align="center" nowrap><B>{LN_TOPPLAY_NAME}</B></td>
@@ -330,13 +333,15 @@
 			<td class="{cssclass}" align="right"><B>{Kills}</B></td>
 			<td class="{cssclass}" align="right"><B>{Deaths}</B></td>
 			<td class="{cssclass}" align="right">
-				<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" class="with_border">
+				<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" class="table_with_border_second">
 				<tr>
 					<td bgcolor="#770000" width="50%"><img align="left" src="{BarImageKillRatioMinus}" width="{KillRatioWidthMinus}%" height="9" title="{KillRatioWidthMinusText}"></td>
 					<td bgcolor="#007700" width="50%">
 					<!-- IF KillRatioWidthPlusText!="" -->
 					<img align="left" src="{BarImageKillRatioPlus}" width="{KillRatioWidthPlus}%" height="9" title="{KillRatioWidthPlusText}">
 					<!-- ENDIF KillRatioWidthPlusText!="" -->
+					<!-- IF KillRatioWidthPlusText="" -->
+					<!-- ENDIF KillRatioWidthPlusText="" -->
 					</td>
 				</tr>
 				</table>
@@ -359,8 +364,8 @@
 	<br>
 	<!-- IF medalsproenable="true" -->
 
-		<table border="0" width="100%" cellspacing="0" cellpadding="0" align="center">
-		<tr><td align="center" class="title"><a name="{DisplayName}"><B>{LN_PRO_Medals}</B></a></td></tr>
+		<table border="0" width="100%" cellspacing="0" cellpadding="0" align="center" class="with_border_alternate">
+		<tr><td align="center" class="title"><a name="{LN_PRO_Medals}"><B>{LN_PRO_Medals}</B></a></td></tr>
 		</table>
 
 		<table border="0" width="100%" cellspacing="0" cellpadding="0" align="center" class="with_border">
@@ -369,14 +374,14 @@
 		<!-- BEGIN medals_pro -->
 			<td align="center" valign="top">
 
-			<table width="140" border="0" cellspacing="1" cellpadding="0" align="center" class="with_border_alternate">
-			<tr><td align="center" class="cellmenu1"><a href="medals.php?id={NAME}" title="{LN_MEDAL_DERTAILS}" name="{DisplayName}"><B>{DisplayName} {LN_Medals}</B></a></td></tr>
+			<table width="140" border="0" cellspacing="1" cellpadding="0" align="center" class="with_border">
+			<tr><td align="center" class="cellmenu1"><a href="medals.php?id={NAME}" title="{MEDAL_DETAILTXT}" name="{DisplayName}" class="cellmenu1_link"><B>{DisplayName} {LN_Medals}</B></a></td></tr>
 			<tr> 
 				<td width="140" class="line1" nowrap valign="top" align="center">
 				<B>{VALUE_TXT}: &nbsp;{VALUE_INT}&nbsp;</B>
 				<BR><a href="players-detail.php?id={PLAYER_ID}{additional_url}" title="{Alias}">{AliasAsHtml}</a>
 
-				<a href="medals.php?id={NAME}" title="{LN_MEDAL_DERTAILS}"><img src="{BASEPATH}images/medals/normal/{NAME}.png" style="filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='{BASEPATH}images/medals/normal/{NAME}.png', sizingMethod='scale')" width="128" height="256" name="{NAME}"></a>
+				<a href="medals.php?id={NAME}" title="{MEDAL_DETAILTXT}"><img src="{BASEPATH}images/medals/normal/{NAME}.png" style="filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='{BASEPATH}images/medals/normal/{NAME}.png', sizingMethod='scale')" width="128" height="256" name="{NAME}"></a>
 				<script>CheckAlphaPNGImage('{NAME}', '{BASEPATH}images/main/space.gif');</script>
 
 				</td>
@@ -409,8 +414,8 @@
 	<td colspan="3" valign="top">
 	<!-- IF medalsantienable="true" -->
 
-		<table border="0" width="100%" cellspacing="0" cellpadding="0" align="center">
-		<tr><td align="center" class="title"><a href="medals.php?id={NAME}" title="{LN_MEDAL_DERTAILS}" name="{DisplayName}"><B>{LN_ANTI_Medals}</B></a></td></tr>
+		<table border="0" width="100%" cellspacing="0" cellpadding="0" align="center" class="with_border_alternate">
+		<tr><td align="center" class="title"><a name="{DisplayName}"><B>{LN_ANTI_Medals}</B></a></td></tr>
 		</table>
 
 		<table border="0" width="100%" cellspacing="0" cellpadding="0" align="center" class="with_border">
@@ -419,14 +424,14 @@
 		<!-- BEGIN medals_anti -->
 			<td align="center" valign="top">
 
-			<table width="140" border="0" cellspacing="1" cellpadding="0" align="center" class="with_border_alternate">
-			<tr><td align="center" class="cellmenu1"><a name="{DisplayName}"><B>{DisplayName} {LN_Medals}</B></a></td></tr>
+			<table width="140" border="0" cellspacing="1" cellpadding="0" align="center" class="with_border">
+			<tr><td align="center" class="cellmenu1"><a href="medals.php?id={NAME}" title="{MEDAL_DETAILTXT}" name="{DisplayName}" class="cellmenu1_link"><B>{DisplayName} {LN_Medals}</B></a></td></tr>
 			<tr> 
 				<td width="140" class="line1" nowrap valign="top" align="center">
 				<B>{VALUE_TXT}: &nbsp;{VALUE_INT}&nbsp;</B>
 				<BR><a href="players-detail.php?id={PLAYER_ID}{additional_url}" title="{Alias}">{AliasAsHtml}</a>
 
-				<a href="medals.php?id={NAME}" title="{LN_MEDAL_DERTAILS}"><img src="{BASEPATH}images/medals/normal/{NAME}.png" style="filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='{BASEPATH}images/medals/normal/{NAME}.png', sizingMethod='scale')" width="128" height="256" name="{NAME}"></a>
+				<a href="medals.php?id={NAME}" title="{MEDAL_DETAILTXT}"><img src="{BASEPATH}images/medals/normal/{NAME}.png" style="filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='{BASEPATH}images/medals/normal/{NAME}.png', sizingMethod='scale')" width="128" height="256" name="{NAME}"></a>
 				<script>CheckAlphaPNGImage('{NAME}', '{BASEPATH}images/main/space.gif');</script>
 
 				</td>

@@ -8,10 +8,12 @@
 	<td width="100%" valign="top" align="center">
 
 		<form action="" method="GET">
-		<table width="500" cellpadding="2" cellspacing="1" border="0" align="center" class="with_border">
+		<table width="600" cellpadding="2" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
 			<td colspan="3" class="title" width="400" nowrap>{LN_SEARCH_TITLE}</td>
 		</tr>
+		</table>
+		<table width="600" cellpadding="2" cellspacing="1" border="0" align="center" class="with_border">
 		<tr>
 			<td class="cellmenu1"><B>{LN_SEARCH_STRING}</B></td>
 			<td class="line1"><input type="text" name="search" value="{searchfor}" size="40" maxlength="32"></td>
@@ -33,7 +35,6 @@
 		</tr>
 		</table>
 		</form>
-		<br><br>
 	</td>
 	<td rowspan="2" width="10" valign="top" nowrap>&nbsp;</td>
 </tr>
@@ -41,11 +42,18 @@
 <tr>
 	<td width="100%" valign="top" align="center">
 	<!-- IF playersfound="false" -->
-	<br><font class="ErrorMsg">{LN_SEARCH_NOPLAYERFOUND}</font><br><br><br><br>
+	<center>
+		<div class="table_with_border_second ErrorMsg" style="width:600px">
+			<div class="PriorityError">{LN_ERROR_DETAILS}</div>
+			<p>{LN_SEARCH_NOPLAYERFOUND}</p>
+			</div>
+		<br><br>
+	</center>
+	<br><br>
 	<!-- ENDIF playersfound="false" -->
 
 	<!-- IF playersfound="true" -->
-		<table width="500" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
+		<table width="600" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
 			<td colspan="2" class="title" width="400" nowrap>{LN_SEARCH_FOUND} '{searchfor}'</td>
 		</tr>

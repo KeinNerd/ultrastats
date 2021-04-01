@@ -1,11 +1,15 @@
 <!-- INCLUDE include_header.html --> 
 
-<br>
-
 <!-- IF iserror="true" -->
-	<center>
-	<h3><font color="red">{LN_ERROR_INVALIDMEDAL}</font></h3>
-	</center>
+<br><br>
+<center>
+	<div class="table_with_border_second ErrorMsg" style="width:600px">
+		<div class="PriorityError">{LN_ERROR_DETAILS}</div>
+		<p>{LN_ERROR_INVALIDMEDAL}</p>
+		</div>
+	<br><br>
+</center>
+<br><br>
 <!-- ENDIF iserror="true" -->
 
 <!-- IF medalsenabled="true" -->
@@ -30,11 +34,11 @@
 					<script>CheckAlphaPNGImage('{medalid}', '{BASEPATH}images/main/space.gif');</script>
 
 					</td>
-					<td width="100%" nowrap valign="top" class="line1" rowspan="4">
-						<table width="100%" cellpadding="2" cellspacing="0" border="0" align="center" >
+					<td width="100%" nowrap valign="top" class="tableBackground" rowspan="4">
+						<table width="100%" cellpadding="2" cellspacing="0" border="0" align="center">
 						<tr><td width="100%" class="cellmenu1" align="center"><B>{LN_MEDAL_DESCRIPTION}</B></td></tr>
 						</table>
-						<table width="100%" cellpadding="5" cellspacing="0" border="0" align="center" >
+						<table width="100%" cellpadding="5" cellspacing="0" border="0" align="center">
 						<tr>
 							<td width="100%">{medaldescription}</td>
 						</tr>
@@ -58,7 +62,7 @@
 				<tr>
 					<td class="cellmenu2" nowrap><B>Pages: &nbsp; </B>
 				<!-- BEGIN MOSTKILLSPAGES -->
-					&nbsp;<a href="?id={weaponid}&mostkills_start={mypagebegin}&killedby_start={current_killedby_pagebegin}{additional_url}" target="_top">{mypagenumber}</a>
+					&nbsp;<a href="?id={medalid}&mostkills_start={mypagebegin}&killedby_start={current_killedby_pagebegin}{additional_url}" target="_top">{mypagenumber}</a>
 				<!-- END MOSTKILLSPAGES -->
 					</td>
 					<td nowrap width="100%"class="line2"><I>&nbsp;{MOSTKILLS_MOREPAGES}</I></td>
@@ -69,10 +73,10 @@
 
 				<table width="95%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
 				<tr>
-					<td width="20" class="cellmenu1" align="center" nowrap><B>{LN_TOPPLAY_NUM}</B></td>
-					<td width="100%" class="cellmenu1" align="center" nowrap><B>{LN_TOPPLAY_NAME}</B></td>
-					<td width="40" class="cellmenu1" align="center" nowrap><A HREF="players.php?sorting=Kills{additional_url}" class="cellmenu1_link" >{LN_TOPPLAY_KILLS}</A></td>
-					<td width="200" class="cellmenu1" align="center" nowrap><A HREF="players.php?sorting=Deaths{additional_url}" class="cellmenu1_link" >{LN_TOPPLAY_Deaths}</A></td>
+					<td width="20" class="cellmenu1" align="center" nowrap><b>{LN_TOPPLAY_NUM}</b></td>
+					<td width="100%" class="cellmenu1" align="center" nowrap><b>{LN_TOPPLAY_NAME}</b></td>
+					<td width="40" class="cellmenu1" align="center" nowrap><b>{LN_TOPPLAY_KILLS}</b></td>
+					<td width="200" class="cellmenu1" align="center" nowrap><b>>{LN_TOPPLAY_Deaths}</b></td>
 				</tr>
 
 				<!-- BEGIN mostkills -->

@@ -1,0 +1,73 @@
+-- New Database Structure Updates
+
+--
+-- Table structure for table `stats_attachments`
+--
+CREATE TABLE `stats_attachments` (
+  `ID` varchar(64) NOT NULL,
+  `DisplayName` varchar(255) NOT NULL,
+  `Description_id` varchar(255) NOT NULL,
+  PRIMARY KEY  (`ID`)
+) TYPE=MyISAM COMMENT='Helper table to store known attachments / perks';
+
+--
+-- Table structure for table `stats_damagetypes_kills`
+--
+CREATE TABLE IF NOT EXISTS `stats_damagetypes_kills` (
+  `damagetypeid` tinyint(4) NOT NULL,
+  `SERVERID` tinyint(4) NOT NULL,
+  `Time_Year` mediumint(9) NOT NULL,
+  `Time_Month` tinyint(4) NOT NULL,
+  `Kills` int(11) NOT NULL,
+  `PlayersCount` int(11) NOT NULL,
+  `Deaths` int(11) NOT NULL,
+  PRIMARY KEY  (`damagetypeid`,`SERVERID`,`Time_Year`,`Time_Month`)
+) TYPE=MyISAM COMMENT='Helper table to store and combine damagetype kills';
+
+--
+-- Table structure for table `stats_weapons_kills`
+--
+CREATE TABLE `stats_weapons_kills` (
+  `WEAPONID` smallint(6) NOT NULL,
+  `SERVERID` tinyint(4) NOT NULL,
+  `Time_Year` mediumint(9) NOT NULL,
+  `Time_Month` tinyint(4) NOT NULL,
+  `Kills` int(11) NOT NULL,
+  `PlayersCount` int(11) NOT NULL,
+  PRIMARY KEY  (`WEAPONID`,`SERVERID`,`Time_Year`,`Time_Month`)
+) TYPE=MyISAM COMMENT='Helper table to store and combine weapon kills';
+
+--
+-- Added new fields for possible future database performance!
+--
+ALTER TABLE `stats_aliases` ADD `AliasChecksum` INT NOT NULL AFTER `PLAYERID` ;
+ALTER TABLE `stats_consolidated` ADD `Time_Year` MEDIUMINT NOT NULL AFTER `SERVERID`, ADD `Time_Month` TINYINT NOT NULL AFTER `Time_Year` ;
+ALTER TABLE `stats_consolidated` DROP PRIMARY KEY, ADD PRIMARY KEY( `ID`, `NAME`, `SERVERID`, `Time_Year`, `Time_Month`);
+
+-- --------------------------------------------------------
+-- New Insert stuff
+-- ID's are auto generated
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('grip', 'Grip', 'attachment_grip_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('acog', 'Acog Scope', 'attachment_acog_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('bigammo', 'Extra Ammo', 'attachment_bigammo_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('scoped', 'Scope', 'attachment_scoped_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('aperture', 'Aperture', 'attachment_aperture_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('bayonet', 'Bayonet', 'attachment_bayonet_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('bipod', 'Bipod', 'attachment_bipod_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('silenced', 'Silencer', 'attachment_silencer_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('sawoff', 'Sawoff', 'attachment_sawoff_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('singleshot', 'Single Shot', 'attachment_singleshot_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('selectfire', 'Select Fire', 'attachment_selectfire_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('fullauto', 'Full Auto', 'attachment_fullauto_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('flash', 'Flash Surpressor', 'attachment_flash_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('gl', 'Grenade Launcher', 'attachment_gl_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('silencer', 'Silencer', 'attachment_silencer_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('reflex', 'Reflex', 'attachment_relfex_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('crouch', 'Crouch', 'attachment_crouch_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('stand', 'Stand', 'attachment_stand_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('20mm', '20mm', 'attachment_20mm_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('ffar', 'FFar', 'attachment_ffar_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('telescopic', 'Telescopic', 'attachment_telescopic_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('none', 'None', 'attachment_none_description');
+
+-- Updated data records stuff

@@ -1,42 +1,46 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006, 2007, 2008						*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Round Detail File													*
-	*																	*
-	* -> Displayes details of a played round							*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Round details page
+	*		This is the page that displays details for rounds
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
+
 
 // *** Default includes	and procedures *** //
 define('IN_ULTRASTATS', true);
 $gl_root_path = './';
-include($gl_root_path . 'include/functions_db.php');
 include($gl_root_path . 'include/functions_common.php');
-include($gl_root_path . 'include/class_template.php');
 include($gl_root_path . 'include/functions_frontendhelpers.php');
 
 InitUltraStats();
-IncludeLanguageFile( $gl_root_path . '/lang/' . $LANG . '/main.php' );
 InitFrontEndDefaults();	// Only in WebFrontEnd
 // ***					*** //
 
-// --- CONTENT Vars
-if ( isset($content['myserver']) ) 
-	$content['TITLE'] = "Ultrastats :: Rounds :: Server '" . $content['myserver']['Name'] . "'";	// Title of the Page 
-else
-	$content['TITLE'] = "Ultrastats :: Rounds";
-// --- 
+// --- BEGIN CREATE TITLE
+$content['TITLE'] = InitPageTitle();
+
+// Append custom title part!
+$content['TITLE'] .= " :: Round Details ";
+// --- END CREATE TITLE
+
 
 // --- BEGIN Custom Code
-
-// --- Get/Set Playersorting
+// --- Get/Set RoundID
 if ( isset($_GET['id']) )
 {
 	// get and check
@@ -49,6 +53,9 @@ if ( isset($_GET['id']) )
 	}
 	else
 	{	
+		// Append this to the title 
+		$content['TITLE'] .= " for ID '" .  $content['roundid'] . "'";
+
 		// --- BEGIN LastRounds Code for front stats
 		$sqlquery = "SELECT " .
 							STATS_ROUNDS . ".TIMEADDED, " . 
@@ -73,7 +80,7 @@ if ( isset($_GET['id']) )
 		$result = DB_Query($sqlquery);
 
 		$roundvars = DB_GetSingleRow($result, true);
-		if ( isset($roundvars) )
+		if ( isset($roundvars) && is_array($roundvars) )
 		{
 			// Enable Stats
 			$content['roundsenabled'] = "true";
@@ -185,7 +192,10 @@ if ( isset($_GET['id']) )
 					$content['rounds_unfinished_enabled'] = "true";
 
 					// --- Combine All Players for analysis
+//		print_r( $content['unfinishedplayers'] );
 					ExtendPlayerData( $content['unfinishedplayers'] );
+//		print_r( $content['unfinishedplayers'] );
+
 					if ( isset($AllPlayers) )
 						$AllPlayers = array_merge( $AllPlayers, $content['unfinishedplayers'] );
 					else
@@ -338,7 +348,7 @@ if ( isset($_GET['id']) )
 			// --- Set Mapimage
 			$content['MapNameFile'] = $gl_root_path . "images/maps/small/" . $content['MapName'] . ".jpg";
 			if ( !is_file($content['MapNameFile']) )
-				$content['MapNameFile'] = $gl_root_path . "images/maps/no-pic.jpg";
+				$content['MapNameFile'] = $gl_root_path . "images/maps/no-pic.png";
 			// --- 
 
 			// --- Set Gametype Details
@@ -624,13 +634,24 @@ function ExtendPlayerData ( &$myplayers )
 	{
 		if ( isset($playerguids) ) { $playerguids .= ", "; } else { $playerguids = ""; }
 		$playerguids .= $myplayers[$i]['PLAYERID'];
-	}
 
+		// --- Set Default picture url for KillRation Values and Bars
+		$myplayers[$i]['BarImageKillRatioMinus'] = $gl_root_path . "images/bars/bar-small/red_middle_9.png";
+		$myplayers[$i]['BarImageKillRatioPlus'] = $gl_root_path . "images/bars/bar-small/green_middle_9.png";
+		// ---
+
+		// --- Set other variable defaults
+		$myplayers[$i]['KillRatioWidthMinus'] = 0;
+		$myplayers[$i]['KillRatioWidthPlus'] = "0";
+		$myplayers[$i]['KillRatioWidthMinusText'] = "";
+		$myplayers[$i]['KillRatioWidthPlusText'] = "";
+		// ---
+	}
 
 	// Get Player Stats from DB
 	$sqlquery = "SELECT " .
 						STATS_PLAYER_KILLS . ".ENEMYID , " . 
-						"count( " . STATS_PLAYER_KILLS . ".PLAYERID ) as TotalKilled " . 
+						"sum( " . STATS_PLAYER_KILLS . ".Kills ) as TotalKilled " . 
 						" FROM " . STATS_PLAYER_KILLS . 
 //							" WHERE " . STATS_PLAYER_KILLS . ".ENEMYID =" . $myplayers[$i]['PLAYERID'] . 
 //							" AND " . STATS_PLAYER_KILLS . ".ROUNDID=" . $content['roundid'];
@@ -638,6 +659,7 @@ function ExtendPlayerData ( &$myplayers )
 						" AND " . STATS_PLAYER_KILLS . ".ROUNDID=" . $content['roundid'] . 
 						GetBannedPlayerWhereQuery(STATS_PLAYER_KILLS, "PLAYERID", false) . 
 						" GROUP BY " . STATS_PLAYER_KILLS . ".ENEMYID";
+
 	$result = DB_Query($sqlquery);
 	$tmpvars = DB_GetAllRows($result, true);
 
@@ -675,10 +697,6 @@ function ExtendPlayerData ( &$myplayers )
 
 		for($n = 0; $n < count($myplayers); $n++)
 		{
-			// --- Set KillRation Values and Bars
-			$myplayers[$n]['BarImageKillRatioMinus'] = $gl_root_path . "images/bars/bar-small/red_middle_9.png";
-			$myplayers[$n]['BarImageKillRatioPlus'] = $gl_root_path . "images/bars/bar-small/green_middle_9.png";
-
 			if ( isset($content['MyMaxKillRatio']) )
 			{
 				// Now we set the Width of the images

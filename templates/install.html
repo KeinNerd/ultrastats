@@ -2,16 +2,16 @@
 <html>
 <head>
 	<title>{TITLE}</title>
-	{EXTRA_METATAGS}
 
-	<link rel="stylesheet" href="themes/default/main.css" type="text/css">
+	<link rel="stylesheet" href="css/defaults.css" type="text/css">
+	<link rel="stylesheet" href="themes/{user_theme}/main.css" type="text/css">
 	<script type='text/javascript' src='{BASEPATH}js/common.js'></script>
 </head>
 <body TOPMARGIN="0" LEFTMARGIN="0" MARGINWIDTH="0" MARGINHEIGHT="0">
 
 <table width="100%" border="0" cellspacing="0" cellpadding="2" class="mainheader">
 <tr> 
-	<td width="400" align="left"><a href="index.php"><img src="{BASEPATH}images/main/Header-Logo.png" style="filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='{BASEPATH}images/main/Header-Logo.png', sizingMethod='scale')" width="238" height="80" name="HeaderLogo"></a><script>CheckAlphaPNGImage('HeaderLogo', '{BASEPATH}images/main/space.gif');</script></td>
+	<td width="400" align="left"><a href="index.php"><img src="{BASEPATH}images/main/Header-Logo.png" style="filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='{BASEPATH}images/main/Header-Logo.png', sizingMethod='scale')" width="297" height="100" name="HeaderLogo"></a><script>CheckAlphaPNGImage('HeaderLogo', '{BASEPATH}images/main/space.gif');</script></td>
 	<td width="100%" align="center" valign="top" height="100%">&nbsp;</td>
 </tr>
 </table>
@@ -23,12 +23,11 @@
 	<tr>
 		<td>
 
-		<br><br>
-
+		<br>
 		<table width="100%" cellpadding="2" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
 			<td class="title">
-				<h1 align="center">Installing UltraStats Version <U>{BUILDNUMBER}</U> - Step {INSTALL_STEP}</h1>
+				<h3 align="center">{LN_INSTALL_TITLETOP}</h3>
 			</td>
 		</tr>
 		</table>
@@ -36,22 +35,26 @@
 		<!-- IF iserror="true" -->
 		<table width="100%" cellpadding="2" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
-			<td class="line2" align="center">
+			<td class="tableBackground" align="center">
+				<br>
 				<h3><font color="red">ERROR: {errormsg}</font></h3>
+				<br>
 			</td>
 		</tr>
 		</table>
 		<!-- ENDIF iserror="true" -->
 
+		<form action="?step={INSTALL_NEXT_STEP}" method="post" id="mainform">
+
 		<!-- IF INSTALL_STEP="1" -->
 		<table width="100%" cellpadding="5" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
-			<td class="line1">
+			<td class="tableBackground">
 
-			<h1>Step 1 - Prerequisites</h1>
-			<p>Bevor you can install UltraStats, the Installer setup has to check a few things first.<br>
-			You may have to correct some file permissions first. <br>
-			Click on <B>NEXT</B> to start the Test!</p>
+			<h1>{LN_INSTALL_STEP1}</h1>
+			<p>
+			{LN_INSTALL_STEP1_TEXT}
+			</p>
 			<p>&nbsp;</p>
 			<p>&nbsp;</p>
 
@@ -63,11 +66,12 @@
 		<!-- IF INSTALL_STEP="2" -->
 		<table width="100%" cellpadding="5" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
-			<td class="line1">
+			<td class="tableBackground">
 
-				<h1>Step 2 - Verify File Permissions</h1>
-				<p>The following file permissions have been checked. Verify the results below!</p>
-				You may use the <B>setpermissions.sh</B> script from the <B>contrib</B> folder to set the permissions for you. 
+				<h1>{LN_INSTALL_STEP2}</h1>
+				<p>
+				{LN_INSTALL_STEP2_TEXT}
+				</p>
 				<p>&nbsp;</p>
 
 				<table width="300" class="with_border_alternate" cellpadding="2" cellspacing="1" border="0" align="center">
@@ -90,45 +94,48 @@
 		<!-- IF INSTALL_STEP="3" -->
 		<table width="100%" cellpadding="5" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
-			<td class="line1">
+			<td class="tableBackground">
 
-			<h1>Step 3 - Create ConfigFile</h1>
-			<p>Very Good! You made it so far :) ! <br>
-			Now we will create the basic configuration file for UltraStats! <br>
-			This file will contain the database configuration which is fundamental for UltraStats ;)!</p>
+			<h1>{LN_INSTALL_STEP3}</h1>
+			<p>
+			{LN_INSTALL_STEP3_TEXT}
+			<br><br>
+			</p>
 			<p>&nbsp;</p>
 
-			<form action="?step={INSTALL_NEXT_STEP}" method="post">
 				<table border="0" cellpadding="1" cellspacing="1" bgcolor="#DDDDDD" width="500" align="center">
 				<tr>
-					<td align="left" class="cellmenu1" width="150" nowrap><b>Database Host</b></td>
+					<td colspan="2" align="left" class="cellmenu1" nowrap><b>{LN_CFG_DATABASE}</b></td>
+				</tr>
+				<tr>
+					<td align="left" class="cellmenu2" width="150" nowrap><b>{LN_CFG_DBSERVER}</b></td>
 					<td align="right" class="line0" width="100%"><input type="text" name="db_host" size="40" maxlength="255" value="{DB_HOST}"></td>
 				</tr>
 				<tr>
-					<td align="left" class="cellmenu1" width="150" nowrap><b>Database Port</b></td>
+					<td align="left" class="cellmenu2" width="150" nowrap><b>{LN_CFG_DBPORT}</b></td>
 					<td align="right" class="line1" width="100%"><input type="text" name="db_port" size="40" maxlength="255" value="{DB_PORT}"></td>
 				</tr>
 				<tr>
-					<td align="left" class="cellmenu1" width="150" nowrap><b>Database Name</b></td>
+					<td align="left" class="cellmenu2" width="150" nowrap><b>{LN_CFG_DBNAME}</b></td>
 					<td align="right" class="line0" width="100%"><input type="text" name="db_name" size="40" maxlength="255" value="{DB_NAME}"></td>
 				</tr>
 				<tr>
-					<td align="left" class="cellmenu1" width="150" nowrap><b>Table prefix</b></td>
+					<td align="left" class="cellmenu2" width="150" nowrap><b>{LN_CFG_DBPREF}</b></td>
 					<td align="right" class="line1" width="100%"><input type="text" name="db_prefix" size="40" maxlength="255" value="{DB_PREFIX}"></td>
 				</tr>
 				<tr>
-					<td align="left" class="cellmenu1" width="150" nowrap><b>Database User</b></td>
+					<td align="left" class="cellmenu2" width="150" nowrap><b>{LN_CFG_DBUSER}</b></td>
 					<td align="right" class="line0" width="100%"><input type="text" name="db_user" size="40" maxlength="255" value="{DB_USER}"></td>
 				</tr>
 				<tr>
-					<td align="left" class="cellmenu1" width="150" nowrap><b>Database Password</b></td>
+					<td align="left" class="cellmenu2" width="150" nowrap><b>{LN_CFG_DBPASSWORD}</b></td>
 					<td align="right" class="line1" width="100%"><input type="text" name="db_pass" size="40" maxlength="255" value="{DB_PASS}"></td>
 				</tr>
 				<tr>
-					<td colspan="2" align="left" class="cellmenu1" nowrap>UltraStats can process Stats for ONE Game! It is __NOT__ possible to change this in a later step, so choose wisely ;)!</td>
+					<td colspan="2" align="left" class="cellmenu1" nowrap><b>{LN_INSTALL_WARNGAMESEL}</b></td>
 				</tr>
 				<tr>
-					<td align="left" class="cellmenu2" width="250" nowrap><b>GameVersion</b></td>
+					<td align="left" class="cellmenu2" width="250" nowrap><b>{LN_CFG_GAMEVER}</b></td>
 					<td align="right" class="line0" width="100%">
 						<select name="gen_gameversion" size="1">
 							<!-- BEGIN GAMEVERSIONS -->
@@ -143,7 +150,6 @@
 					</td>
 				</tr>
 				</table>
-			</form>
 
 			<p>&nbsp;</p>
 			<p>&nbsp;</p>
@@ -155,15 +161,14 @@
 		<!-- IF INSTALL_STEP="4" -->
 		<table width="100%" cellpadding="5" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
-			<td class="line1">
-			<h1>Step 4 - Create Tables</h1>
-			<p>If you reached this step, the database configuration file has been successfully written! <br>
-			The next step will start creating the database tables. <br>
-			This might take a while, so be <B>patient</B>!<br>
-			Go ahead when you feel ready ;)
+			<td class="tableBackground">
+			
+			<h1>{LN_INSTALL_STEP4}</h1>
+			<p>
+			{LN_INSTALL_STEP4_TEXT}
+			<p>&nbsp;</p>
+			<p>&nbsp;</p>
 
-			<p>&nbsp;</p>
-			<p>&nbsp;</p>
 			</td>
 		</tr>
 		</table>
@@ -172,35 +177,40 @@
 		<!-- IF INSTALL_STEP="5" -->
 		<table width="100%" cellpadding="5" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
-			<td class="line1">
-			<h1>Step 5 - Check SQL Results</h1>
-			<p>Tables have been created. Check the List below for possible Error's<br><br>
+			<td class="tableBackground">
+			<h1>{LN_INSTALL_STEP5}</h1>
+			<p>
+			{LN_INSTALL_STEP5_TEXT}
+			<br><br>
 			<ul>
-			<li>Successfully executed statements: <B>{sql_sucess}</B><br>
-			<li>Failed statements: <B>{sql_failed}</B> <br>
+			<li>{LN_INSTALL_SUCCESSSTATEMENTS} <B>{sql_sucess}</B><br>
+			<li>{LN_INSTALL_FAILEDSTATEMENTS} <B>{sql_failed}</B> <br>
 			</ul>
-			<!-- IF sql_failed="0" -->
-				You can now proceed to the <B>next</B> step adding the first UltraStats Admin User!
-				<p>&nbsp;</p>
-			<!-- ENDIF sql_failed="0" -->
-			<!-- IF sql_failed!="0" -->
-				<table width="700" class="with_border_alternate" cellpadding="2" cellspacing="1" border="0" align="center">
-				<tr>
-					<td colspan="2" nowrap class="cellmenu1" align="center"><B>At least one statement failed,see error reasons below</B></td>
-				</tr>
-				<tr>
-					<td width="400" class="cellmenu1">Error Message</td>
-					<td width="300" class="cellmenu1" align="center"><B>SQL Statement</B></td>
-				</tr>
-				<!-- BEGIN failedstatements -->
-				<tr>
-					<td class="line0">{myerrmsg}</td>
-					<td class="line0" align="center">{mystatement}</td>
-				</tr>
-				<!-- END failedstatements -->
-				</table>
-				<p>&nbsp;</p>
-			<!-- ENDIF sql_failed!="0" -->
+			
+			<!-- IF showsqlresults="true" -->
+				<!-- IF sql_failed="0" -->
+					{LN_INSTALL_STEP5_TEXT_NEXT}
+					<p>&nbsp;</p>
+				<!-- ENDIF sql_failed="0" -->
+				<!-- IF sql_failed!="0" -->
+					<table width="700" class="with_border_alternate" cellpadding="2" cellspacing="1" border="0" align="center">
+					<tr>
+						<td colspan="2" nowrap class="cellmenu1" align="center"><B>{LN_INSTALL_STEP5_TEXT_FAILED}</B></td>
+					</tr>
+					<tr>
+						<td width="400" class="cellmenu1">{LN_INSTALL_ERRORMSG}</td>
+						<td width="300" class="cellmenu1" align="center"><B>{LN_INSTALL_SQLSTATEMENT}</B></td>
+					</tr>
+					<!-- BEGIN failedstatements -->
+					<tr>
+						<td class="line0">{myerrmsg}</td>
+						<td class="line0" align="center">{mystatement}</td>
+					</tr>
+					<!-- END failedstatements -->
+					</table>
+					<p>&nbsp;</p>
+				<!-- ENDIF sql_failed!="0" -->
+			<!-- ENDIF showsqlresults="true" -->
 
 			<p>&nbsp;</p>
 			</td>
@@ -211,24 +221,25 @@
 		<!-- IF INSTALL_STEP="6" -->
 		<table width="100%" cellpadding="5" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
-			<td class="line1">
-			<h1>Step 6 - Creating the Main Useraccount</h1>
-			<p>You are now about to create the initial UltraStats User Account. <br>
-			This useraccount is important, as it will allow you to login into the Admin center!
+			<td class="tableBackground">
+			<h1>{LN_INSTALL_STEP6}</h1>
+			<p>
+			{LN_INSTALL_STEP6_TEXT}
+			<br><br>
 
-			<form action="?step={INSTALL_NEXT_STEP}" method="post">
 				<table border="0" cellpadding="1" cellspacing="1" bgcolor="#DDDDDD" width="500" align="center">
+				<tr><td align="center" class="cellmenu1" colspan="2"><b>{LN_INSTALL_CREATEUSER}</b></td></tr>
 				<tr>
-					<td align="left" class="cellmenu1" width="150" nowrap><b>Username</b></td>
-					<td align="right" class="line0" width="100%"><input type="text" name="username" size="40" maxlength="255" value="{MAIN_Username}"></td>
+					<td align="left" class="cellmenu1" width="150" nowrap><b>{LN_INSTALL_USERNAME}</b></td>
+					<td align="right" class="line2" width="100%"><input type="text" name="username" size="40" maxlength="255" value="{MAIN_Username}"></td>
 				</tr>
 				<tr>
-					<td align="left" class="cellmenu1" width="150" nowrap><b>Password</b></td>
+					<td align="left" class="cellmenu1" width="150" nowrap><b>{LN_INSTALL_PASSWORD}</b></td>
 					<td align="right" class="line1" width="100%"><input type="password" name="password1" size="40" maxlength="255" value="{MAIN_Password1}"></td>
 				</tr>
 				<tr>
-					<td align="left" class="cellmenu1" width="150" nowrap><b>Repeat Password</b></td>
-					<td align="right" class="line0" width="100%"><input type="password" name="password2" size="40" maxlength="255" value="{MAIN_Password2}"></td>
+					<td align="left" class="cellmenu1" width="150" nowrap><b>{LN_INSTALL_PASSWORDREPEAT}</b></td>
+					<td align="right" class="line2" width="100%"><input type="password" name="password2" size="40" maxlength="255" value="{MAIN_Password2}"></td>
 				</tr>
 				<tr>
 					<td align="center" class="line2" colspan="2">
@@ -236,7 +247,6 @@
 					</td>
 				</tr>
 				</table>
-			</form>
 
 			<p>&nbsp;</p>
 			<p>&nbsp;</p>
@@ -246,16 +256,29 @@
 		<!-- ENDIF INSTALL_STEP="6" -->
 
 		<!-- IF INSTALL_STEP="7" -->
+
+		<!-- IF createduser="true" -->
+		<table width="100%" cellpadding="2" cellspacing="1" border="0" align="center" class="with_border_alternate">
+		<tr>
+			<td class="line2" align="center">
+				<br>
+				<h3><font color="red">{LN_INSTALL_SUCCESSCREATED} '{MAIN_Username}'.</font></h3>
+				<br>
+			</td>
+		</tr>
+		</table>
+		<!-- ENDIF createduser="true" -->
+
 		<table width="100%" cellpadding="5" cellspacing="1" border="0" align="center" class="with_border_alternate">
 		<tr>
-			<td class="line1">
-			<h1>Step 7 - Done</h1>
-			<p>Congratulations! You have successfully installed UltraStats :D!<br>
-			To finish the Installation, remove the file install.php from the main directory!<br><br>
-			Click <a href="index.php">here</a> to go to your installation, and add your Server in the Admin Center!
+			<td class="tableBackground">
 
+			<h1>{LN_INSTALL_STEP7}</h1>
+			<p>
+			{LN_INSTALL_STEP7_TEXT}
 			<p>&nbsp;</p>
 			<p>&nbsp;</p>
+
 			</td>
 		</tr>
 		</table>
@@ -265,7 +288,7 @@
 		<tr>
 			<td class="cellmenu1" width="50%">
 			</td>
-			<td class="line0" width="100" nowrap><B>Install Progress: </B></td>
+			<td class="line0" width="100" nowrap><B>{LN_INSTALL_PROGRESS}</B></td>
 			<td class="line0" width="300" nowrap>
 				<table width="100%" bgcolor="#007700" cellpadding="0" cellspacing="0" border="0" align="center">
 				<tr>
@@ -275,13 +298,13 @@
 			</td>
 			<td class="line1" width="50" nowrap align="center">
 				<!-- IF NEXT_ENABLED="true" -->
-				<a href="?step={INSTALL_NEXT_STEP}">Next</a>
+				<input type="submit" value="Next">
 				<!-- ENDIF NEXT_ENABLED="true" -->
 				<!-- IF RECHECK_ENABLED="true" -->
-				<a href="?step={INSTALL_STEP}">ReCheck</a>
+				<a href="?step={INSTALL_STEP}">{LN_INSTALL_RECHECK}</a>
 				<!-- ENDIF RECHECK_ENABLED="true" -->
 				<!-- IF FINISH_ENABLED="true" -->
-				<a href="index.php">Finish!</a>
+				<a href="index.php">{LN_INSTALL_FINISH}</a>
 				<!-- ENDIF FINISH_ENABLED="true" -->
 			</td>
 			<td class="cellmenu1" width="50%">
@@ -289,6 +312,7 @@
 		</tr>
 		</table>
 
+		</form>
 
 		</td>
 	</tr>

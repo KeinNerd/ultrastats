@@ -1,0 +1,164 @@
+ UltraStats Installation help
+ ----------------------------------
+
+ To install UltraStats, you will need:
+
+ * Apache or IIS Webserver
+ * PHP5 ( PHP4 should still work )
+ * MySQL Database
+ * A gamelog from a Call Of Duty 1/Uo/2/4/WaW gameserver. 
+
+ Preperations 
+ ------------
+
+ In order too use UltraStats, your gameserver will need to write a
+ gamelogfile, which might not be the default case. For all known
+ Call of Duty Versions, the following settings are recommended in 
+ your server configuration: 
+
+     set logfile "1"		// 0 = NO log, 1 = log file enabled 
+     set g_logsync "2"		// 0=no log, 1=buffered, 
+				// 2=continuous, 3=append 
+     set g_log "games_mp.log"	// Name of log file. 
+
+ To workaround certain logfile bugs in Call of Duty 4, I recommend 
+ the following setting as well: 
+ 
+     set sv_log_damage "1"	// Enables damage logging. 
+
+ Installation in Detail
+ ----------------------
+
+  1. Upload all files from the ultrastats/src/ folder to your webserver. 
+     The other files are not needed on the webserver. 
+
+  2. If your webserver has write access to the ultrastats folder, 
+     you can skip the following step: 
+     
+         Upload the scripts configure.sh and secure.sh from the 
+         contrib folder into the same folder where you uploaded 
+	 the ultrastats files into. Then set the execution flag 
+	 on both files (chmod +x configure.sh secure.sh). 
+         
+         Now run ./configure.sh, this will create a blank config.php, 
+         and will also set write access to everyone to it. You can 
+	 perform this step manually of course if you know what you 
+	 are doing ;)
+
+  3. Now access your ultrastats installation by using your favourite 
+     webbrowser. You should see an error message pointing you to the 
+     installation script. Follow this link and follow the instructions 
+     from the installer. 
+ 
+  3.1 Step 1 -	Prerequisites Beginning of installation / welcome site
+		This is the first page of the installation. It just tells
+		you, that before installing, some file permission have to
+		be checked. Simply click "Next" to start the process.
+
+  3.2 Step 2 -	Verify the file permissions
+		Here you will see, if the config.php can be written or not.
+		If it cannot be written, you have to set file permissions 
+		and repeat the check of Step 2.
+
+  3.3 Step 3 -	Database Configuration
+		In this step you have to configure the basic database 
+		options of UltraStats. 
+		- Database Host = The Servername or IP of your MYSQL Server
+		- Database Port = The database Port of your MYSQL Server
+		- Database Name = The database name, needs to be created first!
+				  UltraStats does not create the database itself.
+		- Table prefix	= If you plan to use more then ONE UltraStats 
+				  installation in ONE database, you can change
+				  the table prefix here. The table prefix is 
+				  prepended in each table of UltraStats. 
+		- Database User	= A MYSQL Username with sufficient rights to your
+				  database
+		- Database Password = The password for your MYSQL User account, 
+				  if needed. 
+		- Gameversion	= Select which Version of Call of Duty you are 
+				  going to use. Note that you can only log 
+				  data from ONE game version in ONE UltraStats
+				  installation. 
+
+
+
+  3.4 Step 4 -	Create Tables
+		If you reach this step, this means the conenction test to your
+		MYSQL database was successfull, and can start filling the 
+		database with tables and data. 
+
+		Be careful! Any existing UltraStats installation with the SAME
+		table prefix will be OVERWRITTEN!
+
+  3.5 Step 5 -	Check SQL Results
+		This steps confirms that all database statements were successfully
+		performed. 
+
+  3.6 Step 6 -	Creating the firts Adminuser
+		To administrate UltraStats, you need at least one Adminuser. 
+		In this step you have to add the first Adminuser. 
+
+  3.8 Step 7 -	Done
+		UltraStats is now fully installed and should be accessable now. 
+
+
+  4.	If everything went right, you should see a message "No Servers installed"
+	when you access the index page of your UltraStats installation.
+	Klick on the Admin Center menu entry, and login UltraStats to add your 
+	first Server. 
+  
+  5.	Now go to the Server Admin and click on "Add Server". 
+	The most important field is the "Gamelog Location" which specifies the relative
+	location of your gamelog, from where the webserver needs to be able to access
+	the gamelogfiles. 
+
+	If you unsure, to not change this default value. The default value 
+	"../gamelogs/server_1.log" will assume, that the gamelog is located in the 
+	"gamelogs" folder of your UltraStats Installation. If gameserver and webserver 
+	are the same machine, you can configure the full logical path to your gamelog
+	file here. 
+
+  6.	Now click on "Add Server" to add the server entry into the database. 
+
+  7.	If you do NOT need to download the gamelog from a remote location, you can 
+	skip this step. 
+	
+	Click on the Edit button of your server, you will see that the "Create" 
+	button for the "Remote FTP Gamelog Location" is available now. You can use
+	this button to build a valid FTP URL, here is an example of a valid one: 
+	ftp://username@127.0.0.1/.callofdutyww/main/Server1_mp.log
+
+  8.	If you do NOT need to download the gamelog from a remote location, you can 
+	skip this step. 
+
+	Assuming that you have a valid FTP Location, you can click the download 
+	icon in the Server Admin Center now, to start the gamelogfile download. 
+	You will be prompted for the ftp password if needed. 
+
+	UltraStats does append downloads of existing gamelogfiles, so you do not need
+	to worry about traffic issues. 
+
+  9.	Run the gamelog parser!
+	Click on the RunParser Icon in the Server Admin Center to start the parsing 
+	process. The script is internally designed to avoid PHP Script timeouts,
+	and automatically reload itself if necessary. 
+
+	However if database grow larger, it is possible that a php script timeout still
+	happens when the parser is in the middle of a SQL statement. In this case, it 
+	would be a good Idea to switch over to parse the gamelog using the command 
+	prompt. Sample scripts can be found in the contrib folder. 
+
+  10.	Run Total/Final Calculations
+	For performance issues of the database, there are certain things which are done 
+	at each end of a complete parsing process. This includes generation if medals, 
+	top used aliases and more. 
+
+  11.	Finished
+	If everything went right, you should see stats data in your UltraStats installation
+	now ;)!
+
+Note on SUPPORT issues
+--------------------------------
+If you experience problems or any bugs within UltraStats, feel free to post into our Forums: 
+http://www.ultrastats.org
+

@@ -1,12 +1,84 @@
 <!-- INCLUDE include_header.html --> 
 
-<br>
-
 <!-- IF iserror="true" -->
-	<center>
-	<h3><font color="red">{LN_ERROR_INVALIDWEAPON}</font></h3>
-	</center>
+<br><br>
+<center>
+	<div class="table_with_border_second ErrorMsg" style="width:600px">
+		<div class="PriorityError">{LN_ERROR_DETAILS}</div>
+		<p>{ERROR_DETAILS}</p>
+		</div>
+	<br><br>
+</center>
+<br><br>
 <!-- ENDIF iserror="true" -->
+
+<!-- IF weaponslist="true" -->
+<table width="100%" cellpadding="0" cellspacing="5" border="0" align="center">
+<tr>
+	<td width="10" valign="top" nowrap>&nbsp;</td>
+	<td width="100%" valign="top">
+
+		<table width="100%" cellpadding="1" cellspacing="0" border="0" align="center" class="with_border_alternate">
+		<tr>
+			<td class="title" nowrap>{LN_WEAPON_LIST}</td>
+		</tr>
+		</table>
+
+		<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border_alternate">
+		<!-- BEGIN weaponcategories -->
+		<!-- IF weaponcategoriesenabled="true" -->
+		<tr>
+			<td class="titleSecond" nowrap colspan="9">{CategoryDisplayName}</td>
+		</tr>
+		<tr>
+			<td class="cellmenu1" align="center" nowrap>&nbsp;</td>
+			<td width="100%" class="cellmenu1" align="center" nowrap><B>{LN_WEAPON_NAME}</B></td>
+			<td width="150" class="cellmenu1" align="center" nowrap colspan="2"><B>{LN_WEAPON_ATTACHMENT}</B></td>
+			<td width="175" class="cellmenu1" align="center" nowrap colspan="2"><B>{LN_WEAPON_KILLCOUNT}</B></td>
+			<td width="175" class="cellmenu1" align="center" nowrap colspan="2"><B>{LN_WEAPON_PLAYERCOUNT}</B></td>
+			<td width="125" class="cellmenu1" align="left" nowrap colspan="2"><B>{LN_WEAPON_EXTERNLINFO}</B></td>
+		</tr>
+			<!-- BEGIN myweapons -->
+			<tr>
+				<td class="{cssclass}" align="right"><a HREF="weapons.php?id={INGAMENAME}{additional_url}"><img src="{WeaponImage}" height="18" align="right"></a></td>
+				<td class="{cssclass}" align="left"><a HREF="weapons.php?id={INGAMENAME}{additional_url}">{WeaponDisplayName}</a></td>
+				<td class="{cssclass}" align="right"><img src="{AttachmentImage}" height="18" align="right"></td>
+				<td class="{cssclass}" align="left"><b>{AttachmentDisplayName}</b></td>
+				<td class="{cssclass}" align="right" width="50"><b>{WeaponKills}</b></td>
+				<td class="{cssclass}" align="left" width="125" bgcolor="#007700">
+				<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" class="with_border">
+				<tr>
+					<td bgcolor="#007700" OnMouseOver="HoverPopup(null, '{LN_DETAIL_INFO}', '{KillCountText}', '');" OnMouseMove="movePopupWindow(event,'popupdetails', this);" OnMouseOut="FinishPopupWindow();">
+					<img align="left" src="{BarImageKillCount}" width="{KillRatioWidth}%" height="9">
+					</td>
+				</tr>
+				</table>
+				</td>
+				<td class="{cssclass}" align="right" width="50"><b>{PlayersCount}</b></td>
+				<td class="{cssclass}" align="left" width="125">
+				<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" class="with_border">
+				<tr>
+					<td bgcolor="#005577" OnMouseOver="HoverPopup(null, '{LN_DETAIL_INFO}', '{PlayerCountText}', '');" OnMouseMove="movePopupWindow(event,'popupdetails', this);" OnMouseOut="FinishPopupWindow();">
+					<img align="left" src="{BarImagePlayerCount}" width="{PlayerCountWidth}%" height="9">
+					</td>
+				</tr>
+				</table>
+				<td class="{cssclass}" align="center">
+				<!-- IF IsExternalInfoUrl="true" -->
+				<a href="{ExternalInfoUrl}" target="_blank">{ExternalInfoUrlDisplay}</a>
+				<!-- ENDIF IsExternalInfoUrl="true" -->
+				</td>
+			</tr>
+			<!-- END myweapons -->
+		<!-- ENDIF weaponcategoriesenabled="true" -->
+		<!-- END weaponcategories -->
+		</table>
+
+	</td>
+	<td width="10" valign="top" nowrap>&nbsp;</td>
+</tr>
+</table>
+<!-- ENDIF weaponslist="true" -->
 
 <!-- IF weaponsenabled="true" -->
 <table width="100%" cellpadding="0" cellspacing="5" border="0" align="center">
@@ -17,46 +89,63 @@
 		<tr>
 			<td width="50%" valign="top">
 
-				<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center">
+				<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" class="with_border_alternate">
 				<tr>
 					<td colspan="3" class="title" nowrap>{LN_WEAPON_DETAILS} '{WeaponDisplayName}'</td>
 				</tr>
 				</table>
 				<table width="100%" cellpadding="0" cellspacing="1" border="0" align="center" class="with_border">
 				<tr>
-					<td colspan="2" width="266" nowrap valign="top" class="line1">
-					<img src="{WeaponImage}" alt="{WeaponImageDisplayName}" width="258">
+					<td colspan="3" width="266" nowrap valign="top" align="center" class="tablebackground">
+					<img src="{WeaponImage}" alt="{WeaponImageDisplayName}">
+					
+					<!-- IF AttachmentEnabled="true" -->
+					<table width="128" cellpadding="1" cellspacing="1" border="0" align="center" class="with_border_alternate">
+					<tr><td nowrap align="center" class="cellmenu2_naked"><B>{LN_WEAPON_ATTACHMENT}:</B></td></tr>
+					<tr><td nowrap valign="top" align="center" class="line2">{AttachmentDisplayName}</td></tr>
+					<tr><td nowrap valign="top" align="center" class="line1"><img src="{AttachmentImage}" height="128" align="left"></td></tr>
+					</table>
+					<br>
+					<!-- ENDIF AttachmentEnabled="true" -->
+
 					</td>
-					<td width="100%" nowrap valign="top" class="line1" rowspan="4">
-						<table width="100%" cellpadding="2" cellspacing="0" border="0" align="center" >
+					<td width="100%" nowrap valign="top" class="tablebackground">
+						<table width="100%" cellpadding="2" cellspacing="0" border="0" align="center">
 						<tr><td width="100%" class="cellmenu1" align="center"><B>{LN_WEAPON_DESCRIPTION}</B></td></tr>
 						</table>
-						<table width="100%" cellpadding="5" cellspacing="0" border="0" align="center" >
+						<table width="100%" cellpadding="5" cellspacing="1" border="0" align="center">
 						<tr>
-							<td width="100%">{Description}</td>
+							<td width="100%" class="tablebackground"  height="100%">{Description}</td>
 						</tr>
 						</table>
 					</td>
 				</tr>
 				<tr>
-					<td nowrap align="center" class="cellmenu2"><B>{LN_WEAPON_INGAMENAME}:</B></td>
+					<td colspan="2" nowrap align="center" class="cellmenu2"><B>{LN_WEAPONTYPE_CATEGORY}:</B></td>
+					<td nowrap valign="top" align="left" class="line1">{WeaponTypeDisplayName}</td>
+					<td class="tablebackground" align="center">
+					<!-- IF IsExternalInfoUrl="true" -->
+						<b>{LN_WEAPON_READMORE}</b>
+					<!-- ENDIF IsExternalInfoUrl="true" -->
+					&nbsp;
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2" nowrap align="center" class="cellmenu2"><B>{LN_WEAPON_INGAMENAME}:</B></td>
 					<td nowrap valign="top" align="left" class="line1">{INGAMENAME}</td>
+					<td class="tablebackground" align="center">
+					<!-- IF IsExternalInfoUrl="true" -->
+						<a href="{ExternalInfoUrl}" target="_blank">{ExternalInfoUrlDisplay}</a>
+					<!-- ENDIF IsExternalInfoUrl="true" -->
+					&nbsp;
+					</td>
 				</tr>
-				<!-- IF IsExternalInfoUrl="true" -->
-				<tr>
-					<td colspan="2" nowrap align="center" class="cellmenu2"><B>{LN_WEAPON_EXTERNLINFO}:</B></td>
-				</tr>
-				<tr>
-					<td colspan="2" nowrap valign="top" align="center" class="line1"><a href="{ExternalInfoUrl}" target="_blank">{ExternalInfoUrlDisplay}</a></td>
-				</tr>
-				<!-- ENDIF IsExternalInfoUrl="true" -->
 				</table>
-
 			</td>
 			<td width="50%" valign="top">
 
 			<!-- IF mostkillssenabled="true" -->
-				<table width="95%" cellpadding="1" cellspacing="0" border="0" align="center">
+				<table width="95%" cellpadding="1" cellspacing="0" border="0" align="center" class="with_border_alternate">
 				<tr>
 					<td class="title" width="400" nowrap>{web_detaillistsplayers} {LN_WEAPON_TOPPLAYERS}</td>
 				</tr>
@@ -106,7 +195,7 @@
 			</td>
 			<td width="50%" valign="top">
 			<!-- IF mostkilledbyenabled="true" -->
-				<table width="95%" cellpadding="1" cellspacing="0" border="0" align="center">
+				<table width="95%" cellpadding="1" cellspacing="0" border="0" align="center" class="with_border_alternate">
 				<tr>
 					<td class="title" width="400" nowrap>{web_detaillistsplayers} {LN_WEAPON_TOPKILLEDBY}</td>
 				</tr>

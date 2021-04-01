@@ -1,18 +1,25 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006!								*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Parser helper functions											*
-	*																	*
-	* -> 		*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Helper Parser File
+	*		Contains helper functions for the parser
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
+
 
 // --- Avoid directly accessing this file! 
 if ( !defined('IN_ULTRASTATS') )
@@ -24,7 +31,8 @@ if ( !defined('IN_ULTRASTATS') )
 
 function CreateHTMLHeader()
 {
-	global $RUNMODE;
+	global $RUNMODE, $content, $gl_root_path;
+
 
 	// not needed in console mode
 	if ( $RUNMODE == RUNMODE_COMMANDLINE )
@@ -37,7 +45,9 @@ function CreateHTMLHeader()
 	print ('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 			<html>
 			<head>
-			<link rel="stylesheet" href="css/admin.css" type="text/css">
+			<link rel="stylesheet" href="' . $gl_root_path . 'css/defaults.css" type="text/css">
+			<link rel="stylesheet" href="' . $gl_root_path . 'css/menu.css" type="text/css">
+			<link rel="stylesheet" href="' . $gl_root_path . 'themes/' . $content['web_theme'] . '/main.css" type="text/css">
 			</head>
 			<SCRIPT language="JavaScript">
 				var g_intervalID;
@@ -75,20 +85,20 @@ function PrintDebugInfoHeader()
 	}
 }
 
-function PrintSecureUserCheck( $warningtext, $yesmsg, $nomsg, $operation )
+function PrintSecureUserCheckLegacy( $warningtext, $yesmsg, $nomsg, $operation )
 {
 	global $content, $myserver;
 
 	// Show Accept FORM!
 	print('<br><br>
-			<table width="600" cellpadding="2" cellspacing="0" border="0" align="center" class="with_border">
+			<table width="700" cellpadding="2" cellspacing="0" border="0" align="center" class="with_border">
 			<tr>
 				<td colspan="10" align="center" valign="top" class="title"><strong><FONT COLOR="red">' . $warningtext . '</FONT></strong></td>
 			</tr>
 			</table>
-			<table width="600" cellpadding="2" cellspacing="1" border="0" align="center" class="with_border">
+			<table width="700" cellpadding="2" cellspacing="1" border="0" align="center" class="with_border">
 			<tr>
-				<td align="center" class="line0">
+				<td align="center" class="line1">
 					<br>
 					<A HREF="parser-core.php?op=' . $operation . '&id=' . $myserver['ID'] . '&verify=yes">
 					<img src="' . $content['BASEPATH'] . 'images/icons/check.png" width="16"><br>
@@ -168,12 +178,25 @@ function PrintHTMLDebugInfo( $facility, $fromwhere, $szDbgInfo )
 			$currentmenuclass = "cellmenu1";
 	}
 
-	//Flush php output
-	flush();
+	//Flush output
+	FlushParserOutput();
 
 	// If DEBUG_ERROR_WTF and $content['gen_phpdebug'] is set, abort!
 	if ( $content['gen_phpdebug'] == 1 && $facility == DEBUG_ERROR_WTF ) 
 		die ( $szDbgInfo );
+}
+
+function FlushParserOutput()
+{
+	global $RUNMODE;
+	
+	// not needed in console mode
+	if ( $RUNMODE == RUNMODE_COMMANDLINE )
+		return;
+
+	//Flush php output
+	@flush();
+	@ob_flush();
 }
 
 function GetFacilityAsString( $facility )
@@ -229,10 +252,24 @@ function CreateHTMLFooter()
 	if ( $RUNMODE == RUNMODE_COMMANDLINE )
 		return;
 
-	print ('<br><center><h3>Finished</h3><br>Total running time was ' . $RenderTime . ' seconds<br><br>
-			<br></center>
+	print ('<br><center><h3>Finished</h3>
+			Total running time was ' . $RenderTime . ' seconds
+			<br><br>
+			<br>
+			</center>
 			</body> 
 			</html>');
+}
+
+function GetLastPlayedSeconds( $serverid )
+{
+	// --- Get last FilePosition
+	$result = DB_Query("SELECT PlayedSeconds FROM " . STATS_SERVERS . " WHERE id = $serverid");
+	$rows = DB_GetAllRows($result, true);
+	if ( isset($rows) )
+		return $rows[0]['PlayedSeconds'];
+	else
+		return 0;
 }
 
 function GetLastLogLine( $serverid )
@@ -246,7 +283,7 @@ function GetLastLogLine( $serverid )
 		return 0;
 }
 
-function SetLastLogLine( $serverid, $newlastline )
+function SetLastLogLine( $serverid, $newlastline, $nTotalPlayedSeconds )
 {
 	global $content;
 
@@ -255,23 +292,43 @@ function SetLastLogLine( $serverid, $newlastline )
 		return;
 
 	// --- Set the last FilePosition
-	$result = DB_Query("UPDATE " . STATS_SERVERS . " SET LastLogLine = '" . $newlastline . "' WHERE ID = $serverid");
+	$result = DB_Query("UPDATE " . STATS_SERVERS . " SET LastLogLine = " . $newlastline . ", PlayedSeconds = " . $nTotalPlayedSeconds . " WHERE ID = $serverid");
 	DB_FreeQuery($result);
 }
 
 function GetSecondsFromLogLine( $logline )
 {
-	$tempstr = explode(" ", trim($logline));
-	$timestr = explode(":", trim($tempstr[0]));
-	
-	if ( !isset($timestr[1]) )
-	{
-		PrintHTMLDebugInfo( DEBUG_ERROR_WTF, "GetSecondsFromLogLine", "Invalid LOGLINE detected: '" . $logline . "'");
-		return -1;
-	}
+	global $gl_UnixTimeMode;
 
-	// We only need to add them
-	return ( (intval($timestr[0])*60) + intval($timestr[1]) );
+	$tempstr = explode(" ", trim($logline));
+
+	if ( strpos($tempstr[0], ":") !== false )
+	{
+		$timestr = explode(":", trim($tempstr[0]));
+		
+		if ( !isset($timestr[1]) )
+		{
+			PrintHTMLDebugInfo( DEBUG_ERROR_WTF, "GetSecondsFromLogLine", "Invalid LOGLINE detected: '" . $logline . "'");
+			return -1;
+		}
+
+		// We only need to add them
+		$gl_UnixTimeMode = false;
+		return ( (intval($timestr[0])*60) + intval($timestr[1]) );
+	}
+	else
+	{
+		if ( is_numeric( $tempstr[0]) )
+		{
+			$gl_UnixTimeMode = true;
+			return intval($tempstr[0]);
+		}
+		else
+		{
+			PrintHTMLDebugInfo( DEBUG_ERROR_WTF, "GetSecondsFromLogLine", "Invalid LOGLINE detected: '" . $logline . "' - '" . $tempstr[0] . "'");
+			return -1;
+		}
+	}
 }
 
 function CheckLogLine($myLine)
@@ -285,7 +342,7 @@ function CheckLogLine($myLine)
 	if ( count($myTempArray) < 2 )
 		return false;
 
-	if ( strstr($myTempArray[0], ':') == FALSE )
+	if ( strpos($myTempArray[0], ":") === false && is_numeric($myTempArray[0]) == false )
 		return false;
 
 	// ---
@@ -334,6 +391,23 @@ function GetDamageTypeIDByName( $damagetype )
 function GetWeaponIDByName( $weaponname )
 {
 	global $myserver;
+	
+	// Move GL at the right position, to avoid duplicated weapon ID's!
+	$pos = strpos($weaponname, "gl_");
+	if ( $pos !== false && $pos == 0) 
+	{	
+		// store for debug
+		$oldname = $weaponname;
+
+		// Remove GL first!
+		$weaponname = str_replace("gl_", "", $weaponname);
+
+		// Add gl_ where it belongs to!
+		$weaponname = str_replace("_mp", "_gl_mp", $weaponname);
+
+		PrintHTMLDebugInfo( DEBUG_ULTRADEBUG, "GetWeaponIDByName", "Renamed weapon '" . $oldname . "' into '" . $weaponname . "'!");
+
+	}
 
 	/* --- Hotfix for crap cod4 logging format .. damn dev noobs @iw ... 
 	*	Rewritting the weapon_ids of these here: 
@@ -343,10 +417,11 @@ function GetWeaponIDByName( $weaponname )
 		gl_m14_mp
 		gl_m16_mp
 		gl_m4_mp
-	--- */
+	--- 
 	$search = array( "gl_ak47_mp", "gl_g36c_mp", "gl_g3_mp", "gl_m14_mp", "gl_m16_mp", "gl_m4_mp" );
 	$replace = array( "ak47_gl_mp", "g36c_gl_mp", "g3_gl_mp", "m14_gl_mp", "m16_gl_mp", "m4_gl_mp" );
 	$weaponname = str_replace($search, $replace, $weaponname);
+	*/
 
 	// --- First get and check the weapon id ;)!
 	$result = DB_Query("SELECT ID FROM " . STATS_WEAPONS . " WHERE INGAMENAME = '$weaponname'");
@@ -383,7 +458,11 @@ function GetGametypeFromInitGame($mybuffer)
 	// +11 Chars to remove the "InitGame: \" and Create tmp Servervar Array
 	$tmparray = explode( "\\", trim(substr( SplitTimeFromLogLine($mybuffer), 11)) );
 	for($i = 0; $i < count($tmparray); $i+=2)
-		$cvartmparray[ DB_RemoveBadChars($tmparray[$i]) ] = DB_RemoveBadChars( $tmparray[$i+1] );
+	{
+		// check before adding to cvararray
+		if ( isset($tmparray[$i]) && isset($tmparray[$i+1]) )
+			$cvartmparray[ DB_RemoveBadChars($tmparray[$i]) ] = DB_RemoveBadChars( $tmparray[$i+1] );
+	}
 
 	if ( isset($cvartmparray['g_gametype']) )
 		return $cvartmparray['g_gametype'];
@@ -525,7 +604,7 @@ function ProcessQueuedUpdateStatement()
 		return; 
 	
 	// Dump into file now
-	$myhandle = fopen( $content['sqltmpfile'], "w" );
+	$myhandle = @fopen( $content['sqltmpfile'], "w" );
 	if ($myhandle)
 		fwrite($myhandle, $sqlupdatestatements . "\r\n");
 	
@@ -568,7 +647,10 @@ function GetPlayerWithMostKills()
 		return $returnguid;
 	}
 	else
+	{
+		PrintHTMLDebugInfo(DEBUG_DEBUG, "GetPlayerWithMostKills", "Empty Player Array, cannot calculate Roundwinner");
 		return "";
+	}
 }
 
 /*	Helper function which will generate stripped Aliases Names 
@@ -628,13 +710,14 @@ function ReCreateAliases()
 			
 			// Now create plain alias code!
 			$plainalias = GetPlayerNameAsWithHTMLCodes( DB_RemoveBadChars($allplayers[$i]['Alias']) );
+			$aliaschecksum = sprintf( "%u", crc32 ( $plainalias )); 
 			$aliasashtml = GetPlayerNameAsHTML( DB_RemoveBadChars($allplayers[$i]['Alias']) );
 			$strippedalias = StripColorCodesFromString( DB_RemoveBadChars($allplayers[$i]['Alias']) );
 			if ( strlen($strippedalias) <= 0 )	// matches for peoples using colorcodes only, bastards :D
 				$strippedalias = "ColorCodePlayer";
 
 			// Update Calc
-			ProcessUpdateStatement("UPDATE " . STATS_ALIASES . " SET Alias = '" . $plainalias .  "', AliasAsHtml = '" . $aliasashtml . "', AliasStrippedCodes = '" . $strippedalias . "' " . $wherequery );
+			ProcessUpdateStatement("UPDATE " . STATS_ALIASES . " SET Alias = '" . $plainalias .  "', AliasChecksum = " . $aliaschecksum . ", AliasAsHtml = '" . $aliasashtml . "', AliasStrippedCodes = '" . $strippedalias . "' " . $wherequery );
 		}
 	}
 }
@@ -731,8 +814,10 @@ function SetMaxExecutionTime()
 	if ($RUNMODE == RUNMODE_WEBSERVER)
 	{
 		// Max Execution time
-		set_time_limit( 120 );									// Extend Execution Time
-		$MaxExecutionTime = ini_get("max_execution_time") - 15; // Raised limit to -15 Seconds to be on the save side
+// NOT NEEDED ANYMORE!
+// Extend Execution Time
+//		@set_time_limit( 120 );									
+		$MaxExecutionTime = ini_get("max_execution_time") - 10; // Raised limit to -15 Seconds to be on the save side
 		PrintHTMLDebugInfo( DEBUG_ULTRADEBUG, "Gamelog", "MaxExecutionTime = $MaxExecutionTime");
 	}
 	else
@@ -750,7 +835,8 @@ function ParsePlayerGuid( $myArray, $arraynum, $arraynum_playername )
 
 	if ( $content['gen_parseby'] == PARSEBY_GUIDS )
 	{
-		if ( $content['gen_gameversion'] == COD4 )
+		if (	$content['gen_gameversion'] == COD4 ||
+				$content['gen_gameversion'] == CODWW )
 		{
 			// Calc Guid!
 			$checksum = sprintf( "%u", crc32 ( $myArray[$arraynum] ));
@@ -814,7 +900,11 @@ function GetCustomServerStartTime($mybuffer)
 	// +11 Chars to remove the "InitGame: \" and Create tmp Servervar Array
 	$tmparray = explode( "\\", trim(substr( SplitTimeFromLogLine($mybuffer), 11)) );
 	for($i = 0; $i < count($tmparray); $i+=2)
-		$cvartmparray[ DB_RemoveBadChars($tmparray[$i]) ] = DB_RemoveBadChars( $tmparray[$i+1] );
+	{
+		// Add check if cvars exists
+		if ( isset($tmparray[$i]) && isset($tmparray[$i+1]) )
+			$cvartmparray[ DB_RemoveBadChars($tmparray[$i]) ] = DB_RemoveBadChars( $tmparray[$i+1] );
+	}
 
 	if ( isset($cvartmparray['gamestartup']) )
 	{
@@ -822,7 +912,17 @@ function GetCustomServerStartTime($mybuffer)
 		return $cvartmparray['gamestartup'];
 	}
 	else
+	{
+		// UNIX TIMEMODE WORKAROUND
+		global $gl_UnixTimeMode;
+		$tmpStartTime = GetSecondsFromLogLine( $mybuffer );
+		if ( $gl_UnixTimeMode ) 
+			return $tmpStartTime;
+		// UNIX TIMEMODE WORKAROUND
+
+		/// Default return
 		return "";
+	}
 }
 
 

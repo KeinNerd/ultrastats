@@ -1,6 +1,16 @@
 <!-- INCLUDE include_header.html --> 
 
-<br>
+<!-- IF playersenabled!="true" -->
+<br><br>
+<center>
+	<div class="table_with_border_second ErrorMsg" style="width:600px">
+		<div class="PriorityError">{LN_ERROR_DETAILS}</div>
+		<p>{LN_ERROR_NOSTATSDATAFOUND}</p>
+		</div>
+	<br><br>
+</center>
+<br><br>
+<!-- ENDIF playersenabled!="true" -->
 
 <table width="100%" cellpadding="0" cellspacing="5" border="0" align="center">
 <tr>
@@ -8,9 +18,9 @@
 	<td width="100%" valign="top">
 
 	<!-- IF playersenabled="true" -->
-		<table width="100%" cellpadding="1" cellspacing="0" border="0" align="center">
+		<table width="100%" cellpadding="1" cellspacing="0" border="0" align="center" class="with_border_alternate">
 		<tr>
-			<td class="title" width="400" nowrap>{web_topplayers} {LN_PLAYERS_MAINLASTROUNDS} '{sorting}'</td>
+			<td class="title" nowrap>{web_topplayers} {LN_PLAYERS_MAINLASTROUNDS} '{sorting}'</td>
 		</tr>
 		</table>
 	
@@ -31,10 +41,10 @@
 		<tr>
 			<td width="20" class="cellmenu1" align="center" nowrap><B>{LN_TOPPLAY_NUM}</B></td>
 			<td width="100%" class="cellmenu1" align="center" nowrap><B>{LN_TOPPLAY_NAME}</B></td>
-			<td width="50" class="cellmenu1" align="center" nowrap><A HREF="players.php?sorting=Kills{additional_url}" class="cellmenu1_link" >{LN_TOPPLAY_KILLS}</A></td>
-			<td width="50" class="cellmenu1" align="center" nowrap><A HREF="players.php?sorting=Deaths{additional_url}" class="cellmenu1_link" >{LN_TOPPLAY_Deaths}</A></td>
-			<td width="50" class="cellmenu1" align="center" nowrap><A HREF="players.php?sorting=Teamkills{additional_url}" class="cellmenu1_link" >{LN_TOPPLAY_TeamKills}</A></td>
-			<td width="50" class="cellmenu1" align="center" nowrap><A HREF="players.php?sorting=Suicides{additional_url}" class="cellmenu1_link" >{LN_TOPPLAY_Suicides}</A></td>
+			<td width="60" class="cellmenu1" align="center" nowrap><A HREF="players.php?sorting=Kills{additional_url}" class="cellmenu1_link" >{LN_TOPPLAY_KILLS}</A></td>
+			<td width="60" class="cellmenu1" align="center" nowrap><A HREF="players.php?sorting=Deaths{additional_url}" class="cellmenu1_link" >{LN_TOPPLAY_Deaths}</A></td>
+			<td width="70" class="cellmenu1" align="center" nowrap><A HREF="players.php?sorting=Teamkills{additional_url}" class="cellmenu1_link" >{LN_TOPPLAY_TeamKills}</A></td>
+			<td width="60" class="cellmenu1" align="center" nowrap><A HREF="players.php?sorting=Suicides{additional_url}" class="cellmenu1_link" >{LN_TOPPLAY_Suicides}</A></td>
 			<td colspan="2" width="200" class="cellmenu1" align="center" nowrap><A HREF="players.php?sorting=KillRatio{additional_url}" class="cellmenu1_link" >{LN_TOPPLAY_KillRatio}</A></td>
 <!--TODO!			<td colspan="2" width="200" class="cellmenu1" align="center" nowrap><A HREF="players.php?sorting=TotalSeconds{additional_url}" class="cellmenu1_link" >{LN_TOPPLAY_PlayedTime}</A></td>-->
 			<td colspan="2" width="200" class="cellmenu1" align="center" nowrap><B>{LN_TOPPLAY_PlayedTime}</B></td>

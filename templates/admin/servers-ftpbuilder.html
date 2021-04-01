@@ -6,10 +6,23 @@
 
 <!-- IF ISERROR="true" -->
 <center>
-<br>
-<h3><font color="red">{ERROR_MSG}</font></h3>
+	<div class="table_with_border_second ErrorMsg" style="width:400px">
+		<div class="PriorityError">{LN_ERROR_DETAILS}</div>
+		<p>{ERROR_MSG}</p>
+		</div>
+	<br><br>
 </center>
 <!-- ENDIF ISERROR="true" -->
+
+<!-- IF FTP_IS_ENABLED!="true" -->
+<center>
+	<div class="table_with_border_second ErrorMsg" style="width:400px">
+		<div class="PriorityWarning">{LN_WARN_DETAILS}</div>
+		<p>{LN_WARN_NOFTPEXTENSIONS}</p>
+		</div>
+	<br><br>
+</center>
+<!-- ENDIF FTP_IS_ENABLED!="true" -->
 
 <!-- IF ISSAVED="true" -->
 <script language="javascript">
@@ -77,31 +90,31 @@
 				<table border="0" cellpadding="1" cellspacing="1" bgcolor="#DDDDDD" width="100%">
 				<tr>
 					<td align="left" class="cellmenu1" width="200" nowrap><b>{LN_FTPBUILD_SERVERIP}</b></td>
-					<td align="center" class="line0" width="100%"><input type="text" name="serverip" size="50" maxlength="255" value="{SERVERIP}" onkeyup="updateftpurl(document.forms.ftpcheck)"></td>
+					<td align="center" class="line2" width="100%"><input type="text" name="serverip" size="40" maxlength="255" value="{SERVERIP}" onkeyup="updateftpurl(document.forms.ftpcheck)"></td>
 				</tr>
 				<tr>
 					<td align="left" class="cellmenu2" nowrap><b>{LN_FTPBUILD_SERVERPORT}</b></td>
-					<td align="center" class="line1"><input type="text" name="serverport" size="50" maxlength="7" value="{SERVERPORT}" onkeyup="updateftpurl(document.forms.ftpcheck)"></td>
+					<td align="center" class="line1"><input type="text" name="serverport" size="40" maxlength="7" value="{SERVERPORT}" onkeyup="updateftpurl(document.forms.ftpcheck)"></td>
 				</tr>
 				<tr>
 					<td align="left" class="cellmenu1" nowrap><b>{LN_FTPBUILD_USERNAME}</b></td>
-					<td align="center" class="line0"><input type="text" name="username" size="50" maxlength="255" value="{USERNAME}" onkeyup="updateftpurl(document.forms.ftpcheck)"></td>
+					<td align="center" class="line2"><input type="text" name="username" size="40" maxlength="255" value="{USERNAME}" onkeyup="updateftpurl(document.forms.ftpcheck)"></td>
 				</tr>
 				<tr>
 					<td align="left" class="cellmenu2" nowrap><b>{LN_FTPBUILD_PASSWORD}</b></td>
-					<td align="center" class="line1"><input type="text" name="password" size="50" maxlength="255" value="{PASSWORD}" onkeyup="updateftpurl(document.forms.ftpcheck)"></td>
+					<td align="center" class="line1"><input type="text" name="password" size="40" maxlength="255" value="{PASSWORD}" onkeyup="updateftpurl(document.forms.ftpcheck)"></td>
 				</tr>
 				<tr>
 					<td align="left" class="cellmenu1" nowrap><b>{LN_FTPBUILD_PATHTOGAMELOG}</b></td>
-					<td align="center" class="line0"><input type="text" name="pathtogamelog" size="50" maxlength="128" value="{PATHTOGAMELOG}" onkeyup="updateftpurl(document.forms.ftpcheck)"></td>
+					<td align="center" class="line2"><input type="text" name="pathtogamelog" size="40" maxlength="128" value="{PATHTOGAMELOG}" onkeyup="updateftpurl(document.forms.ftpcheck)"></td>
 				</tr>
 				<tr>
 					<td align="left" class="cellmenu2" nowrap><b>{LN_FTPBUILD_GAMELOGFILENAME}</b></td>
-					<td align="center" class="line1"><input type="text" name="gamelogfilename" size="50" maxlength="128" value="{GAMELOGFILENAME}" onkeyup="updateftpurl(document.forms.ftpcheck)"></td>
+					<td align="center" class="line1"><input type="text" name="gamelogfilename" size="40" maxlength="128" value="{GAMELOGFILENAME}" onkeyup="updateftpurl(document.forms.ftpcheck)"></td>
 				</tr>
 				<tr>
 					<td align="left" class="cellmenu2" nowrap><b>{LN_FTPPASSIVEENABLED}</b></td>
-					<td align="left" class="line1">&nbsp;&nbsp;&nbsp;<input type="checkbox" name="ftppassiveenabled" value="yes" {FTPPASSIVEENABLED_CHECKED}>&nbsp;Click to enable</td>
+					<td align="left" class="line2">&nbsp;&nbsp;&nbsp;<input type="checkbox" name="ftppassiveenabled" value="yes" {FTPPASSIVEENABLED_CHECKED}>&nbsp;Click to enable</td>
 				</tr>
 				<tr>
 					<td align="center" colspan="2" class="line1">

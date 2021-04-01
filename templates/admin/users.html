@@ -6,16 +6,18 @@
 </center>
 <!-- ENDIF ISERROR="true" -->
 
-<table cellpadding="0" cellspacing="0" border="0" align="center" class="with_border">
-	<tr>
-		<td colspan="10" align="center" valign="top" class="title">
-		<strong>{LN_USER_CENTER}</strong></td>
-	</tr>
-	<tr>
-		<td align="center">
+<table cellpadding="0" cellspacing="0" border="0" width="600" align="center" class="with_border_alternate">
+<tr>
+	<td colspan="10" align="center" valign="top" class="title">
+	<strong>{LN_USER_CENTER}</strong></td>
+</tr>
+</table>
+<table cellpadding="0" cellspacing="0" border="0" width="600" align="center" class="with_border">
+<tr>
+	<td align="center">
 
 <!-- IF LISTUSERS="true" -->
-		<table border="0" cellpadding="2" cellspacing="1" bgcolor="#DDDDDD">
+		<table border="0" cellpadding="2" cellspacing="1" width="600">
 		<tr>
 			<td align="center" width="50" class="cellmenu1"><b>{LN_SERVERNUMBER}</b></td>
 			<td align="center" width="300" class="cellmenu1"><b>{LN_USER_NAME}</b></td>
@@ -32,7 +34,7 @@
 		</tr>
 		<!-- END USERS -->
 		<tr>
-			<td align="center" colspan="3"><b><a href="users.php?op=add"><img src="{BASEPATH}images/icons/add.png" title="{LN_ADMINADD} {LN_SERVER}">&nbsp;{LN_USER_ADD}</a></b></td>
+			<td align="center" colspan="3" class="tableBackground"><a href="users.php?op=add"><img src="{BASEPATH}images/icons/add.png" title="{LN_ADMINADD} {LN_SERVER}">&nbsp;{LN_USER_ADD}</a></td>
 		</tr>
 		</table>
 <!-- ENDIF LISTUSERS="true" -->
@@ -53,7 +55,7 @@
 				<td align="right" class="line0"><input type="password" name="password2" size="40" maxlength="64" value=""></td>
 			</tr>
 			<tr>
-				<td align="center" colspan="2">
+				<td align="center" colspan="2" class="tableBackground">
 					<input type="submit" value="{USER_SENDBUTTON}">
 					<input type="hidden" name="op" value="{USER_FORMACTION}">
 					<input type="hidden" name="id" value="{USERID}">

@@ -1,0 +1,150 @@
+<!-- INCLUDE admin/admin_header.html --> 
+
+<!-- IF ISERROR="true" -->
+<center>
+<h3><font color="red">{ERROR_MSG}</font></h3>
+</center>
+<!-- ENDIF ISERROR="true" -->
+
+<table cellpadding="0" cellspacing="0" border="0" width="750" align="center" class="with_border_alternate">
+<tr>
+	<td colspan="10" align="center" valign="top" class="title">
+	<strong>{LN_ADMIN_STREDITOR}</strong></td>
+</tr>
+</table>
+<table cellpadding="0" cellspacing="0" border="0" width="750" align="center" class="with_border">
+<tr>
+	<td align="center" class="tableBackground">
+
+<!-- IF LISTSTRINGS="true" -->
+
+		<table width="100%" border="0" cellspacing="0" cellpadding="0" align="center">
+		<tr> 
+			<td class="cellmenu1" nowrap><B>&nbsp;{LN_STRING_FILTER}&nbsp;</B></td>
+			<td class="line0" align="center" nowrap>
+				<form action="" method="get">
+				<input type="hidden" name="start" value="{current_pagebegin}">
+				<input type="textbox" size="40" name="strfilter" value="{strfilter}">
+				<input type="submit" value="{LN_STRED_DOFILTER}">
+			</td>
+			<td class="line1" width="100%" align="center">&nbsp;</td>
+			</form>
+		</tr>
+		</table>
+
+		<!-- IF string_pagerenabled="true" -->
+		<table width="100%" align="center" border="0" cellpadding="1" cellspacing="1" class="with_border">
+		<tr>
+			<td class="cellmenu2" nowrap><B>Pages: &nbsp; </B></td>
+		<!-- BEGIN STRINGPAGES -->
+			<td class="{cssclass}" nowrap><a href="?playerfilter={playerfilter}&start={mypagebegin}" target="_top">{mypagenumber}</a>&nbsp;</td>
+		<!-- END STRINGPAGES -->
+			<td nowrap width="100%"class="line2">&nbsp;</td>
+		</tr>
+		</table>
+		<!-- ENDIF string_pagerenabled="true" -->
+
+		<table border="0" cellpadding="2" cellspacing="1" bgcolor="#DDDDDD">
+		<tr>
+			<td align="center" width="100" class="cellmenu1"><b>{LN_STRED_LANG}</b></td>
+			<td align="center" width="200" class="cellmenu1"><b>{LN_STRED_STRINGID}</b></td>
+			<td align="center" width="300" class="cellmenu1"><b>{LN_STRED_TEXT}</b></td>
+			<td align="center" width="150" class="cellmenu1"><b>{LN_STRED_ACTION}</b></td>
+		</tr>
+		<!-- BEGIN STRINGS -->
+		<tr>
+			<td align="center" class="{cssclass}"><b>{LANG}</b></td>
+			<td align="left" class="{cssclass}"><b>{STRINGID}</b></td>
+			<td align="left" class="{cssclass}">{TEXT_TRUNS}</td>
+			<td align="center" class="{cssclass}">
+				&nbsp;<a href="stringeditor.php?op=edit&id={STRINGID}&lang={LANG}"><img src="{BASEPATH}images/icons/edit.png" width="16" title="{LN_ADMINEDIT}"></a>
+				&nbsp;<a href="stringeditor.php?strfilter={strfilter}&start={current_pagebegin}&op=delete&id={STRINGID}&lang={LANG}"><img src="{BASEPATH}images/icons/delete.png" width="16" title="{LN_ADMINDELETE}"></a>
+			</td>
+		</tr>
+		<!-- END STRINGS -->
+		<tr>
+			<td align="center" colspan="4" class="tableBackground">
+				<a href="stringeditor.php?op=add"><img src="{BASEPATH}images/icons/add.png" title="{LN_STRING_ADD}">&nbsp;{LN_STRING_ADD}</a> 
+			</td>
+		</tr>
+		</table>
+<!-- ENDIF LISTSTRINGS="true" -->
+
+<!-- IF ISEDITSTRING="true" -->
+		<form action="" method="post">
+			<table border="0" cellpadding="1" cellspacing="1" bgcolor="#DDDDDD" width="100%">
+			<tr>
+				<td align="left" class="cellmenu1" width="150" nowrap><b>{LN_STRED_STRINGID}</b></td>
+				<td align="right" class="line0" width="100%"><input type="textbox" size="40" name="id" value="{STRINGID}"></td>
+			</tr>
+			<tr>
+				<td align="left" class="cellmenu1" nowrap><b>{LN_STRED_LANG}</b></td>
+				<td align="right" class="line1">
+				<select name="langcode" size="1" STYLE="width: 190px">
+					<!-- BEGIN FORM_LANGUAGES -->
+					<option {is_selected} value="{langcode}">{DisplayName}</option>
+					<!-- END FORM_LANGUAGES -->
+				</select>
+				</td>
+			</tr>
+			<tr>
+				<td align="left" class="cellmenu1_naked" nowrap><b>{LN_STRED_TEXT}</b></td>
+				<td align="right" class="line1"><textarea name="text" cols="80" rows="20">{TEXT}</textarea></td>
+			</tr>
+			<tr>
+				<td align="center" colspan="2">
+					<input type="submit" value="{STRING_SENDBUTTON}">
+					<input type="hidden" name="oldid" value="{STRINGID}">
+					<input type="hidden" name="oldlang" value="{LANG}">
+					<input type="hidden" name="op" value="{STRING_FORMACTION}">
+					<input type="hidden" name="referer" value="{encoded_referer}">
+				</td>
+			</tr>
+			</table>
+		</form>
+<!-- ENDIF ISEDITSTRING="true" -->
+
+<!-- IF ISDELETESTRING="true" -->
+	<br>
+	<!-- IF ISVERIFY="true" -->
+			<table width="600" cellpadding="2" cellspacing="0" border="0" align="center" class="with_border_alternate">
+			<tr>
+				<td colspan="10" align="center" valign="top" class="title"><strong><FONT COLOR="red">{LN_WARNING_DELETESTRING}</FONT></strong></td>
+			</tr>
+			</table>
+			<table width="600" cellpadding="2" cellspacing="1" border="0" align="center" class="with_border">
+			<tr>
+				<td align="center" class="line0" width="50%">
+					<br>
+					<A HREF="stringeditor.php?strfilter={strfilter}&start={current_pagebegin}&op=delete&id={STRINGID}&lang={LANG}&verify=yes">
+					<img src="{BASEPATH}images/icons/check.png" width="16"><br>
+					Yes, delete stringid '{STRINGID}' </A>
+				</td>
+				<td align="center" class="line1" width="50%">
+					<A HREF="javascript:history.back();">
+					<br>
+					<img src="{BASEPATH}images/icons/redo.png" width="16"><br>
+					No, go back</A>
+				</td>
+			</tr>
+			</table>
+	<!-- ENDIF ISVERIFY="true" -->
+
+	<!-- IF ISVERIFY="false" -->
+		<table border="0" cellpadding="2" cellspacing="1" bgcolor="#DDDDDD">
+		<tr>
+			<td align="center" class="line1"><b>{STRING_DELETEDSTRING}</b></td>
+		</tr>
+		</table>
+	<!-- ENDIF ISVERIFY="false" -->
+		<br>
+		<a href="stringeditor.php?strfilter={strfilter}&start={current_pagebegin}">{LN_STRING_BACKSTRINGLIST}</a>
+
+
+<!-- ENDIF ISDELETESTRING="true" -->
+
+		</td>
+	</tr>
+</table>
+
+<!-- INCLUDE admin/admin_footer.html -->

@@ -24,7 +24,7 @@
 				<input type="textbox" size="40" name="playerfilter" value="{playerfilter}">
 				<input type="submit" value="{LN_PLAYER_DOFILTER}">
 			</td>
-			<td class="line1" width="100%" align="center">&nbsp;</td>
+			<td class="line1" width="100%" align="center"><I>{players_count_text}</I></td>
 			</form>
 		</tr>
 		</table>
@@ -56,8 +56,8 @@
 			<td align="center" class="{cssclass}"><b>{Number}</b></td>
 			<td align="center" class="{cssclass}"><b>{GUID}</b></td>
 			<td align="center" class="{cssclass}"><A HREF="players.php?op=edit&id={GUID}" title="{Alias}">{AliasAsHtml}</a></td>
-			<td align="center" class="{cssclass}"><a href="?playerfilter={playerfilter}&start={current_pagebegin}&playerguid={GUID}&playerop=setclanmember&newval={set_clanmember}"><img src="{BASEPATH}{is_clanmember_string}" width="16"></a></td>
-			<td align="center" class="{cssclass}"><a href="?playerfilter={playerfilter}&start={current_pagebegin}&playerguid={GUID}&playerop=setban&newval={set_banned}"><img src="{BASEPATH}{is_banned_string}" width="16"></a></td>
+			<td align="center" class="{cssclass}"><a href="?playerfilter={playerfilter}&start={current_pagebegin}&playerguid={GUID}&playerop=setclanmember&newval={set_clanmember}"><img src="{is_clanmember_string}" width="16"></a></td>
+			<td align="center" class="{cssclass}"><a href="?playerfilter={playerfilter}&start={current_pagebegin}&playerguid={GUID}&playerop=setban&newval={set_banned}"><img src="{is_banned_string}" width="16"></a></td>
 			<td align="center" class="{cssclass}">
 				&nbsp;<a href="players.php?op=edit&id={GUID}"><img src="{BASEPATH}images/icons/edit.png" width="16" title="{LN_ADMINEDIT}"></a>
 				&nbsp;<a href="players.php?playerfilter={playerfilter}&start={current_pagebegin}&op=delete&id={GUID}"><img src="{BASEPATH}images/icons/delete.png" width="16" title="{LN_ADMINDELETE}"></a>
@@ -80,7 +80,7 @@
 			</tr>
 			<tr>
 				<td align="left" class="cellmenu1" nowrap><b>{LN_PLAYER_PBGUID}</b></td>
-				<td align="right" class="line0"><input type="text" name="playerpbguid" size="40" maxlength="7" value="{PBGUID}"></td>
+				<td align="right" class="line0"><input type="text" name="playerpbguid" size="40" maxlength="32" value="{PBGUID}"></td>
 			</tr>
 
 			<tr>

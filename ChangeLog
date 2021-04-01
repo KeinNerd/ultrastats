@@ -1,0 +1,242 @@
+---------------------------------------------------------------------------
+Version 0.3.16 (beta), 2009-07-24
+ - Added database updtae V9 including the new map inserts for CodWAW 
+   Patch 1.4 and 1.5. 
+ - Added pictures for CodWAW maps from Patch 1.4 and 1.5
+ - Added fix for death calculations on rounds-detail page
+---------------------------------------------------------------------------
+Version 0.3.15 (beta), 2009-03-16
+ - Added support for new action style logging of CodWAW.
+ - Added database update script for DB Version 8 including inserts for 
+   gametype specific actions of CodWAW Patch 1.3
+ - Added support for JT loglines (joinTeam)
+ - Added another fix for the time calculation. As long as the last
+   file modifcation timestamp of the gamelog is valid, the roundtimes 
+   should be accurate.
+ - Added a killratio calculation fix in parser submitted by 
+   silent ( silent AT ccmail DOT cc )
+ - Invalid Rounds won't be shown anymore and fixed Round Action display
+ - Fixed some notice errors in parser helper.
+ - Round Starttime is printed in debug now as well
+ - Added counter for select statements
+ - Fixed a typo in constants script
+---------------------------------------------------------------------------
+Version 0.3.14 (beta), 2009-03-10
+Changes and bugfixes
+- Added compatibilty support for CodWAW Patch 1.3. 
+- Minor other bugfixes needed to fully support CodWAW Patch 1.3
+---------------------------------------------------------------------------
+Version 0.3.13 (beta), 2008-11-30
+New features:
+- Added Icons for gameversions to the top left on the menubar.
+- Added SQL_BIG_SELECTS workaround for certain databases.
+- Number of Top Players on main page is configureable now
+- Added searchpage for searching in the chatlogs
+- Added workaround for changed ACTION logging format of Pam4 in Cod4! 
+  However Pam4 still breaks log format in a way that some features like
+  chatlogging will not work with PAM4.
+Changes and bugfixes:
+- Fixed PHP4 compatibility issues in logparser
+- Fixed Donate Button ;)
+- Added database upgrade V7, including important changes in the database.
+  Adds also missing weapons, maps and other stuff automatically, 
+  also on existing installations.
+- Fixed SD Gametype default for codww, empty gametypes will be displayed 
+  with gametype id on main page now.
+- Fixed "WTF OMFG" Error when playertime was 0 seconds, proberly because 
+  client directly disconnected
+- Fixed strange increment error in install.php
+---------------------------------------------------------------------------
+Version 0.3.12 (beta), 2008-11-18
+New features:
+- Added new general frotnend options, to inject html code at certain 
+  places, prepend a string in the title tag and customize the 
+  UltraStats Logo url.
+- Added help text for FTP Create button.
+- Added display of the current configured game.
+- Added check if gamelogfile is actually writeable. 
+- Added quick and dirty support for download gamelogfiles over http.
+  Just a fully qualified http url instead of ftp, the stats parser 
+  automatically detect. 
+Changes and bugfixes:
+- Fixed Sniper Medal for Codww
+- Removed some minor issues with missing templates variables. 
+- Fixed serious security issue of reading the serverid parameter. 
+- Fixed problem with session initialization on Microsoft IIS Webservers.
+- Fixed a problem in the default db templates, causing some mysql 4 
+  version to fail durign installation. 
+- Added support to display new weapon ids proberly and correct. 
+- Fixed minor notice bug when reading script timeout from db settings. 
+- Fixed PB Guid detection string
+- Fixed Knife medal for CodWW and fixed minor bug in the medals 
+  page template. 
+- Fix detection of command line mode, which also fixes php 
+  session management. 
+- Added fix for "SQL_BIG_SELECT" errors in logparser.
+---------------------------------------------------------------------------
+Version 0.3.11 (beta), 2008-10-05
+Changes and bugfixes:
+- Fixed race condition, when a new logfile is used the LastLogLine 
+  was only reseted internal. We are reseting the playedseconds as well now.
+- Fixed typing issues and removed notices issues
+- Changed display name of Marine Soldier to American Soldier
+- Removed TM from frontpage logo
+- Fixed RoundEnd Detection in Parser, which caused following errors.
+---------------------------------------------------------------------------
+Version 0.3.10 (beta), 2008-10-04
+New features:
+- Added missing .357 Magnum Pistol including images and description. 
+Changes and bugfixes:
+- Calculation of time (roundbegin) has been hardened and corrected against 
+  large logfiles which contain server restarts. Added two new fields 
+  into Server Table needed for this and future enhancments. 
+- Removed some obselete weapons from template database
+- All fopen calls changed to use @fopen, this avoids php warnings
+---------------------------------------------------------------------------
+Version 0.3.9 (beta), 2008-10-03
+Changes and bugfixes:
+- Replaced all weapon images with new rendered weapn images from the 
+  final game. Added lots of missing images as well. 
+- Fixed all references to Call of Duty: World ar War. 
+- Fixed minor spelling issues in default database template
+- Removed old obselete documentation. 
+- Session Startup is done in every site now!
+---------------------------------------------------------------------------
+Version 0.3.8 (beta), 2008-10-01
+New features:
+- Added few missing language strings for certain existing and new weapons. 
+- Added README document
+- Added images for certain existing and new weapons
+Changes and bugfixes:
+- Lots of fixes in the weapon table, replaced some of the existing 
+  weapon images with better ones. 
+- Added new attachment images
+- Removed ANTI Medals from code for now. 
+- Fixed minor installer issues and enhanced critical error messages. 
+- Changed few minor things in the docs and about page
+--------------------------------------------------------------------------
+Version 0.3.7 (devel), 2008-09-30
+New features:
+- Added some german translation
+- Added warning if FTP Extensions are disabled!
+- Enhanced database query performance in player admin
+- Show found player number in player admin
+- Prepared time filter for consolidation table
+Changes and bugfixes:
+- Fixed GUID issues bug in player admin causing failed edits of some players
+- Fixed minor issues if new gametypes were added, no displayname was used
+- Fixed lots of minor display issues and minor template issues
+- Cleaned up gametypes in default database template
+- Removed useless default charset from tabel defs
+---------------------------------------------------------------------------
+Version 0.3.6 (devel), 2008-09-29
+New features:
+- Added missing map picture for airfield
+Changes and bugfixes:
+- Fixed minor sql issues in medal statements
+- Fixed sort order of available stats years and months
+- fixed misspelled svt40 images
+- Set default bar images for players without kills
+- Added result workaround for TDM gametype in Cod:WW
+- Added missing weapons into default sql statement set
+- Changed artillery text
+- Unknown alias is now displayed with -Topalias Unknown-
+---------------------------------------------------------------------------
+Version 0.3.5 (devel), 2008-09-28
+New features:
+- Added new default theme called "codww" which is like the current 
+  www.callofduty.com style. 
+- Implemented Update Check feature which is performed when the user logs 
+  into the admin center. If an update is available, the user will be 
+  reminded on each admin page. 
+- Added option to set php script execution timeout, if possible. 
+  This will help people who have to parse the logfile 
+  using the webserver. 
+- Links within text description are parsed and modified, so that always
+  open in a new window. 
+- Implemented time filter into medal code. All sql statements had 
+  to be modified for this to work.
+Changes and bugfixes:
+- Fixed some sql statement issues
+- Added additional pager template, forgot to add in last version
+- Fixed typo of table name when deleting a player in admin/players.php
+---------------------------------------------------------------------------
+Version 0.3.4 (devel), 2008-09-24
+New features:
+- Implemented Time Filtering which can be selected now on the left 
+  side below the menu. The time filtering can go down to year and month 
+  level. Available years and month will automatically be generated by 
+  the statsdata. 
+- Also cleaned up the template coding, replaced the default error display,
+  and added more useful error description in certain places. 
+- Added submenu option into pager include. Added available gametypes 
+  menu into round list. 
+- Damagetype and Weapon lists are now stored in helper tables, the data
+  is consolidated in the Total/Final Calculations but can also be done 
+  seperated in the Serverlist Menu. This improves performance for 
+  stats display on larger databases. 
+- Also added some more popup help texts in certain areas.  
+- Fixed a few minor isses in the css and templates. 
+---------------------------------------------------------------------------
+Version 0.3.3 (devel), 2008-09-21
+New features:
+- Added 4 new Player Models for Cod:WW, and rewrote the hitdetection 
+  model view in the player details. Details are now shown in a popup 
+  when you hover the body parts. It is also possible to configure
+  which model you want to use in the player details: 
+  marine, german, japanese and russian. 
+- Added german translation
+- Added support to enable GZIP compression. This can be used to reduce 
+  outgoing html traffic. 
+
+Changes and bugfixes:
+  logline for now!
+- Fixed few minor display and visiblity issues in the stats
+- Changed some debug levels in the parser. Default debug level is 
+  restricted to more useful output now. 
+- Fixed readability issue in dark style
+- Added menu workaround for Internet Explorer, so it works there as well. 
+- Fixed default picture in serverlist view
+- LogParser: Rewrote round begin and round end detection to 
+  work with new Cod:WW Gametypes. 
+- LogParser: Added workaround to add players into a running round which 
+  didn't join before. This workaround is only applied in the KILL 
+- LogParser: Fixed a bug in the custom time start detection method 
+  using the gamestartup variable workaround. 
+- LogParser: Fixed a roundstart time calculation bug which caused 
+  played rounds to appear in the future. 
+---------------------------------------------------------------------------
+Version 0.3.2 (devel), 2008-09-18
+
+New features:
+- Initial Changelog entry for the third UltraStats release
+- Added support for Cod:WW (Call of Duty: World at War)
+- Added map images for Cod:WW
+- Added weapon images for Cod:WW
+- Added string editor in Admin Center
+- Implemented new css based menu into UltraStats
+- Enhanced and cleaned up the basic "default" and "dark"
+- Added support to LIST weapons and damagetypes on ONE site
+- Added favicon.ico
+
+Changes and bugfixes:
+- Added new Installations instructions document called "INSTALL"
+- Added GPLv3 document "COPYING"
+- Removed unused files, fixed pager in stringeditor and minor 
+  other visual tweaks
+- Removed unsupported languages and themes for now. 
+  Going to add them back in a later step
+- Enhanced AdminMenu, fixed a few style sheet bugs
+- Fixed minor issue with includes and server deletion
+- ini_set commands won't create an error now
+- Removed Windows linefeeds from include files
+- Enhanced the UltraStats installer, better error handling now!
+- Fixed issue of showing PBGUid Field when no PBGuid was available
+- Fixed wrong sized thmbnails for custom maps
+- Fixed bug in INSERT statement of server admin
+- Fixed a bug of players which were not displayed on the detail page. 
+  Only happened if there GUID was empty.
+- Fixed leaking DB handle in GetSingleDBEntryOnly
+- Removed useless files like multiple Thumbs.db occurences
+- Removed old cvs crap (using git now ;) )!
+---------------------------------------------------------------------------

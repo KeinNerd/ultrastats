@@ -1,17 +1,23 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006-2008!								*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Some constants													*
-	*																	*
-	* -> Stuff which has to be static and predefined					*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Constants Helper File
+	*		This file contains all needed constants for UltraStat s
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
 
 // --- Avoid directly accessing this file! 
@@ -46,11 +52,13 @@ define('COD', 0);
 define('CODUO', 1);
 define('COD2', 2);
 define('COD4', 3);
+define('CODWW', 4);
 
 define('LN_GEN_COD', "Call of Duty");
-define('LN_GEN_CODUO', "Call of Duty - United Offense");
+define('LN_GEN_CODUO', "Call of Duty: United Offensive");
 define('LN_GEN_COD2', "Call of Duty 2");
-define('LN_GEN_COD4', "Call of Duty 4 - Modern Warfare");
+define('LN_GEN_COD4', "Call of Duty 4: Modern Warfare");
+define('LN_GEN_CODWW', "Call of Duty: World at War");
 // --- 
 
 // ---
@@ -67,6 +75,10 @@ define('PARSER_GUID', 1);
 
 define('JOIN_CLIENTID', 2);
 define('JOIN_CLIENTNAME', 3);
+
+define('JOINTEAM_CLIENTID', 2);
+define('JOINTEAM_CLIENTTEAM', 3);
+define('JOINTEAM_CLIENTNAME', 4);
 
 define('QUIT_CLIENTID', 2);
 define('QUIT_CLIENTNAME', 3);
@@ -100,10 +112,22 @@ define('DAMAGE_ATTACKER_NAME', 8);
 define('RWIN_TEAM', 1);
 define('RLOS_TEAM', 1);
 
+define('RWINLOSS_GUID', 1);
+define('RWINLOSS_ID', 2);
+define('RWINLOSS_NAME', 3);
+
 define('ACTION_CLIENTID', 2);
 define('ACTION_CLIENT_TEAM', 3);
 define('ACTION_CLIENT_NAME', 4);
 define('ACTION_THEACTION', 5);
+
+define('ACTIONV2_GUID', 1);
+define('ACTIONV2_CLIENTID', 2);
+define('ACTIONV2_CLIENT_NAME', 3);
+
+define('PAM4_ACTION_CLIENTID', 3);
+define('PAM4_ACTION_CLIENT_NAME', 2);
+define('PAM4_ACTION_THEACTION', 4);
 // --- 
 
 // --- Constants for the processing
@@ -132,6 +156,7 @@ define('ROUND_ALLIES_GUIDS', 10);
 define('ROUND_DBID', 11);
 define('ROUND_TOTALKILLS', 12);
 define('ROUND_DURATION', 13);
+define('ROUND_MODVERSION', 14);
 
 define('DBKILLS_ATTACKERGUID', 0);
 define('DBKILLS_OPFERGUID', 1);
@@ -153,20 +178,30 @@ define('FTP_TIMEOUT', 10);
 
 define('TRANSFERTYPE_FTP', 0);
 define('TRANSFERTYPE_SCP', 1);
+define('TRANSFERTYPE_HTTP', 2);
 // --- 
 
 // --- WeaponTypes
-define('WEAPONTYPE_MACHINEGUN', 0);	// MachineGun, Maschinenpistolen
-define('WEAPONTYPE_SNIPER', 1);		// Sniper, Scharfschützengewehre
-define('WEAPONTYPE_PISTOL', 2);		// Pistol, Pistole
-define('WEAPONTYPE_GRENADE', 3);	// Grenade, Granaten
-define('WEAPONTYPE_STANDWEAPON', 4);
-define('WEAPONTYPE_TANK', 5);		// Panzer
-define('WEAPONTYPE_MISC', 6);		// Misc, Sonstiges
-define('WEAPONTYPE_ASSAULT', 7);		// Sturmgewehre, Assault Rifle
-define('WEAPONTYPE_LIGHTMACHINEGUN', 8);// Light MachineGun, Leichte Maschinengewehre
-define('WEAPONTYPE_SHOTGUN', 9);		// Shotgun, Schrotflinten
-define('WEAPONTYPE_SPECIAL', 10);		// Special weapons like Claymore, RPG etc.
+define('WEAPONTYPE_MACHINEGUN', 0);			// MachineGun, Maschinenpistolen
+define('WEAPONTYPE_SNIPER', 1);				// Sniper, Scharfschützengewehre
+define('WEAPONTYPE_PISTOL', 2);				// Pistol, Pistole
+define('WEAPONTYPE_GRENADE', 3);			// Grenade, Granaten
+define('WEAPONTYPE_STANDWEAPON', 4);		// Stand-MG, Stand-MG's
+define('WEAPONTYPE_TANK', 5);				// Tanks, Panzer
+define('WEAPONTYPE_MISC', 6);				// Misc, Sonstiges
+define('WEAPONTYPE_ASSAULT', 7);			// Assault Rifles, Sturmgewehre
+define('WEAPONTYPE_LIGHTMACHINEGUN', 8);	// Light MachineGun, Leichte Maschinengewehre
+define('WEAPONTYPE_SHOTGUN', 9);			// Shotgun, Schrotflinten
+define('WEAPONTYPE_SPECIAL', 10);			// Special weapons like Claymore, RPG etc.
+define('WEAPONTYPE_RIFLES', 11);			// Rifles Weapons like M1 Garand or K98
+define('WEAPONTYPE_HEAVYWEAPONS', 12);		// Heavy Weapons like rocket launchers.
+define('WEAPONTYPE_SECONDARYGRENADE', 13);	// Secondary Grenade
+// --- 
+
+// --- Config Level defines
+define('CFGLEVEL_GLOBAL', 0);
+define('CFGLEVEL_GROUP', 1);
+define('CFGLEVEL_USER', 2);
 // --- 
 
 ?>

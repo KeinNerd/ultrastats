@@ -1,80 +1,137 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006, 2007, 2008						*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Rounds Index File													*
-	*																	*
-	* -> Shows list of all played rounds								*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Rounds List File
+	*		Shows a list of played rounds 
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
 
 // *** Default includes	and procedures *** //
 define('IN_ULTRASTATS', true);
 $gl_root_path = './';
-include($gl_root_path . 'include/functions_db.php');
 include($gl_root_path . 'include/functions_common.php');
-include($gl_root_path . 'include/class_template.php');
 include($gl_root_path . 'include/functions_frontendhelpers.php');
 
 InitUltraStats();
-IncludeLanguageFile( $gl_root_path . '/lang/' . $LANG . '/main.php' );
 InitFrontEndDefaults();	// Only in WebFrontEnd
 // ***					*** //
 
+// --- BEGIN CREATE TITLE
+$content['TITLE'] = InitPageTitle();
+// Append custom title part!
+$content['TITLE'] .= " :: Rounds ";
+// --- END CREATE TITLE
+
 // --- CONTENT Vars
 if ( isset($content['myserver']) ) 
-{
-	$content['TITLE'] = "Ultrastats :: Rounds :: Server '" . $content['myserver']['Name'] . "'";	// Title of the Page 
 	$content['rounddetailsspan'] = "5";
-}
 else
 {
-	$content['TITLE'] = "Ultrastats :: Rounds";
 	$content['ShowServer'] = "true";
 	$content['rounddetailsspan'] = "7";
 }
 // --- 
 
-// --- BEGIN Custom Code
 
+// --- BEGIN Custom Code
 // --- Read Vars
 if ( isset($_GET['start']) )
 	$content['current_pagebegin'] = intval(DB_RemoveBadChars($_GET['start']));
 else
 	$content['current_pagebegin'] = 0;
-
-
 // ---
 
+
 // --- Get/Set Sorting
+$strsortingsql = " WHERE 1 = 1 "; // Dummy query begin 
 if ( isset($_GET['id']) && strlen($_GET['id']) > 0 )
 {
 	// Set new Sorting
 	$content['sorting'] = DB_RemoveBadChars($_GET['id']);
-	$strsortingsql = " WHERE " . STATS_GAMETYPES . ".NAME = '" . $content['sorting'] . "'" . 
-					 GetCustomServerWhereQuery( STATS_ROUNDS, false);
+	$strsortingsql .= " AND " . STATS_GAMETYPES . ".NAME = '" . $content['sorting'] . "'";
 }
 else
 {
-	$strsortingsql = GetCustomServerWhereQuery( STATS_ROUNDS, true);
+	$strsortingsql .= GetCustomServerWhereQuery( STATS_ROUNDS, false);
+//	$strsortingsql = GetCustomServerWhereQuery( STATS_ROUNDS, true);
 	$content['sorting'] = ""; // Set empty, we have no sorting!
 }
+
+// Append Timefilter to query!
+$strsortingsql .= GetTimeWhereQueryString(STATS_TIME);
+//echo $strsortingsql;
 // --- 
+
+// --- BEGIN Get Available Gametypes!
+$sqlquery = "SELECT DISTINCT " .
+					STATS_GAMETYPES . ".NAME as GameTypeName, " .
+					STATS_GAMETYPES . ".DisplayName as GameTypeDisplayName " . 
+					" FROM " . STATS_GAMETYPES . 
+					" INNER JOIN (" . STATS_ROUNDS . ", " . STATS_SERVERS . 
+					") ON (" . 
+					STATS_GAMETYPES . ".ID=" . STATS_ROUNDS . ".GAMETYPE AND " . 
+					STATS_ROUNDS . ".SERVERID=" . STATS_SERVERS . ".ID )" . 
+					" WHERE 1 = 1 " . /* Dummy where */
+					GetCustomServerWhereQuery( STATS_ROUNDS, false) . 
+					GetTimeWhereQueryStringForRoundTable() . 
+					" ORDER BY GameTypeName "; 
+
+$result = DB_Query($sqlquery);
+$content['roundgametypes'] = DB_GetAllRows($result, true);
+if ( isset($content['roundgametypes']) )
+{
+	// Set pagermenuenabled true
+	$content['pagermenuenabled'] = "true";
+	$content['PAGERMENUTITLE'] = $content['LN_ROUNDS_AVAILABLEGAMETYPES'];
+	
+
+	foreach( $content['roundgametypes'] as $myGameType )
+	{
+		// Set DisplayName for Gametype if necessary
+		if ( strlen($myGameType['GameTypeDisplayName']) <= 0 ) 
+			$myGameType['GameTypeDisplayName'] = $myGameType['GameTypeName'];
+
+		$content['PAGERMENU'][] = array(
+									"PMENU_URL" => "?id=" . $myGameType['GameTypeName'] . $content['additional_url'] , 
+									"PMENU_DisplayName" =>	$myGameType['GameTypeDisplayName'], 
+									"PMENU_IMG_ENABLED" => false, 
+									"PMENU_IMG" => "", 
+									);
+	}
+
+
+//print_r( $content['roundgametypes'] );
+
+}
+	
+
+
+// --- END
 
 // --- BEGIN LastRounds Code for front stats
 	// --- First get the Count and Set Pager Variables
 	$sqlquery = "SELECT " .
 						"count(" . STATS_ROUNDS . ".ID) as AllRoundCount " . 
 						" FROM " . STATS_ROUNDS . 
-						" INNER JOIN (" . STATS_GAMETYPES .  
+						" INNER JOIN (" . STATS_GAMETYPES . ", " . STATS_TIME .  
 						") ON (" . 
-						STATS_GAMETYPES . ".ID=" . STATS_ROUNDS . ".GAMETYPE ) " . 
+						STATS_GAMETYPES . ".ID=" . STATS_ROUNDS . ".GAMETYPE AND " .
+						STATS_ROUNDS . ".ID=" . STATS_TIME . ".ROUNDID " . 
+						") " . 
 						$strsortingsql . 
 						" GROUP BY " . STATS_ROUNDS . ".ID " . 
 						" ORDER BY TIMEADDED DESC ";
@@ -114,7 +171,7 @@ $sqlquery = "SELECT " .
 					STATS_SERVERS . ".ID as ServerID, " . 
 					"count(" . STATS_TIME . ".PLAYERID) as PlayerCount " . 
 					" FROM " . STATS_ROUNDS . 
-					" INNER JOIN (" . STATS_GAMETYPES . ", " . STATS_MAPS . ", " . STATS_TIME . ", " . STATS_SERVERS . 
+					" LEFT OUTER JOIN (" . STATS_GAMETYPES . ", " . STATS_MAPS . ", " . STATS_TIME . ", " . STATS_SERVERS . 
 					") ON (" . 
 					STATS_GAMETYPES . ".ID=" . STATS_ROUNDS . ".GAMETYPE AND " . 
 					STATS_ROUNDS . ".MAPID=" . STATS_MAPS . ".ID AND " . 
@@ -162,11 +219,11 @@ if ( isset($content['roundsonly']) )
 		// --- Set Mapimage
 		$content['roundsonly'][$i]['MapImage'] = $gl_root_path . "images/maps/thumbs/" . $content['roundsonly'][$i]['MAPNAME'] . ".jpg";
 		if ( !is_file($content['roundsonly'][$i]['MapImage']) )
-			$content['roundsonly'][$i]['MapImage'] = $gl_root_path . "images/maps/no-pic.jpg";
+			$content['roundsonly'][$i]['MapImage'] = $gl_root_path . "images/maps/thumbs/no-pic.png";
 		// --- 
 
 		// --- Set GametypeName 
-		if ( isset($content['roundsonly'][$i]['GameTypeDisplayName']) )
+		if ( isset($content['roundsonly'][$i]['GameTypeDisplayName']) && strlen($content['roundsonly'][$i]['GameTypeDisplayName']) > 0 )
 			$content['roundsonly'][$i]['FinalGameTypeDisplayName'] = $content['roundsonly'][$i]['GameTypeDisplayName'];
 		else
 			$content['roundsonly'][$i]['FinalGameTypeDisplayName'] = $content['roundsonly'][$i]['GameTypeName'];

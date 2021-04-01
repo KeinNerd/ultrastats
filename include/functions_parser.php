@@ -1,18 +1,26 @@
 <?php
 /*
-	*********************************************************************
-	* Copyright by Andre Lorbach | 2006!								*
-	* -> www.ultrastats.org <-											*
-	*																	*
-	* Use this script at your own risk!									*
-	* -----------------------------------------------------------------	*
-	* Core Parser functions												*
-	*																	*
-	* -> 		*
-	*																	*
-	* All directives are explained within this file						*
-	*********************************************************************
+	********************************************************************
+	* Copyright by Andre Lorbach | 2006, 2007, 2008						
+	* -> www.ultrastats.org <-											
+	* ------------------------------------------------------------------
+	*
+	* Use this script at your own risk!									
+	*
+	* ------------------------------------------------------------------
+	* ->	Core Parser File
+	*		This file contains the core parser functions to analyze and
+	*		process the gamelogfiles. This is l33t stuff!
+	*																	
+	* This file is part of UltraStats
+	*
+	* UltraStats is free software: you can redistribute it and/or modify
+	* it under the terms of the GNU General Public License as published
+	* by the Free Software Foundation, either version 3 of the License,
+	* or (at your option) any later version.
+	********************************************************************
 */
+
 
 // --- Avoid directly accessing this file! 
 if ( !defined('IN_ULTRASTATS') )
@@ -25,6 +33,12 @@ if ( !defined('IN_ULTRASTATS') )
 // Some defaults vars
 $gl_newlastline = 0;
 $gl_linebuffer = "";
+$gl_UnixTimeMode = false;
+
+// Global variable Scope!
+$myPlayers = array(); 
+$myRound = array();
+$myKills = array();
 
 // SQL Counters
 $SQL_UDPATE_Batch_Count = 0;								// Counter for the batched UPDATE statements
@@ -33,6 +47,9 @@ $SQL_INSERT_Count = 0;										// Counter for direct INSERT statements
 $SQL_SELECT_Count = 0;										// Counter for direct SELECT statements
 // ---
 
+// --- Enable BIG Selects when the parser code runs
+EnableBigSelects();
+// ---
 
 /*
 *	Function to reset the GetLastLogFile
@@ -56,15 +73,25 @@ function GetLastLogFile( $overwritepasswd = "" )
 			!isset( $myserver['ID'] ) || 
 			intval( $myserver['ID'] ) <= 0 ||
 			!isset( $myserver['GameLogLocation'] ) || 
-			(strlen($myserver['GameLogLocation']) <= 0 ) )
+			(strlen($myserver['GameLogLocation']) <= 0)
+		)
 	{
 		// Error, we can not go on!
 		PrintHTMLDebugInfo( DEBUG_ERROR, "FTP", "Error, invalid Server or logfile location specified!" );
 		return;
 	}
+	
+	// check if local file is writeable
+	if ( !is_writeable($myserver['GameLogLocation']) )
+	{
+		// Error, we can not go on!
+		PrintHTMLDebugInfo( DEBUG_ERROR, "FTP", "Error, the local gameloglocation is NOT writeable! Please check file permission on '" . $myserver['GameLogLocation'] . "'!" );
+		return;
+	}
 
 	// --- Now we get FTP URL!
-	$result = DB_Query("SELECT ftppath FROM " . STATS_SERVERS . " WHERE id = " . $myserver['ID']);
+	$result = ProcessSelectStatement("SELECT ftppath FROM " . STATS_SERVERS . " WHERE id = " . $myserver['ID']);
+//	$result = DB_Query("SELECT ftppath FROM " . STATS_SERVERS . " WHERE id = " . $myserver['ID']);
 	$rows = DB_GetAllRows($result, true);
 	if ( isset($rows) )
 	{
@@ -76,6 +103,8 @@ function GetLastLogFile( $overwritepasswd = "" )
 			$nTransferType = TRANSFERTYPE_FTP;
 		else if ( strpos($fullftpstr, "scp://") !== false )
 			$nTransferType = TRANSFERTYPE_SCP;
+		else if ( strpos($fullftpstr, "http://") !== false )
+			$nTransferType = TRANSFERTYPE_HTTP;
 		else
 		{
 			//Error!
@@ -189,11 +218,11 @@ function GetLastLogFile( $overwritepasswd = "" )
 						// close the connection
 						ftp_close($connid);
 
-						// Clear Filecache!
+						// Bugfix for race conditions, clear file stats cache!
 						clearstatcache();
 
 						// Dbg Info
-						PrintHTMLDebugInfo( DEBUG_INFO, "Parser", "Download of " . $ftpfilename . " finished - New Filesize = " . filesize($myserver['GameLogLocation']) );
+						PrintHTMLDebugInfo( DEBUG_INFO, "Parser", "Download of " . $ftpfilename . " finished - New Filesize = " . @filesize($myserver['GameLogLocation']) );
 					} 
 					else 
 					{ 
@@ -213,10 +242,10 @@ function GetLastLogFile( $overwritepasswd = "" )
 						PrintHTMLDebugInfo( DEBUG_INFO, "SCP", "Download of " . $ftppath . $ftpfilename . " - resuming from filepos " . $locallogfilesize);
 
 						// Create stream handle to the file for reading!
-						$streamIn = fopen($szFileStr, 'r');
+						$streamIn = @fopen($szFileStr, 'r');
 
 						// Create local stream handle to the file for writing!
-						$streamOut = fopen($myserver['GameLogLocation'], 'a+'); //w
+						$streamOut = @fopen($myserver['GameLogLocation'], 'a+'); //w
 
 						// Move Pointer to last known position ^^
 						fseek($streamIn, $locallogfilesize);
@@ -264,10 +293,10 @@ function GetLastLogFile( $overwritepasswd = "" )
 						fclose($streamIn);
 						fclose($streamOut);
 
-						// WTF OMFG HWO THE HELL TO CLOSE SSH? 
-
-						// Clear Filecache!
+						// Bugfix for race conditions, clear file stats cache!
 						clearstatcache();
+
+						// WTF OMFG HWO THE HELL TO CLOSE SSH? 
 
 						// Debug Info!
 						PrintHTMLDebugInfo( DEBUG_INFO, "SCP", "Download of " . $ftpfilename . " finished - New Filesize = " . filesize($myserver['GameLogLocation']) );
@@ -276,6 +305,55 @@ function GetLastLogFile( $overwritepasswd = "" )
 					{
 						//Error!
 						PrintHTMLDebugInfo( DEBUG_ERROR, "SCP", "Could not initialize SFTP subsystem." );
+						return;
+					}
+				}
+				else if ( $nTransferType == TRANSFERTYPE_HTTP ) 
+				{
+					// QUICK AND DIRTY FOR NOW!
+					if ( $content["allow_url_fopen"] )
+					{
+						PrintHTMLDebugInfo( DEBUG_INFO, "HTTP", "Getting full logfile from " . $fullftpstr . " ... standby");
+						
+						//Flush output
+						FlushParserOutput();
+
+						// Create InHandle
+						$streamIn = @fopen($fullftpstr, "r");
+						if ( $streamIn )
+						{
+							// Create local stream handle to the file for writing!
+							$streamOut = @fopen($myserver['GameLogLocation'], 'w+'); //a+ for append later
+							if ( $streamOut ) 
+							{
+								// Move to beginning
+								fseek($streamOut, 0);
+								
+								// Loop through file and copy 8192 blocks
+								while (!feof($streamIn))
+								{
+									$tmpstr = fread($streamIn, 8192);
+									@fwrite($streamOut, $tmpstr); 
+								}
+								// close outstream
+								fclose($streamOut);
+							}
+							
+							// Close handle
+							fclose($streamIn);
+
+							// Bugfix for race conditions, clear file stats cache!
+							clearstatcache();
+
+							// Debug Info!
+							PrintHTMLDebugInfo( DEBUG_INFO, "HTTP", "Download of " . $fullftpstr . " finished - New Filesize = " . filesize($myserver['GameLogLocation']) );
+						}
+						else
+							PrintHTMLDebugInfo( DEBUG_ERROR, "HTTP", "Failed to obtain gamelog from '" . $fullftpstr . "'!" );
+					}
+					else
+					{
+						PrintHTMLDebugInfo( DEBUG_ERROR, "HTTP", "The setting ftp 'allow_url_fopen' is not enabled. Fopen cannot open remote http files." );
 						return;
 					}
 				}
@@ -314,6 +392,8 @@ function server_connect($server, $port)
 		$connid = ftp_connect($server, $port, FTP_TIMEOUT);
 	else if ( $nTransferType == TRANSFERTYPE_SCP ) 
 	    $connid = ssh2_connect($server, $port);
+	else if ( $nTransferType == TRANSFERTYPE_HTTP ) 
+		$connid = true;
 	
 	// return connection id
 	return $connid;
@@ -334,6 +414,8 @@ function server_login($connid, $username, $password)
 	{
 		$res = ssh2_auth_password($connid, $username, $password);
 	}
+	else if ( $nTransferType == TRANSFERTYPE_HTTP ) 
+		$res = true;
 	
 	// return resukt
 	return $res;
@@ -361,11 +443,11 @@ function ResetLastLine()
 	}
 
 	// --- Set the last FilePosition to 0 
-	$result = DB_Query("UPDATE " . STATS_SERVERS . " SET LastLogLine = '0' WHERE ID = " . $myserver['ID']);
+	$result = DB_Query("UPDATE " . STATS_SERVERS . " SET LastLogLine = 0, PlayedSeconds = 0, LastLogLineChecksum = 0 WHERE ID = " . $myserver['ID']);
 	DB_FreeQuery($result);
 
 	// Dbg
-	PrintHTMLDebugInfo( DEBUG_INFO, "Parser", "Resetted LastLine value for Server '" . $myserver['ID'] . "' ...");
+	PrintHTMLDebugInfo( DEBUG_INFO, "Parser", "Reseted LastLine value for Server '" . $myserver['ID'] . "' ...");
 }
 
 
@@ -393,7 +475,7 @@ function DeleteServer()
 	if ( !isset($_GET['verify']) || $_GET['verify'] != "yes" )
 	{
 		// Print form and return from function
-		PrintSecureUserCheck( $content['LN_WARNINGDELETE'], $content['LN_DELETEYES'], $content['LN_DELETENO'], "delete" );
+		PrintSecureUserCheckLegacy( $content['LN_WARNINGDELETE'], $content['LN_DELETEYES'], $content['LN_DELETENO'], "delete" );
 		return;
 	}
 	// ---
@@ -413,7 +495,7 @@ function DeleteServer()
 */
 function DeleteServerStats()
 {
-	global $ParserStart, $myserver;
+	global $content, $ParserStart, $myserver;
 	global $RUNMODE;
 
 	// Init Header
@@ -431,6 +513,16 @@ function DeleteServerStats()
 		PrintHTMLDebugInfo( DEBUG_ERROR, "Parser", "Error, invalid Server specified!" );
 		return;
 	}
+
+	// --- Ask for deletion first!
+	if ( (!isset($_GET['verify']) || $_GET['verify'] != "yes") )
+	{
+		// Print form and return from function
+		PrintSecureUserCheckLegacy( GetAndReplaceLangStr($content['LN_WARNINGDELETE_STATS'], $myserver['Name'] ), $content['LN_DELETEYES'], $content['LN_DELETENO'], "deletestats" );
+		return;
+	}
+	// ---
+
 
 	// StartDbg
 	PrintHTMLDebugInfo( DEBUG_INFO, "Parser", "Starting Delete process for Server '" . $myserver['ID'] . "' ...");
@@ -490,8 +582,16 @@ function RunTotalStats()
 	// Set StartTime
 	$ParserStart = microtime_float();
 
-	//Run the Medals Generation now!
+	// Create Damagetype Stats
+	RunWeaponKillsConsolidation( -1 );
+
+	// Create Damagetype Stats
+	RunDamagetypeKillsConsolidation( -1 );
+
+	// Create Medals 
 	CreateAllMedals( -1 );
+
+	// Consolidate Global stuff
 	RunServerConsolidation( -1 );
 
 	//Run Calc for TOPAliases
@@ -524,6 +624,7 @@ function OptimizeAllTables()
 		"`" . STATS_CONSOLIDATED . "`, " . 
 		"`" . STATS_GAMEACTIONS . "`, " . 
 		"`" . STATS_DAMAGETYPES . "`, " . 
+		"`" . STATS_DAMAGETYPES_KILLS . "`, " . 
 		"`" . STATS_GAMETYPES . "`, " . 
 		"`" . STATS_HITLOCATIONS . "`, " . 
 		"`" . STATS_LANGUAGE_STRINGS . "`, " . 
@@ -536,9 +637,11 @@ function OptimizeAllTables()
 		"`" . STATS_TIME . "`, " . 
 		"`" . STATS_USERS . "`, " . 
 		"`" . STATS_WEAPONS . "`, " . 
+		"`" . STATS_WEAPONS_KILLS . "`, " . 
+		"`" . STATS_WEAPONS_PERSERVER . "`, " . 
 		"`" . STATS_PLAYERS_STATIC . "`, " . 
 		"`" . STATS_PLAYERS_TOPALIASES . "`, " . 
-		"`" . STATS_WEAPONS_PERSERVER . "` "; 
+		"`" . STATS_ATTACHMENTS . "` ";
 
 	$result = DB_Query($sqlquery);
 	$sqllines = DB_GetAllRows($result, true);
@@ -558,7 +661,7 @@ function OptimizeAllTables()
 */
 function RunParserNow()
 {
-	global $gl_newlastline, $gl_linebuffer, $ParserStart, $myserver;
+	global $gl_newlastline, $gl_linebuffer, $ParserStart, $myserver, $gl_UnixTimeMode;
 	global $SQL_UDPATE_Batch_Count, $SQL_UDPATE_Direct_Count, $SQL_INSERT_Count, $SQL_SELECT_Count;
 	global $RUNMODE, $MaxExecutionTime;
 
@@ -578,42 +681,40 @@ function RunParserNow()
 		return;
 	}
 
-	/* moved to helpers 
-	if ($RUNMODE == RUNMODE_WEBSERVER)
-	{
-		// Max Execution time
-		set_time_limit( 120 );									// Extend Execution Time
-		$MaxExecutionTime = ini_get("max_execution_time") - 10; // -10 Seconds to be on the save side and have enough time  to finish the site!
-		PrintHTMLDebugInfo( DEBUG_ULTRADEBUG, "Gamelog", "MaxExecutionTime = $MaxExecutionTime");
-	}
-	else
-	{
-		// Unlimited
-		set_time_limit( 0 );
-		PrintHTMLDebugInfo( DEBUG_ULTRADEBUG, "Gamelog", "Console Mode, unlimited Execution TIME ");
-	}*/
-
 	// Some defaults
 	$gl_newlastline = 0;
 	$gl_linebuffer = "";
-	$currentseconds = 0;
+	$currentseconds = 0;				// helper variables storing the seconds amount from the current logline
 	$gl_totallogtimesecs = 0;			// The total time of the whole log!
+	$unixtimeadd = 0;					// Helper variable needed to support mixed logfiles (unixtime and old style time)
 
 	// StartDbg
 	PrintHTMLDebugInfo( DEBUG_INFO, "Gamelog", "Starting Parser...");
 	
-	// Get LastLogLine Value
+	// Get Stored LastLogline Value
 	$db_lastlogline = GetLastLogLine( $myserver['ID'] );
-	PrintHTMLDebugInfo( DEBUG_INFO, "Gamelog", "Last parsed Line was " . $db_lastlogline);
+	// --- TIME CALC FIX!
+	$db_lastplayedseconds = GetLastPlayedSeconds( $myserver['ID'] );
+	if ( $db_lastplayedseconds > 0 ) 
+	{
+		// Append prevous played seconds to gl_totallogtimesecs!
+		$gl_totallogtimesecs += $db_lastplayedseconds;
+	}
+	// ---
+	PrintHTMLDebugInfo( DEBUG_INFO, "Gamelog", "The last parsed line was " . $db_lastlogline . ", playedseconds = " . $db_lastplayedseconds);
 
-	// --- First Loop - Get linecount
-	$myhandle = fopen( $myserver['GameLogLocation'], "r");
+
+	// --- First Loop - Obtain linecount
+	$myhandle = @fopen( $myserver['GameLogLocation'], "r");
 	if ($myhandle)
 	{
 		if (feof ($myhandle)) 
 			PrintHTMLDebugInfo( DEBUG_WARN, "Gamelog", "Error, file is empty " . $myserver['GameLogLocation'] );
 
-		PrintHTMLDebugInfo( DEBUG_INFO, "Gamelog", "Opening for counting the lines..." );
+		PrintHTMLDebugInfo( DEBUG_INFO, "Gamelog", "Opening for counting the lines, this may take a while depending on the size of your logfile..." );
+		
+		//Flush output
+		FlushParserOutput();
 
 		while (!feof ($myhandle))
 		{
@@ -627,6 +728,17 @@ function RunParserNow()
 				// Get the seconds from the logline
 				$lastseconds = $currentseconds;
 				$currentseconds = GetSecondsFromLogLine( $gl_linebuffer );
+
+				// Extra Check for UnixTimeMode
+				if ( $gl_UnixTimeMode ) 
+				{
+					// Set UnixAddTime
+					if ( $unixtimeadd == 0 )
+						$unixtimeadd = $currentseconds;
+					
+					// Substract UnixAddTime from current seconds
+					$currentseconds -= $unixtimeadd;
+				}
 
 				if ( !isset($initseconds) )
 				{	// First entry
@@ -648,10 +760,20 @@ function RunParserNow()
 			}
 		}
 
+		// --- FIXED TIME CALC BUG, I can't believe nobody ever found this easy bug :S
+		// Append seconds we have left + the saved seconds from the  last processed time!
+		if ( isset($initseconds) ) 
+			$gl_totallogtimesecs += ( ($currentseconds) - $initseconds) ;// - $unixtimeadd; //Substract unixtime, this only has affect if the gamelog switched to unix time.
+		else
+			$gl_totallogtimesecs += $currentseconds					    ;//- $unixtimeadd; //Substract unixtime, this only has affect if the gamelog switched to unix time.
+		// --- 
+
 		fclose($myhandle);
 		PrintHTMLDebugInfo( DEBUG_INFO, "Gamelog", "has $gl_newlastline lines ");
-		PrintHTMLDebugInfo( DEBUG_DEBUG, "Gamelog", "Total Time player in the logfile is '" . $gl_totallogtimesecs . "' seconds");
-		PrintHTMLDebugInfo( DEBUG_INFO, "Gamelog", "Closing ..." );
+		PrintHTMLDebugInfo( DEBUG_INFO, "Gamelog", "Total amount of seconds played in the whole logfile: " . $gl_totallogtimesecs );
+		PrintHTMLDebugInfo( DEBUG_INFO, "Gamelog", "Closing Filehandle ..." );
+
+// TODO! Compare Last LogLine with Checksum!
 
 		if ($db_lastlogline == 0)
 			PrintHTMLDebugInfo( DEBUG_INFO, "Gamelog", "First time, processing whole Gamelogfile, this could take some time...");
@@ -664,35 +786,53 @@ function RunParserNow()
 		elseif ($gl_newlastline < $db_lastlogline)
 		{	
 			// logfile is smaller then before, start from beginning
-			PrintHTMLDebugInfo( DEBUG_WARN, "Gamelog", "Logfile is smaller then last time, start processing from beginning...");
+			PrintHTMLDebugInfo( DEBUG_WARN, "Gamelog", "Logfile is smaller then last time, new logfile assumed. UltraStats is reseting the LastLogLine...");
+			
+			// Not really needed lol!
 			$db_lastlogline = 0;
+			$db_lastplayedseconds = 0;
+
+			// Reset LastLogline now!
+			ResetLastLine();
+			
+			// Draw Javascript reload!
+			define('RELOADPARSER', true);
+			print ('<br><center><B>The LastLogline has been reseted, the Parser need to be reloaded to restart parsing!</B><br>
+					Please click <B><a href="' . $_SERVER['PHP_SELF'] . "?" . $_SERVER['QUERY_STRING'] . '">here</A></B> to resume the update process.
+					This site will automatically reload in 5 seconds.<br></center>
+					<script language="Javascript">function reload() { location = "' . $_SERVER['PHP_SELF'] . "?" . $_SERVER['QUERY_STRING'] . '"; } setTimeout("reload()", 5000);</script>');
+
+			// Return from the function
+			return;
 		}
 	}
 	else
 	{
-		PrintHTMLDebugInfo( DEBUG_ERROR, "Gamelog", "Could not open the game logfile ".$CFG['Gamelogfile']." - Check File name and path");
+		PrintHTMLDebugInfo( DEBUG_ERROR, "Gamelog", "Could not open the game logfile ". $myserver['GameLogLocation'] ." - Check File name and path");
 		return;
 	}
 
 	// Get the last file modification time
 	$gl_logfiletimemod = filemtime( $myserver['GameLogLocation'] );
+	PrintHTMLDebugInfo( DEBUG_INFO, "Gamelog", "Last modification date of the gamelogfile " . $myserver['GameLogLocation'] . " was " . date ("Y-m-d H:i:s", $gl_logfiletimemod) );
 
 	// Copy Last line of the file
 	$gl_MaxLineCount = $gl_newlastline;
 	// ---
 
 	// --- Second Loop, processing Round by round now!
-	$myhandle = fopen( $myserver['GameLogLocation'], "r");
+	$myhandle = @fopen( $myserver['GameLogLocation'], "r");
 	if ($myhandle)
 	{
 		// --- Init some vars
 		$currentgametype = "";
-		$CurrentGame[] = "";
+		$CurrentGame = array();
 		$currentline = 0;
 		$arrayline = 0;
 		$initgameseconds = 0;			// Used to compare
 		$currentseconds = -1;			// Reinit | Update! Changed to -1, because otherwise the first round could have been skipped
-		$currenttotalseconds = 0;		// Needed to determine the time the round started
+//		$currenttotalseconds = 0;		// Needed to determine the time the round started
+		$currenttotalseconds = $db_lastplayedseconds;	// Helper Needed to determine the time the round started | TIMECALC FIXED!
 
 		// 0 means search for "InitGame:"
 		// 1 means search for "ShutdownGame:" to get a whole game and then process it!
@@ -726,9 +866,31 @@ function RunParserNow()
 
 					// Add to current running total time
 					if ( $currentseconds > $lastseconds )
-						$currenttotalseconds += ($currentseconds - $lastseconds );
+					{
+						/* Very complex handling needed here!
+						*	If $currenttotalseconds is more then 0, the lastseconds are 0 or smaller and
+						*	it is NOT a ServerRESTART - then we do NOT append the seconds. 
+						*	In all other cases, the seconds are added!
+						*		- 
+						*	Seriously, this is very complex stuff! If there just was a dvar including the
+						*	Starttime of a round ... 
+						*/
+						if ( $currenttotalseconds > 0 && $lastseconds <= 0 && !isset($logfilerestart) ) 
+							$currenttotalseconds += 0; //Dummy add!
+						else
+						{
+							$currenttotalseconds += ($currentseconds - $lastseconds);
+								
+							// Special, case subtract one second in this case
+							if ( $lastseconds == -1 ) 
+								$currenttotalseconds--;
+						}
+					}
 					else if ( $currentseconds < $lastseconds )
 					{
+						// Add to total seconds as well!
+						$currenttotalseconds += ($currentseconds);
+
 						//LogTime was less then befor, then the server was restarted 
 						$logfilerestart = true;
 						PrintHTMLDebugInfo( DEBUG_WARN, "Gamelog", "Attention, gamelogtime was restarted from " . $lastseconds . " seconds to " . $currentseconds . " seconds");
@@ -741,7 +903,9 @@ function RunParserNow()
 
 					if ( $currentseconds != -1 ) // Init starts at -1
 					{
-						if ( ($findmode == 0) && (preg_match ("/InitGame:/", $gl_linebuffer)) )
+						// PHP4 workaround!
+						if ( ($findmode == 0) && ( strpos( strtoupper($gl_linebuffer), strtoupper("InitGame:") )  !== false ) )
+//						if ( ($findmode == 0) && ( stripos($gl_linebuffer, "InitGame:")  !== false ) )
 						{
 							$findmode = 1;	// From here start copying the game session into the buffer
 							PrintHTMLDebugInfo( DEBUG_DEBUG, "Gamelog", "Gameround found at Line $currentline");
@@ -771,20 +935,42 @@ function RunParserNow()
 								= If the Init and ExitSeconds are the same, the "ExitLevel: executed" is missing so we also quit the round here. 
 							*	(preg_match ("/ExitLevel: executed/", $gl_linebuffer))
 								= ExitLevel is a RoundFinish in ANY case!
-							*	($currentgametype == "dm" || $currentgametype == "tdm") && (preg_match ("/ShutdownGame:/", $gl_linebuffer))
+							*	(	$currentgametype == "dm" || 
+									$currentgametype == "tdm" || 
+									$currentgametype == "war" || 
+									$currentgametype == "twar" || 
+									$currentgametype == "vtdm") && (preg_match ("/ShutdownGame:/", $gl_linebuffer))
 								= If we reach this, it proberly was an "Unclean mapshutdown" - anyway, the session ends here
 							*	( isset($roundfilerestart) && $roundfilerestart == true )
 								= If a server is restarted, we need to finish the session exactly HERE as well ;)!
 							*		
 							*/
-
-							if (	($lastseconds > $currentseconds) ||
-									(preg_match("/ShutdownGame:/", $gl_linebuffer) && $lastseconds == $currentseconds) ||
-									(preg_match ("/ExitLevel: executed/", $gl_linebuffer)) || 
+							// PHP4 workaround!
+//									( stripos($gl_linebuffer, "ShutdownGame:") !== false && $lastseconds == $currentseconds) ||
+//									( stripos($gl_linebuffer, "ExitLevel: executed") !== false ) || 
+							if (	( $lastseconds > $currentseconds) ||
+									( strpos( strtoupper($gl_linebuffer), strtoupper("ShutdownGame:") ) !== false && $lastseconds == $currentseconds) ||
+									( strpos( strtoupper($gl_linebuffer), strtoupper("ExitLevel: executed") ) !== false ) || 
 									(
-										($currentgametype == "dm" || $currentgametype == "tdm") &&
-										(preg_match ("/ShutdownGame:/", $gl_linebuffer))
-									) ||
+										/* DISCUSS THIS 
+										(	$currentgametype == "dm" || 
+											$currentgametype == "tdm" || 
+											$currentgametype == "war"  || 
+											$currentgametype == "twar" || 
+											$currentgametype == "vtdm" 
+										)
+											&&
+										*/
+										(	// Now way, only use workaround for Search And Destroy!
+											$currentgametype != "sd" &&
+											$currentgametype !== "snd" 
+										)
+											&&
+										// PHP4 workaround!
+//										( stripos ($gl_linebuffer, "ShutdownGame:") !== false )
+										( strpos ( strtoupper($gl_linebuffer), strtoupper("ShutdownGame:") ) !== false )
+									) 
+										||
 									( isset($logfilerestart) && $logfilerestart == true )
 								)
 							{
@@ -792,14 +978,18 @@ function RunParserNow()
 								$gl_newlastline = $currentline;				// Ser lastline counter only if a complete game was found!
 								
 								// BEGIN TimeMod, thx to Ramirez!
-								if ( strlen($custserverstarttime) > 0 ) 
-									$realstarttime = strtotime($custserverstarttime) + GetSecondsFromLogLine( $gl_linebuffer );
+								if ( isset($custserverstarttime) && strlen($custserverstarttime) > 0 ) 
+								{
+									// Set realstart time by using the server start time
+									$realstarttime = strtotime($custserverstarttime) + $initgameseconds;
+									PrintHTMLDebugInfo( DEBUG_DEBUG, "Gamelog", "Roundstart time detected through CVAR: " . date('Y-m-d h:i:s', $realstarttime));
+								}
+								// END TimeMod
 								else
 								{
 									// Needed to find the time when the round started
 									$realstarttime = $gl_logfiletimemod	- ( $gl_totallogtimesecs - $currenttotalseconds );
 								}
-								// END TimeMod
 
 								// Now process the Round
 								$processingtime = ProcessGameRound($CurrentGame, $realstarttime);			
@@ -809,13 +999,13 @@ function RunParserNow()
 								unset($CurrentGame);						
 
 								// Write FileCounter into database
-								SetLastLogLine($myserver['ID'], $gl_newlastline);
+								SetLastLogLine($myserver['ID'], $gl_newlastline, $currenttotalseconds);
 
 								// Keep user informed where processing is
-								PrintHTMLDebugInfo( DEBUG_INFO, "Gamelog", "Processed in $processingtime | " . 
+								PrintHTMLDebugInfo( DEBUG_INFO, "Gamelog", "Processed Round (" . date('Y-m-d', $realstarttime) . ") in $processingtime | " . 
 																			" $gl_newlastline lines of $gl_MaxLineCount | " .
 																			$SQL_SELECT_Count . ", " . $SQL_INSERT_Count. ", " .
-																			($SQL_UDPATE_Direct_Count+$SQL_UDPATE_Batch_Count) . "\tSEL,INS,UPT");
+																			($SQL_UDPATE_Direct_Count+$SQL_UDPATE_Batch_Count) . "\tSEL,INS,UPT" );
 								
 								//Disable special logfile restart mode
 								if ( isset($logfilerestart) && $logfilerestart == true )
@@ -825,11 +1015,12 @@ function RunParserNow()
 								if ($RUNMODE == RUNMODE_WEBSERVER)
 								{
 									//Flush php output
-									flush();
+									FlushParserOutput();
 
 									//Check for script timeout
 									if ( ( microtime_float() - $ParserStart) > $MaxExecutionTime)
 									{
+										define('RELOADPARSER', true);
 										print ('<br><center><B>Timelimit hit (' . $MaxExecutionTime . ' seconds).</B><br>
 												Please click <B><a href="' . $_SERVER['PHP_SELF'] . "?" . $_SERVER['QUERY_STRING'] . '">here</A></B> to resume the update process.
 												This site will automatically reload in 5 seconds.<br></center>
@@ -905,12 +1096,18 @@ function ProcessGameRound($myRoundArray, $myrealstarttime)
 	$SQL_INSERT_Count = 0;
 	$SQL_SELECT_Count = 0;
 	
-	// ReInit Values					
+	// Unset Arrays
 	unset ($myPlayers);
 	unset ($myRound[ROUND_ALLIES_GUIDS]);		// why the fuck unset it as well? 
 	unset ($myRound[ROUND_AXIS_GUIDS]);			// why the fuck unset it as well? 
 	unset ($myRound);
 	unset ($myKills);							
+
+	// INIT Arrays
+	$myPlayers = array(); 
+	$myRound = array();
+	$myKills = array();
+//print_r ( $myPlayers);
 
 	// --- Experimental, lock all needed tables: 
 	PrintHTMLDebugInfo( DEBUG_DEBUG, "ProcessGameRound", "Locking Database Tables...");
@@ -965,14 +1162,18 @@ function ProcessGameRound($myRoundArray, $myrealstarttime)
 					case "J":	// Join: 592:07 J;185269;5;^2|OCG|^1UnDead
 						Parser_AddPlayer($myLogArray);
 						break;
+					case "JT":	// Join Team: 1236222871 JT;1033987968;0;allies;[BAD]GIJoe101st;
+						Parser_ChangePlayerTeam($myLogArray);
+						break;
 					case "Q":	// Quit: 592:49 Q;185269;5;^2|OCG|^1UnDead
+
 						$timelasted = $timeroundend - $timeroundbegin;
-						if ( $timelasted <= 0 )
+						if ( $timelasted < 0 )
 						{
 							PrintHTMLDebugInfo( DEBUG_ERROR_WTF, "ProcessGameRound", "NEGATIV Time for RemovePlayer returned! - " . $timeroundend . " - " . $timeroundbegin . " logline = '" . $mybuffer . "'");
 							break;
 						}
-						Parser_RemovePlayer($myLogArray, $timeroundend - $timeroundbegin);
+						Parser_RemovePlayer($myLogArray, $timelasted);
 						break;
 					case "say":		// Chat: 59:22 say;14352;25;|OCG|Anarchy; No we're not atm
 					case "sayteam":	// Chat: 62:34 sayteam;14352;25;|OCG|Anarchy; take it south
@@ -1005,6 +1206,17 @@ function ProcessGameRound($myRoundArray, $myrealstarttime)
 						// TODO: Maybe later we log this 
 						Parser_AddRoundAction($myLogArray);
 						break;
+					// New Style Gameactions logged by CODWAW
+					case "FT":	// CTF		FT: flag taken
+					case "FR":	// CTF 		FR: flag returned
+					case "FC":	// CTF		FC: flag captured
+					case "RC":	// KOTH		RC: headquaters captured
+					case "RD":	// KOTH		RD: headquaters destroyed
+					case "FC":	// TWAR/DOM	FC: flag captured
+					case "BP":	// SD/SAB	BP: bomb planted
+					case "BD":	// SD/SAB	BD: bomb defused
+						Parser_AddAdvancedRoundAction($myLogArray);
+						break;
 				}
 			}
 		}
@@ -1018,6 +1230,7 @@ function ProcessGameRound($myRoundArray, $myrealstarttime)
 	
 	// Create the Round and some variables
 	PrintHTMLDebugInfo( DEBUG_ULTRADEBUG, "ProcessGameRound", "Roundtime: Roundend=$timeroundend - Roundbegin=$timeroundbegin - Roundseconds = " . ($timeroundend - $timeroundbegin) );
+
 	Parser_FinalizeRound( $timeroundend - $timeroundbegin );
 //exit;
 	// --- END Final End analysis
@@ -1048,7 +1261,11 @@ function Parser_RoundInit( $therealstarttime, $buffer )
 	// Create tmp Servervar Array
 	$tmparray = explode( "\\", $myRound[ROUND_SERVERCVARS] );
 	for($i = 0; $i < count($tmparray); $i+=2)
-		$gameinitarray[ DB_RemoveBadChars($tmparray[$i]) ] = DB_RemoveBadChars( $tmparray[$i+1] );
+	{
+		// Add check if cvars exists
+		if ( isset($tmparray[$i]) && isset($tmparray[$i+1]) )
+			$gameinitarray[ DB_RemoveBadChars($tmparray[$i]) ] = DB_RemoveBadChars( $tmparray[$i+1] );
+	}
 
 	// Set Values we know
 	$myRound[ROUND_TIMESTAMP]	= $therealstarttime; 
@@ -1057,6 +1274,13 @@ function Parser_RoundInit( $therealstarttime, $buffer )
 
 	$myRound[ROUND_GAMETYPE]	= DB_RemoveBadChars( $gameinitarray['g_gametype'] );
 	$myRound[ROUND_MAPID]		= DB_RemoveBadChars( $gameinitarray['mapname'] );
+	
+	// Copy optional values!
+	if ( isset($gameinitarray['fs_game']) )
+		$myRound[ROUND_MODVERSION] = DB_RemoveBadChars( $gameinitarray['fs_game'] );
+	else 
+		$myRound[ROUND_MODVERSION] = "";
+	
 
 	// Init Values!
 	$myRound[ROUND_AXIS_WINS] = 0;
@@ -1072,7 +1296,7 @@ function Parser_RoundInit( $therealstarttime, $buffer )
 		 -1, 
 		'" . GetGameTypeByName( $myRound[ROUND_GAMETYPE] ) . "', 
 		 " . GetMapIDByName( $myRound[ROUND_MAPID] ) . ", 
-		'" . DB_RemoveParserSpecialBadChars($myRound[ROUND_SERVERCVARS]) . "'
+		' " . DB_RemoveParserSpecialBadChars($myRound[ROUND_SERVERCVARS]) . " '
 		)");
 }
 /*	----------------------------------------------------*/
@@ -1098,6 +1322,48 @@ function Parser_FinalizeRound( $roundlastedtime )
 		{
 			// We write the winner into both Values, axis and allies
 			$axisguids = $alliexguids = GetPlayerWithMostKills();
+
+			if ( strlen($axisguids) > 0 ) 
+			{
+				// Workaround to set Winner Team, but not really needed here tbh!
+				if ( isset($myPlayers[ $axisguids ]) ) 
+				{
+					$myPlayer = &$myPlayers[ $axisguids ];
+					if ( $myPlayer[PLAYER_TEAM] == TEAM_ALLIES ) 
+					{
+						$myRound[ROUND_ALLIES_WINS] = 1;
+						$myRound[ROUND_AXIS_WINS] = 0;
+					}
+					else
+					{
+						$myRound[ROUND_AXIS_WINS] = 1;
+						$myRound[ROUND_ALLIES_WINS] = 0;
+					}
+				}
+			}
+/* TODO
+			else
+			{
+				// Second try to obtain a Roundwinner, query the database!
+				$result = ProcessSelectStatement(
+						"SELECT " .
+						"sum( " . STATS_PLAYER_KILLS . ".Kills) as TotalKills, " . 
+						STATS_PLAYER_KILLS . ".PLAYERID " . 
+						" FROM " . STATS_PLAYER_KILLS . 
+						" WHERE " . STATS_PLAYER_KILLS . ".ROUNDID=" . $myRound[ROUND_DBID] . " " . 
+						" GROUP BY " . STATS_PLAYER_KILLS . ".PLAYERID " .
+						" ORDER BY TotalKills DESC LIMIT 1");
+				$rows = DB_GetAllRows($result, true);
+					print_r ( $rows );
+					echo "!";
+					exit;
+				if ( isset($rows) )
+				{
+					//					$axisguids = $alliexguids = 
+
+				}
+			}
+*/
 		}
 		else
 		{
@@ -1112,7 +1378,11 @@ function Parser_FinalizeRound( $roundlastedtime )
 				$alliexguids = GetGuidsFromPlayerArray("allies");
 
 			// --- IW messed up again and just removed round finish loglines, so we Count at least TDM (WAR) ourself!
-			if ( $content['gen_gameversion'] == COD4 && $myRound[ROUND_GAMETYPE] == "war" ) 
+			if ( 
+					$content['gen_gameversion'] == COD4 && $myRound[ROUND_GAMETYPE] == "war" 
+					||
+					$content['gen_gameversion'] == CODWW && $myRound[ROUND_GAMETYPE] == "tdm" 
+				) 
 			{	
 				$KillsAllies = 0;
 				$KillsAxis = 0;
@@ -1219,6 +1489,42 @@ function Parser_FinalizeRound( $roundlastedtime )
 
 /*	----------------------------------------------------*/
 /*	Function to add a Player into the current GameRound.
+	SampleLogPrint: JT;1033987968;0;allies;[BAD]GIJoe101st;
+	Description:
+	Type:	JT	
+	GUID:	1033987968	
+	Client ID:	0	
+	Client Team: allies
+	Client Name: [BAD]GIJoe101st
+*/
+function Parser_ChangePlayerTeam( $myArray )
+{
+	global $myPlayers, $myserver;
+
+	// --- Convert GUID into 32Bit Number
+	$myArray[PARSER_GUID] = ParsePlayerGuid( $myArray, PARSER_GUID, JOINTEAM_CLIENTNAME );
+	
+	// check if exists
+	if ( $myArray[PARSER_GUID] != 0 )
+	{
+		// Get Player reference
+		$myPlayer = &$myPlayers[ $myArray[PARSER_GUID] ];
+		
+		// Set TeamName
+		$myPlayer[PLAYER_TEAM] = $myArray[JOINTEAM_CLIENTTEAM];
+
+		// Debug print ^^
+		PrintHTMLDebugInfo( DEBUG_ULTRADEBUG, "Parser_ChangePlayerTeam", "Set Team '" . $myArray[JOINTEAM_CLIENTTEAM] . "' on player GUID '" . $myArray[PARSER_GUID] . "'");
+	}
+	else
+		PrintHTMLDebugInfo( DEBUG_DEBUG, "Parser_ChangePlayerTeam", "ChangeTeam ignored, GUID was 0!");
+	// --- 
+}
+/*	----------------------------------------------------*/
+
+
+/*	----------------------------------------------------*/
+/*	Function to add a Player into the current GameRound.
 	SampleLogPrint: J;185269;5;^2|OCG|^1UnDead
 	Description:
 	Type:	J	
@@ -1245,7 +1551,11 @@ function Parser_AddPlayer( $myArray )
 	// --- Check if already exists!
 	if ( isset($myPlayers[$myArray[PARSER_GUID]]) )
 	{
-		PrintHTMLDebugInfo( DEBUG_WARN, "Parser_AddPlayer", "Player Array '" . implode(",", $myPlayers[$myArray[PARSER_GUID]]) . "' is already on the server! Possible duplicate GUID!");
+//print_r( $myArray );
+//print_r ( $myPlayers);
+//exit;
+		// Changed to DEBUG facility for now!
+		PrintHTMLDebugInfo( DEBUG_DEBUG, "Parser_AddPlayer", "Player Array '" . implode(",", $myPlayers[$myArray[PARSER_GUID]]) . "' is already on the server! Possible duplicate GUID!");
 		return;
 	}
 	// --- 
@@ -1253,10 +1563,14 @@ function Parser_AddPlayer( $myArray )
 	PrintHTMLDebugInfo( DEBUG_ULTRADEBUG, "Parser_AddPlayer", "Player with ID '" . $myArray[PARSER_GUID] . "' joined ");
 
 	// --- Starting the Code
-	
+
+	// Init Player entry array
+	$myPlayers[ $myArray[PARSER_GUID] ] = array();
+
 	// Set Values we know
 	$myPlayers[ $myArray[PARSER_GUID] ][PLAYER_GUID] = $myArray[PARSER_GUID];
-	$myPlayers[ $myArray[PLAYER_ID] ][PLAYER_ID] = $myArray[JOIN_CLIENTID];
+	$myPlayers[ $myArray[PARSER_GUID] ][PLAYER_ID] = $myArray[JOIN_CLIENTID];
+//WTF?	$myPlayers[ $myArray[PLAYER_ID] ][PLAYER_ID] = $myArray[JOIN_CLIENTID];
 	$myPlayers[ $myArray[PARSER_GUID] ][PLAYER_NAME] = $myArray[JOIN_CLIENTNAME];
 
 	// Init Values!
@@ -1266,14 +1580,14 @@ function Parser_AddPlayer( $myArray )
 	$myPlayers[ $myArray[PARSER_GUID] ][PLAYER_TKS] = 0;
 	$myPlayers[ $myArray[PARSER_GUID] ][PLAYER_SUICIDES] = 0;
 	$myPlayers[ $myArray[PARSER_GUID] ][PLAYER_PBGUID] = $playerpbguid;
-	
 
 	// Add Alias and increment Counter
 	$wherequery =  "WHERE SERVERID = " . $myserver['ID'] . " AND 
 					PLAYERID = " . $myArray[PARSER_GUID] . " AND 
 					Alias = '" . DB_RemoveBadChars($myArray[JOIN_CLIENTNAME]) . "'";
 
-	$result = DB_Query("SELECT * FROM " . STATS_ALIASES . " " . $wherequery );
+	$result = ProcessSelectStatement("SELECT * FROM " . STATS_ALIASES . " " . $wherequery );
+//	$result = DB_Query("SELECT * FROM " . STATS_ALIASES . " " . $wherequery );
 	$rows = DB_GetAllRows($result, true);
 	if ( isset($rows) )
 	{
@@ -1282,13 +1596,19 @@ function Parser_AddPlayer( $myArray )
 	}
 	else
 	{
+		// Set variables first!
+		$plainalias = GetPlayerNameAsWithHTMLCodes( DB_RemoveBadChars($myArray[JOIN_CLIENTNAME]) );
+		$aliaschecksum = sprintf( "%u", crc32 ( $plainalias )); 
+		$aliasashtmlcode = GetPlayerNameAsHTML(DB_RemoveBadChars($myArray[JOIN_CLIENTNAME]));
+
 		// Insert New
-		ProcessInsertStatement("INSERT INTO " . STATS_ALIASES . " (SERVERID, PLAYERID, Alias, AliasAsHtml, Count) 
+		ProcessInsertStatement("INSERT INTO " . STATS_ALIASES . " (SERVERID, PLAYERID, Alias, AliasChecksum, AliasAsHtml, Count) 
 		VALUES (
 			 " . $myserver['ID'] . ", 
 			 " . $myArray[PARSER_GUID] . ", 
-			 '" . GetPlayerNameAsWithHTMLCodes(DB_RemoveBadChars($myArray[JOIN_CLIENTNAME])) . "', 
-			 '" . GetPlayerNameAsHTML(DB_RemoveBadChars($myArray[JOIN_CLIENTNAME])) . "', 
+			 '" . $plainalias . "', 
+			 " . $aliaschecksum . ", 
+			 '" . $aliasashtmlcode . "', 
 			 " . "1" . "
 				)");
 	}
@@ -1299,6 +1619,31 @@ function Parser_AddPlayer( $myArray )
 }
 /*	----------------------------------------------------*/
 
+/*	----------------------------------------------------
+*	Helper function to manually add mysterically 
+*	occured players
+*/
+function Parser_AddPlayerManually( $szPlayerGuid, $szPlayerAlias, $nClientID )
+{
+	global $myPlayers;
+
+	// Init Player entry array
+	$myPlayers[ $szPlayerGuid ] = array();
+
+	// Set Values we know
+	$myPlayers[ $szPlayerGuid ][PLAYER_GUID] = $szPlayerGuid;
+//	$myPlayers[ $myArray[PLAYER_ID] ][PLAYER_ID] = $nClientID;
+	$myPlayers[ $szPlayerGuid ][PLAYER_ID] = $nClientID;
+	$myPlayers[ $szPlayerGuid ][PLAYER_NAME] = $szPlayerAlias;
+
+	// Init Values!
+	$myPlayers[ $szPlayerGuid ][PLAYER_TEAM] = "";
+	$myPlayers[ $szPlayerGuid ][PLAYER_KILLS] = 0;
+	$myPlayers[ $szPlayerGuid ][PLAYER_DEATHS] = 0;
+	$myPlayers[ $szPlayerGuid ][PLAYER_TKS] = 0;
+	$myPlayers[ $szPlayerGuid ][PLAYER_SUICIDES] = 0;
+	$myPlayers[ $szPlayerGuid ][PLAYER_PBGUID] = "";
+}
 
 /*	----------------------------------------------------*/
 /*	Helper function to create thwe static record of a player
@@ -1312,7 +1657,8 @@ function Parser_AddStaticPlayerData( $myCurrPlayer )
 
 	// --- Starting the Code
 	$wherequery =  "WHERE GUID = " . $myCurrPlayer[PLAYER_GUID]; 
-	$result = DB_Query("SELECT * FROM " . STATS_PLAYERS_STATIC . " " . $wherequery );
+	$result = ProcessSelectStatement("SELECT * FROM " . STATS_PLAYERS_STATIC . " " . $wherequery );
+//	$result = DB_Query("SELECT * FROM " . STATS_PLAYERS_STATIC . " " . $wherequery );
 	$rows = DB_GetAllRows($result, true);
 	if ( !isset($rows) )
 	{
@@ -1434,7 +1780,7 @@ function Parser_AddChatLine( $myArray )
 				)");
 		}
 		else
-			PrintHTMLDebugInfo( DEBUG_ERROR, "Parser_AddChatLine", "Error, PlayerID '" . $myArray[PARSER_GUID] . "' not found in the Array!");
+			PrintHTMLDebugInfo( DEBUG_WARN, "Parser_AddChatLine", "Error, PlayerID '" . $myArray[PARSER_GUID] . "' not found in the Array!");
 	}
 	else
 		PrintHTMLDebugInfo( DEBUG_DEBUG, "Parser_AddChatLine", "Chatline ignored due missing Chatcontent: '" . $strchatmsg . "'");
@@ -1446,40 +1792,75 @@ function Parser_AddChatLine( $myArray )
 
 
 /*	----------------------------------------------------*/
-/*	Function to add a RoundAction into the Database
-	SampleLogPrint: A;0;2;allies;^3[IW]^1Ned^1 Man;bel_alive_tick
+/*	Advanced Function to add a RoundAction into the Database
+	SampleLogPrint:		FR;1589597861;0;juanBM
+	SampleLogPrint:		FC;1589597861;0;juanBM
+
 	Description:
-	Type: A 
-	Client GUID: 0 
+	Action: FR 
+	Client GUID: 1589597861 
 	Client ID: 2 
-	Client Team: axis 
-	Client Name: ^3[IW]^1Ned^1 Man 
-	Action: bel_alive_tick
+	Client Name: juanBM
 */
-function Parser_AddRoundAction( $myArray )
+function Parser_AddAdvancedRoundAction( $myArray )
 {
 	global $myPlayers, $myserver, $myRound;
 
 	// Convert GUID into 32Bit Number
-	$myArray[PARSER_GUID] = ParsePlayerGuid( $myArray, PARSER_GUID, ACTION_CLIENT_NAME );
+	$myArray[PARSER_GUID] = ParsePlayerGuid( $myArray, PARSER_GUID, ACTIONV2_CLIENT_NAME );
 
 	// --- Check for GUID 0
 	if ( $myArray[PARSER_GUID] == 0 )
 	{
-		PrintHTMLDebugInfo( DEBUG_DEBUG, "Parser_AddRoundAction", "LogLine Ignored, GUID was 0!");
+		PrintHTMLDebugInfo( DEBUG_WARN, "Parser_AddAdvancedRoundAction", "LogLine Ignored, GUID was 0!");
 		return;
 	}
 	// --- 
 
-	// --- Making ActionEntry
-	PrintHTMLDebugInfo( DEBUG_DEBUG, "Parser_AddRoundAction", "Adding Action '" . $myArray[ACTION_THEACTION] . "' for PlayerID '" . $myArray[KILL_OPFER_GUID] . "'");
+	// Get Client Team
+	$szClientTeam = $myPlayers[ $myArray[PARSER_GUID] ][PLAYER_TEAM];
+	
+	// Set Game Action
+	switch ( $myArray[PARSER_TYPE] )
+	{
+		case "FT":	// CTF		FT: flag taken
+			$szAction = "flag_taken";
+			break;
+		case "FR":	// CTF 		FR: flag returned
+			$szAction = "flag_returned";
+			break;
+		case "FC":	// CTF		FC: flag captured
+			$szAction = "flag_captured";
+			break;
+		case "RC":	// KOTH		RC: headquaters captured
+			$szAction = "headquaters_captured";
+			break;
+		case "RD":	// KOTH		RD: headquaters destroyed
+			$szAction = "headquaters_destroyed";
+			break;
+		case "FC":	// TWAR/DOM	FC: flag captured
+			$szAction = "flag_captured";
+			break;
+		case "BP":	// SD/SAB	BP: bomb planted
+			$szAction = "bomb_planted";
+			break;
+		case "BD":	// SD/SAB	BD: bomb defused
+			$szAction = "bomb_defused";
+			break;
+		default:
+			$szAction = "unknown_action";
+			break;
+	}
+
+	// --- Making ActionEntry DEBUG_DEBUG
+	PrintHTMLDebugInfo( DEBUG_DEBUG, "Parser_AddRoundAction", "Adding Action '" . $szAction . "' for PlayerID '" . $myArray[PARSER_GUID] . "'");
 	$wherequery =  "WHERE SERVERID = " . $myserver['ID'] . " AND 
 					ROUNDID = " . $myRound[ROUND_DBID] . " AND 
 					PLAYERID = " . $myArray[PARSER_GUID] . " AND 
-					Team = '" . $myArray[ACTION_CLIENT_TEAM] . "' AND 
-					ACTIONID = " . GetActionIDByName( $myArray[ACTION_THEACTION] );
+					Team = '" . $szClientTeam . "' AND 
+					ACTIONID = " . GetActionIDByName( $szAction );
 
-	$result = DB_Query("SELECT * FROM " . STATS_ROUNDACTIONS . " " . $wherequery );
+	$result = ProcessSelectStatement("SELECT * FROM " . STATS_ROUNDACTIONS . " " . $wherequery );
 	$rows = DB_GetAllRows($result, true);
 	if ( isset($rows) )
 	{
@@ -1494,8 +1875,88 @@ function Parser_AddRoundAction( $myArray )
 			 " . $myserver['ID'] . ", 
 			 " . $myRound[ROUND_DBID] . ", 
 			 " . $myArray[PARSER_GUID] . ", 
-			 '" . $myArray[ACTION_CLIENT_TEAM] . "', 
-			 " . GetActionIDByName( $myArray[ACTION_THEACTION] ) . ", 
+			 '" . $szClientTeam . "', 
+			 " . GetActionIDByName( $szAction ) . ", 
+			 " . "1" . ")");
+	}
+	// --- 
+}
+/*	----------------------------------------------------*/
+
+
+/*	----------------------------------------------------*/
+/*	Function to add a RoundAction into the Database
+	SampleLogPrint:			A;0;2;allies;^3[IW]^1Ned^1 Man;bel_alive_tick
+	SampleLogPrint Cod4PAM4:A;c5b244c8;{NYA}VicDog:Z;3;shots_fired
+
+	Description:
+	Type: A 
+	Client GUID: 0 
+	Client ID: 2 
+	Client Team: axis 
+	Client Name: ^3[IW]^1Ned^1 Man 
+	Action: bel_alive_tick
+*/
+function Parser_AddRoundAction( $myArray )
+{
+	global $content, $myPlayers, $myserver, $myRound;
+	
+	// Workaround for changed Action Logging of PAM4 Mod in Cod4!
+	if ( $content['gen_gameversion'] == COD4 && $myRound[ROUND_MODVERSION] == "mods/pam4" )
+	{
+		// Convert GUID into 32Bit Number
+		$myArray[PARSER_GUID] = ParsePlayerGuid( $myArray, PARSER_GUID, PAM4_ACTION_CLIENT_NAME );
+		
+		// Obtain Team from player array!
+		if ( !isset($myPlayers[$myArray[PARSER_GUID]]) )
+			$szClientTeam = $myPlayers[ $myArray[PARSER_GUID] ][PLAYER_TEAM];
+		else 
+			$szClientTeam = "";
+		$szAction = $myArray[PAM4_ACTION_THEACTION];
+	}
+	else
+	{
+		// Convert GUID into 32Bit Number
+		$myArray[PARSER_GUID] = ParsePlayerGuid( $myArray, PARSER_GUID, ACTION_CLIENT_NAME );
+
+		$szClientTeam = $myArray[ACTION_CLIENT_TEAM];
+		$szAction = $myArray[ACTION_THEACTION];
+	}
+
+	// --- Check for GUID 0
+	if ( $myArray[PARSER_GUID] == 0 )
+	{
+		PrintHTMLDebugInfo( DEBUG_DEBUG, "Parser_AddRoundAction", "LogLine Ignored, GUID was 0!");
+		return;
+	}
+	// --- 
+
+	// --- Making ActionEntry
+	PrintHTMLDebugInfo( DEBUG_DEBUG, "Parser_AddRoundAction", "Adding Action '" . $szAction . "' for PlayerID '" . $myArray[PARSER_GUID] . "'");
+	$wherequery =  "WHERE SERVERID = " . $myserver['ID'] . " AND 
+					ROUNDID = " . $myRound[ROUND_DBID] . " AND 
+					PLAYERID = " . $myArray[PARSER_GUID] . " AND 
+					Team = '" . $szClientTeam . "' AND 
+					ACTIONID = " . GetActionIDByName( $szAction );
+
+	$result = ProcessSelectStatement("SELECT * FROM " . STATS_ROUNDACTIONS . " " . $wherequery );
+//	$result = DB_Query("SELECT * FROM " . STATS_ROUNDACTIONS . " " . $wherequery );
+	$rows = DB_GetAllRows($result, true);
+	if ( isset($rows) )
+	{
+		// Update Calc
+		ProcessUpdateStatement("UPDATE " . STATS_ROUNDACTIONS . " SET Count = Count + 1 " . $wherequery );
+	}
+	else
+	{
+		// Insert New
+		ProcessInsertStatement("INSERT INTO " . STATS_ROUNDACTIONS . " (SERVERID, ROUNDID, PLAYERID, Team, ACTIONID, Count) 
+		VALUES (
+			 " . $myserver['ID'] . ", 
+			 " . $myRound[ROUND_DBID] . ", 
+			 " . $myArray[PARSER_GUID] . ", 
+			 '" . $szClientTeam . "', 
+			 " . GetActionIDByName( $szAction ) . ", 
 			 " . "1" . ")");
 	}
 	// --- 
@@ -1630,12 +2091,18 @@ function Parser_AddKillAndDeath( $myArray )
 	if ( !isset($myPlayers[$myArray[KILL_OPFER_GUID]]) )
 	{
 		// Opfer not found, we don't count this!
-		PrintHTMLDebugInfo( DEBUG_ERROR, "Parser_AddKillAndDeath", "Error, Player Opfer '" . $myArray[KILL_OPFER_GUID] . " already left the server, possible Double GUID! Kill may not be NOT Counted!");
+		PrintHTMLDebugInfo( DEBUG_DEBUG, "Parser_AddKillAndDeath", "Player Opfer '" . $myArray[KILL_OPFER_GUID] . " not in Players Array! Manually adding Player into round player array!");
+		
+		// Manually add the player now!
+		Parser_AddPlayerManually( $myArray[KILL_OPFER_GUID], $myArray[KILL_OPFER_NAME], $myArray[KILL_OPFER_ID] );
+
+//		print_r ( $myPlayers );
+//		exit;
 
 		// In this case, we do NOT count!
 //		return; // TODO: Was commented out, why?
 	}
-	else
+//	else
 	{
 		// Set Opfer reference!
 		$opfer = &$myPlayers[ $myArray[KILL_OPFER_GUID] ];
@@ -1643,11 +2110,14 @@ function Parser_AddKillAndDeath( $myArray )
 
 	if ( !isset($myPlayers[$myArray[KILL_ATTACKER_GUID]]) )
 	{
-		// Attacker not found, we don't count this!
-		PrintHTMLDebugInfo( DEBUG_ERROR, "Parser_AddKillAndDeath", "Error, Player Attacker '" . $myArray[KILL_OPFER_GUID] . " already left the server, possible Double GUID! Kill is NOT Counted!");
+		// Opfer not found, we don't count this!
+		PrintHTMLDebugInfo( DEBUG_DEBUG, "Parser_AddKillAndDeath", "Player Attacker '" . $myArray[KILL_ATTACKER_GUID] . " is not in players Array! Manually adding Player into round player array!");
+		
+		// Manually add the player now!
+		Parser_AddPlayerManually( $myArray[KILL_ATTACKER_GUID], $myArray[KILL_ATTACKER_NAME], $myArray[KILL_ATTACKER_ID] );
 
 		// In this case, we do NOT count!
-		return; // TODO: Was commented out, why?
+//		return; // TODO: Was commented out, why?
 	}
 	// --- 
 
@@ -1677,7 +2147,7 @@ function Parser_AddKillAndDeath( $myArray )
 				$myArray[KILL_ATTACKER_TEAM] = TEAM_ALLIES; 
 			else if ( $myArray[KILL_OPFER_TEAM] == TEAM_WTF ) // WTF default lol! God I hate the bugged logformat from IW so much ... 
 			{
-				PrintHTMLDebugInfo( DEBUG_ERROR, "Parser_AddKillAndDeath", "Setting Teams to default, attacker may be empty!");
+				PrintHTMLDebugInfo( DEBUG_DEBUG, "Parser_AddKillAndDeath", "Setting Teams to default, attacker may be empty!");
 				$myArray[KILL_ATTACKER_TEAM] = TEAM_ALLIES; 
 				$myArray[KILL_OPFER_TEAM] = TEAM_AXIS; 
 			}
@@ -1687,7 +2157,7 @@ function Parser_AddKillAndDeath( $myArray )
 	if ( $myArray[KILL_OPFER_TEAM] == TEAM_WTF )
 	{	
 		// Set another default in this case!
-				PrintHTMLDebugInfo( DEBUG_ERROR, "Parser_AddKillAndDeath", "Setting Teams to default, opfer may be empty!");
+				PrintHTMLDebugInfo( DEBUG_DEBUG, "Parser_AddKillAndDeath", "Setting Teams to default, opfer may be empty!");
 		$myArray[KILL_ATTACKER_TEAM] = TEAM_ALLIES; 
 		$myArray[KILL_OPFER_TEAM] = TEAM_AXIS; 
 	}
@@ -1799,70 +2269,122 @@ function Parser_AddKillAndDeath( $myArray )
 
 /*	----------------------------------------------------*/
 /*	Function to add RoundWin - only for Round based Gametypes
-	SampleLogPrint: W;axis;107521;^2|OCG|^4STINKYPETE;186276;^2|OCG|^9CerealKilla
+	SampleLogPrint Cod2: W;axis;107521;^2|OCG|^4STINKYPETE;186276;^2|OCG|^9CerealKilla
 	Description:
 	Type:	W	
 	Team:	axis	
 	GUID + Players:	107521;^2|OCG|^4STINKYPETE;186276;^2|OCG|^9CerealKilla
+
+	SampleLogPrint CodWAW: W;2046792331;3;Kasosunn
+	Description:
+	Type:	W	
+	ClientGuid:	2046792331	
+	ClientID:	3
+	ClientName:	Kasosunn	
 */
 function Parser_AddRoundWin( $myArray )
 {
-	global $myRound;
+	global $myRound, $content;
 
 	PrintHTMLDebugInfo( DEBUG_DEBUG, "Parser_AddRoundWin", "Adding RoundWin");
 
-	// Add RoundWin
-	if ( $myArray[RWIN_TEAM] == "axis" ) 
+	// New Style Handling
+	if ( $content['gen_gameversion'] == CODWW )
 	{
-		$winningteam = ROUND_AXIS_GUIDS;
-		$losingteam = ROUND_ALLIES_GUIDS;
-		$myRound[ROUND_AXIS_WINS]++;
+		// --- Convert GUID into 32Bit Number
+		$mytmpguid = ParsePlayerGuid( $myArray, RWINLOSS_GUID, RWINLOSS_NAME );
+
+		// check if exists
+		if ( $mytmpguid != 0 )
+		{
+			if ( !isset($winningteam) ) 
+			{
+				// Get Player reference
+				$myPlayer = &$myPlayers[ $mytmpguid ];
+
+				// Add RoundWin
+				if ( $myPlayer[PLAYER_TEAM] == "axis" ) 
+				{
+					$winningteam = ROUND_AXIS_GUIDS;
+					$losingteam = ROUND_ALLIES_GUIDS;
+					$myRound[ROUND_AXIS_WINS]++;
+				}
+				else
+				{
+					$winningteam = ROUND_ALLIES_GUIDS;
+					$losingteam = ROUND_AXIS_GUIDS;
+					$myRound[ROUND_ALLIES_WINS]++;
+				}
+			}
+			
+			// Add Guid to Round Win
+			if ( !isset($myRound[$winningteam]) )								// Add in any case
+				$myRound[$winningteam][$mytmpguid] = $mytmpguid;
+			else if ( !array_key_exists($mytmpguid, $myRound[$winningteam]) )		// Add only if not already there
+				$myRound[$winningteam][$mytmpguid] = $mytmpguid;
+		}
+		else
+			PrintHTMLDebugInfo( DEBUG_ULTRADEBUG, "Parser_AddRoundWin", "Guid '" . $myArray[$i] . "' not found in Playerlist Team Playercount" );
 	}
 	else
 	{
-		$winningteam = ROUND_ALLIES_GUIDS;
-		$losingteam = ROUND_AXIS_GUIDS;
-		$myRound[ROUND_ALLIES_WINS]++;
-	}
+		// OLDSTYLE Handling
 
-	// Create tmp Winner PlayerList now
-	for($i = 2; $i < count($myArray); $i+=2)
-		$tmpplayers[ DB_RemoveBadChars($myArray[$i]) ] = DB_RemoveBadChars($myArray[$i]);
-
-	// Add guids to the winner team
-	if ( isset($tmpplayers) && count($tmpplayers) > 0 )
-	{
-		foreach ($tmpplayers as $myguid )
+		// Add RoundWin
+		if ( $myArray[RWIN_TEAM] == "axis" ) 
 		{
-			// Add if not already there
-			if ( $myguid != 0) 
+			$winningteam = ROUND_AXIS_GUIDS;
+			$losingteam = ROUND_ALLIES_GUIDS;
+			$myRound[ROUND_AXIS_WINS]++;
+		}
+		else
+		{
+			$winningteam = ROUND_ALLIES_GUIDS;
+			$losingteam = ROUND_AXIS_GUIDS;
+			$myRound[ROUND_ALLIES_WINS]++;
+		}
+
+		// Create tmp Winner PlayerList now
+		for($i = 2; $i < count($myArray); $i+=2)
+			$tmpplayers[ DB_RemoveBadChars($myArray[$i]) ] = DB_RemoveBadChars($myArray[$i]);
+
+		// Add guids to the winner team
+		if ( isset($tmpplayers) && count($tmpplayers) > 0 )
+		{
+			foreach ($tmpplayers as $myguid )
 			{
-				if ( !isset($myRound[$winningteam]) )								// Add in any case
-					$myRound[$winningteam][$myguid] = $myguid;
-				else if ( !array_key_exists($myguid, $myRound[$winningteam]) )		// Add only if not already there
-					$myRound[$winningteam][$myguid] = $myguid;
+				// Add if not already there
+				if ( $myguid != 0) 
+				{
+					if ( !isset($myRound[$winningteam]) )								// Add in any case
+						$myRound[$winningteam][$myguid] = $myguid;
+					else if ( !array_key_exists($myguid, $myRound[$winningteam]) )		// Add only if not already there
+						$myRound[$winningteam][$myguid] = $myguid;
+				}
+			}
+		}
+
+		// If loser Team exists, we remove changed players guids
+		if (	isset($myRound[$losingteam]) && 
+				count($myRound[$losingteam]) > 0 &&
+				isset($tmpplayers) && 
+				count($tmpplayers) > 0 )
+		{
+			foreach ( $myRound[$losingteam] as $myguid )
+			{
+				// Remove from!
+				if ( array_key_exists($myguid, $tmpplayers) )
+					unset($myRound[$losingteam][$myguid]);
 			}
 		}
 	}
-
-	// If loser Team exists, we remove changed players guids
-	if (	isset($myRound[$losingteam]) && 
-			count($myRound[$losingteam]) > 0 &&
-			isset($tmpplayers) && 
-			count($tmpplayers) > 0 )
-	{
-		foreach ( $myRound[$losingteam] as $myguid )
-		{
-			// Remove from!
-			if ( array_key_exists($myguid, $tmpplayers) )
-				unset($myRound[$losingteam][$myguid]);
-		}
-	}
-
+	
+	// Debug Output
 	if (isset($myRound[$winningteam]))
 		PrintHTMLDebugInfo( DEBUG_ULTRADEBUG, "Parser_AddRoundWin", "Winning Team Playercount: " . count($myRound[$winningteam]) );
 	if (isset($myRound[$losingteam]))
 		PrintHTMLDebugInfo( DEBUG_ULTRADEBUG, "Parser_AddRoundWin", "Losing Team Playercount: " . count($myRound[$losingteam]) );
+
 }
 /*	----------------------------------------------------*/
 
@@ -1874,56 +2396,103 @@ function Parser_AddRoundWin( $myArray )
 	Type:	L	
 	Team:	allies	
 	GUID + Players:	185269;^2|OCG|^1UnDead;104252;^2[OCG]^4Paulaner_Pils
+	SampleLogPrint CodWAW: L;441826654;42;ATZE07
+	Description:
+	Type:	L	
+	ClientGuid:	441826654	
+	ClientID:	42
+	ClientName:	ATZE07	
 */
 function Parser_AddRoundLoss( $myArray )
 {
-	global $myRound;
+	global $myRound, $content;
 
 	PrintHTMLDebugInfo( DEBUG_DEBUG, "Parser_AddRoundLoss", "Adding RoundLoss");
 
-	// Add RoundLoss
-	if ( $myArray[RLOS_TEAM] == "axis" ) 
+	// New Style Handling
+	if ( $content['gen_gameversion'] == CODWW )
 	{
-		$losingteam = ROUND_AXIS_GUIDS;
-		$winningteam = ROUND_ALLIES_GUIDS;
+		// --- Convert GUID into 32Bit Number
+		$tmpguid = ParsePlayerGuid( $myArray, RWINLOSS_GUID, RWINLOSS_NAME );
+
+		// check if exists
+		if ( $tmpguid != 0 )
+		{
+			if ( !isset($losingteam) ) 
+			{
+				// Get Player reference
+				$myPlayer = &$myPlayers[ $tmpguid ];
+
+				// Add RoundWin
+				if ( $myPlayer[PLAYER_TEAM] == "axis" ) 
+				{
+					$losingteam = ROUND_AXIS_GUIDS;
+					$winningteam = ROUND_ALLIES_GUIDS;
+				}
+				else
+				{
+					$losingteam = ROUND_ALLIES_GUIDS;
+					$winningteam = ROUND_AXIS_GUIDS;
+				}
+			}
+			
+			// Add Guid to Round Loss
+			if ( !isset($myRound[$losingteam]) )									// Add in any case
+				$myRound[$losingteam][ $tmpguid ] = $tmpguid;
+			else if ( !array_key_exists( $tmpguid, $myRound[$losingteam]) )		// Add only if not already there
+				$myRound[$losingteam][ $tmpguid ] = $tmpguid;
+		}
+		else
+			PrintHTMLDebugInfo( DEBUG_ERROR, "Parser_AddRoundLoss", "Guid '" . $tmpguid . "' not found in Playerlist Team Playercount" );
 	}
 	else
 	{
-		$losingteam = ROUND_ALLIES_GUIDS;
-		$winningteam = ROUND_AXIS_GUIDS;
-	}
+		// OLDSTYLE Handling
 
-	// Create tmp Loser PlayerList now
-	for($i = 2; $i < count($myArray); $i+=2)
-		$tmpplayers[ DB_RemoveBadChars($myArray[$i]) ] = DB_RemoveBadChars($myArray[$i]);
-
-	// Add guids to the loser team
-	if ( isset($tmpplayers) && count($tmpplayers) > 0 )
-	{
-		foreach ($tmpplayers as $myguid )
+		// Add RoundLoss
+		if ( $myArray[RLOS_TEAM] == "axis" ) 
 		{
-			// Add if not already there
-			if ( $myguid != 0) 
+			$losingteam = ROUND_AXIS_GUIDS;
+			$winningteam = ROUND_ALLIES_GUIDS;
+		}
+		else
+		{
+			$losingteam = ROUND_ALLIES_GUIDS;
+			$winningteam = ROUND_AXIS_GUIDS;
+		}
+
+		// Create tmp Loser PlayerList now
+		for($i = 2; $i < count($myArray); $i+=2)
+			$tmpplayers[ DB_RemoveBadChars($myArray[$i]) ] = DB_RemoveBadChars($myArray[$i]);
+
+		// Add guids to the loser team
+		if ( isset($tmpplayers) && count($tmpplayers) > 0 )
+		{
+			foreach ($tmpplayers as $myguid )
 			{
-				if ( !isset($myRound[$losingteam]) )									// Add in any case
-					$myRound[$losingteam][$myguid] = $myguid;
-				else if ( !array_key_exists($myguid, $myRound[$losingteam]) )			// Add only if not already there
-					$myRound[$losingteam][$myguid] = $myguid;
+				// Add if not already there
+				if ( $myguid != 0) 
+				{
+					if ( !isset($myRound[$losingteam]) )									// Add in any case
+						$myRound[$losingteam][$myguid] = $myguid;
+					else if ( !array_key_exists($myguid, $myRound[$losingteam]) )			// Add only if not already there
+						$myRound[$losingteam][$myguid] = $myguid;
+				}
 			}
 		}
-	}
 
-	// If Winner Team exists, we remove changed players guids
-	if (	isset($myRound[$winningteam]) && 
-			count($myRound[$winningteam]) > 0 &&
-			isset($tmpplayers) && 
-			count($tmpplayers) > 0 )
-	{
-		foreach ( $myRound[$winningteam] as $myguid )
+		// If Winner Team exists, we remove changed players guids
+		if (	isset($myRound[$winningteam]) && 
+				count($myRound[$winningteam]) > 0 &&
+				isset($tmpplayers) && 
+				count($tmpplayers) > 0 )
 		{
-			// Remove from!
-			if ( array_key_exists($myguid, $tmpplayers) )
-				unset($myRound[$winningteam][$myguid]);
+			foreach ( $myRound[$winningteam] as $myguid )
+			{
+				// Remove from!
+				if ( array_key_exists($myguid, $tmpplayers) )
+					unset($myRound[$winningteam][$myguid]);
+			}
 		}
 	}
 	
@@ -1953,6 +2522,7 @@ function Parser_PlayerAnalyzeAndSave( $myPlayer, $timeplayed )
 	{
 		PrintHTMLDebugInfo( DEBUG_ERROR, "PlayerAnalyzeAndSave", "Invalid Player ID! Array='" . implode(",", $myPlayer) . "'");
 
+
 //	global $myPlayers;
 //	print_r ($myPlayers);
 //	exit; 
@@ -1970,7 +2540,8 @@ function Parser_PlayerAnalyzeAndSave( $myPlayer, $timeplayed )
 					Time_Year = " . $myRound[ROUND_TIMEYEAR] . " AND 
 					Time_Month = " . $myRound[ROUND_TIMEMONTH];
 
-	$result = DB_Query("SELECT * FROM " . STATS_PLAYERS . " " . $wherequery );
+	$result = ProcessSelectStatement("SELECT * FROM " . STATS_PLAYERS . " " . $wherequery );
+//	$result = DB_Query("SELECT * FROM " . STATS_PLAYERS . " " . $wherequery );
 	$myrow = DB_GetSingleRow($result, true);
 	if ( isset($myrow['GUID']) )
 	{
@@ -1983,6 +2554,11 @@ function Parser_PlayerAnalyzeAndSave( $myPlayer, $timeplayed )
 			$killratio = $totalkills / $totaldeaths;
 		else
 			$killratio = $totalkills;
+		
+		// --- Convert number to correct format, thanks t0 
+		// Code was contributed by "Silent"
+		$killratio = number_format($killratio,3,".","");
+		// --- 
 
 		// We go for the update
 		ProcessUpdateStatement("UPDATE " . STATS_PLAYERS . " SET 
@@ -1999,6 +2575,11 @@ function Parser_PlayerAnalyzeAndSave( $myPlayer, $timeplayed )
 			$killratio = $myPlayer[PLAYER_KILLS] / $myPlayer[PLAYER_DEATHS];
 		else
 			$killratio = $myPlayer[PLAYER_KILLS];
+
+		// --- Convert number to correct format, thanks t0 
+		// Code was contributed by "Silent"
+		$killratio = number_format($killratio,3,".","");
+		// --- 
 
 		// We add a NEW entry
 		$myPlayer[PLAYER_DBID] = ProcessInsertStatement("INSERT INTO " . STATS_PLAYERS . " (GUID, SERVERID, Time_Year, Time_Month, Kills, Deaths, Teamkills, Suicides, KillRatio) 
@@ -2022,7 +2603,8 @@ function Parser_PlayerAnalyzeAndSave( $myPlayer, $timeplayed )
 					Time_Month = " . $myRound[ROUND_TIMEMONTH] . " AND 
 					ROUNDID = " . $myRound[ROUND_DBID] . " AND 
 					PLAYERID = " . $myPlayer[PLAYER_GUID];
-	$result = DB_Query("SELECT TIMEPLAYED FROM " . STATS_TIME . " " . $wherequery );
+	$result = ProcessSelectStatement("SELECT TIMEPLAYED FROM " . STATS_TIME . " " . $wherequery );
+//	$result = DB_Query("SELECT TIMEPLAYED FROM " . STATS_TIME . " " . $wherequery );
 	$myrow = DB_GetSingleRow($result, true);
 	if ( isset($myrow['TIMEPLAYED']) )
 	{
@@ -2042,6 +2624,7 @@ function Parser_PlayerAnalyzeAndSave( $myPlayer, $timeplayed )
 			 " . $timeplayed . "
 			)");
 	}
+
 	// ---
 	
 	// Return success

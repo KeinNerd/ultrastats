@@ -1,0 +1,64 @@
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_with_border">
+<tr>		
+	<td class="topmenu2begin" nowrap align="center"><img align="left" src="{MENU_BULLET_YELLOW}" width="16" height="16" vspace="0"></td>
+	<!-- IF pagermenuenabled="true" -->
+		<td class="topmenu2begin" nowrap align="center" nowrap><b>{PAGERMENUTITLE}: </b></td>
+		<!-- BEGIN PAGERMENU -->
+		<td class="topmenu2" nowrap align="center" width="">
+			<a class="topmenu2_link" href="{PMENU_URL}" target="_top">
+				<!-- IF PMENU_IMG_ENABLED="true" -->
+				<img align="left" src="{PMENU_IMG}" width="16" height="16" vspace="0">
+				<!-- ENDIF PMENU_IMG_ENABLED="true" -->
+				&nbsp;{PMENU_DisplayName}&nbsp;
+			</a>
+		</td>
+		<!-- END PAGERMENU -->
+	<!-- ENDIF pagermenuenabled="true" -->
+	
+	<td class="topmenu2begin" nowrap align="center" width="100%">&nbsp;</td>
+
+	<!-- IF ENABLETIMEFILTER="true" -->
+	<td class="topmenu2" nowrap align="center">
+		<form action="userchange.php" method="get" name="yearidform">
+		<table border="0" cellspacing="0" cellpadding="0" align="right">
+		<tr> 
+			<td class="cellmenu1" nowrap width="125"><B>&nbsp;{LN_MAIN_SELECTTIMESPAN}&nbsp;</B></td>
+			<td align="right" class="cellmenu2" width="100">
+				<input type="hidden" name="op" value="changeyear">
+				<select name="newyear" size="1" OnChange="document.yearidform.submit();" STYLE="width: 100px">
+					<option selected value="ALL_YEARS">-- All Years --</option>
+					<!-- BEGIN TIMEYEARS -->
+					<option {selected} value="{ID}">{DisplayName}</option>
+					<!-- END TIMEYEARS -->
+				</select>
+			</td>
+		</tr>
+		</table>
+		</form>
+	</td>
+
+	<td class="topmenu2" nowrap align="center" width="110">
+	<!-- IF ENABLETIMEFILTER_MONTH="true" -->
+		<form action="userchange.php" method="get" name="monthidform">
+		<table width="100" border="0" cellspacing="0" cellpadding="0" align="right">
+		<tr> 
+			<td align="right" class="cellmenu2">
+				<input type="hidden" name="op" value="changemonth">
+				<select name="newmonth" size="1" OnChange="document.monthidform.submit();" STYLE="width: 100px">
+					<option selected value="ALL_MONTHS">-- All Months --</option>
+					<!-- BEGIN TIMEMONTHS -->
+					<option {selected} value="{ID}">{DisplayName}</option>
+					<!-- END TIMEMONTHS -->
+				</select>
+			</td>
+		</tr>
+		</table>
+		</form>
+	<!-- ENDIF ENABLETIMEFILTER_MONTH="true" -->
+	</td>
+
+	<!-- ENDIF ENABLETIMEFILTER="true" -->
+	
+	<td class="topmenu2end" nowrap align="right" width="10">&nbsp;</td>
+</tr>
+</table>

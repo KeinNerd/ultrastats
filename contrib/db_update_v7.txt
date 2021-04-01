@@ -1,0 +1,59 @@
+-- --------------------------------------------------------
+-- Fix/Update duplicated weapon entries!
+DELETE FROM `stats_weapons` WHERE `stats_weapons`.`DisplayName` = 'Gewehr 43' ; -- Codww only%$&1337&%&;
+DELETE FROM `stats_weapons` WHERE `stats_weapons`.`DisplayName` = '.357 Magnum' ; -- Codww only%$&1337&%&;
+UPDATE `stats_weapons` SET `DisplayName` = 'Gewehr 43' WHERE `stats_weapons`.`DisplayName` = 'Gewehr 43 + Aperture' ; -- Codww only%$&1337&%&;
+UPDATE `stats_weapons` SET `DisplayName` = '.357 Magnum', `ExternalInfoUrl` = 'http://en.wikipedia.org/wiki/.357_Magnum', `WeaponType` = 2 WHERE `stats_weapons`.`INGAMENAME` = '357magnum_mp' ; -- Codww only%$&1337&%&;
+
+-- --------------------------------------------------------
+-- New Database Structure Updates
+ALTER TABLE `stats_damagetypes` ADD UNIQUE ( `DAMAGETYPE` );
+ALTER TABLE `stats_gameactions` ADD UNIQUE ( `NAME` );
+ALTER TABLE `stats_gametypes` ADD UNIQUE ( `NAME` );
+ALTER TABLE `stats_maps` ADD UNIQUE ( `MAPNAME` );
+ALTER TABLE `stats_weapons` ADD UNIQUE ( `INGAMENAME` );
+
+-- --------------------------------------------------------
+-- Replace existing data, this automatically INSERTS or UPDATES!
+REPLACE INTO `stats_gametypes` (`NAME`, `DisplayName`, `Description_id`) VALUES ('sd', 'Search and Destroy', 'gametype_sd'); -- Codww only%$&1337&%&;
+
+-- Weapon Fixes
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('gewehr43_aperture_mp', '', 11, 'Gewehr 43 + Aperture', 'weapon_gewehr43_mp', 'http://en.wikipedia.org/wiki/Gewehr_43', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('bar_bipod_prone_mp', '', 7, 'M1918 Rifle (BAR) + Bipod Proned', 'weapon_bar_mp', 'http://en.wikipedia.org/wiki/M1918_Browning_Automatic_Rifle', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('panzer4_mp_explosion_mp', '', 5, 'Panzer IV Explosion', 'weapon_panzer4_mp', 'http://en.wikipedia.org/wiki/Panzer_IV', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('destructible_car', '', 10, 'Car explosion', 'weapon_destructible_car', '', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('t34_mp_explosion_mp', '', 5, 'T-34 Explosion', 'weapon_t34_mp', 'http://en.wikipedia.org/wiki/T-34', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('bar_bipod_stand_mp', '', 0, 'MG42 + Bipod Standing', 'weapon_bar_mp', 'http://en.wikipedia.org/wiki/Type_99_Light_Machine_Gun', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('dp28_bipod_stand_mp', '', 0, 'DP-28 + Bipod Standing', 'weapon_dp28_mp', 'http://en.wikipedia.org/wiki/Degtyaryov_light_machine_gun', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('dp28_bipod_crouch_mp', '', 0, 'DP-28 + Bipod Crouching', 'weapon_dp28_mp', 'http://en.wikipedia.org/wiki/Degtyaryov_light_machine_gun', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('bar_bipod_crouch_mp', '', 7, 'M1918 Rifle (BAR) + Bipod Crouching', 'weapon_bar_mp', 'http://en.wikipedia.org/wiki/M1918_Browning_Automatic_Rifle', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('panzer4_gunner_front_mp', '', 5, 'Panzer IV Frontgunner', 'weapon_panzer4_mp', 'http://en.wikipedia.org/wiki/Panzer_IV', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('mg42_bipod_crouch_mp', '', 0, 'MG42 + Bipod Crouching', 'weapon_mg42_mp', 'http://en.wikipedia.org/wiki/MG42', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('mg42_bipod_stand_mp', '', 0, 'MG42 + Bipod Standing', 'weapon_mg42_mp', 'http://en.wikipedia.org/wiki/MG42', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('t34_gunner_front_mp', '', 5, 'T34 Frontgunner', 'weapon_t34_mp', 'http://en.wikipedia.org/wiki/T-34', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('type99_lmg_bipod_stand_mp', '', 0, 'Type 99 + Bipod Standing', 'weapon_type99lmg_mp', 'http://en.wikipedia.org/wiki/Type_99_Light_Machine_Gun', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('type99_lmg_bipod_crouch_mp', '', 0, 'Type 99 + Bipod Crouching', 'weapon_type99lmg_mp', 'http://en.wikipedia.org/wiki/Type_99_Light_Machine_Gun', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('dp28_bipod_prone_mp', '', 0, 'DP-28 + Bipod Prone position', 'weapon_dp28_mp', 'http://en.wikipedia.org/wiki/Degtyaryov_light_machine_gun', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('30cal_bipod_prone_mp', '', 0, 'M1919A6 (.30 cal) + Bipod Prone position', 'weapon_30cal_mp', 'http://en.wikipedia.org/wiki/M1919_Browning_machine_gun', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('mg42_bipod_prone_mp', '', 0, 'MG42 + Bipod Prone position', 'weapon_mg42_mp', 'http://en.wikipedia.org/wiki/MG42', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('fg42_bipod_prone_mp', '', 0, 'FG-42 + Bipod Prone position', 'weapon_fg42_mp', 'http://en.wikipedia.org/wiki/FG42', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('type99_lmg_bipod_prone_mp', '', 0, 'Type 99 + Bipod Prone position', 'weapon_type99lmg_mp', 'http://en.wikipedia.org/wiki/Type_99_Light_Machine_Gun', 0, 0, ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('fg42_bipod_crouch_mp', '', 0, 'FG-42 + Bipod Crouching', 'weapon_fg42_mp', 'http://en.wikipedia.org/wiki/FG42', 0, 0, ''); -- Codww only%$&1337&%&;
+
+-- Map Fixes
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_roundhouse', 'Roundhouse', 'mp_roundhouse_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_outskirts', 'Outskirts', 'mp_outskirts_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_nachtfeuer', 'Nachtfeuer', 'mp_nachtfeuer_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_makin', 'Makin', 'mp_makin_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_hangar', 'Hangar', 'mp_hangar_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_downfall', 'Downfall', 'mp_downfall_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_courtyard', 'Courtyard', 'mp_courtyard_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_seelow', 'Seelow', 'mp_seelow_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_shrine', 'Shrine', 'mp_shrine_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_wetlands', 'Wetlands', 'mp_wetlands_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_suburban', 'Suburban', 'mp_suburban_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_beachhead', 'Beachhead', 'mp_beachhead_description', ''); -- Codww only%$&1337&%&;
+REPLACE INTO `stats_maps` (`MAPNAME`, `DisplayName`, `Description_id`, `Gametypes`) VALUES('mp_asylum  ', 'Asylum', 'mp_asylum_description', ''); -- Codww only%$&1337&%&;
+
+-- New Insert stuff
+-- Updated data records stuff
