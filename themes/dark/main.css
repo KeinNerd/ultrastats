@@ -1,19 +1,25 @@
 /* Generell Tag Classes */
-BODY
-{
+BODY {
     BACKGROUND-COLOR: #000000;
-	color: #F3F3F1; 
-	font-family: Arial, Verdana, Helvetica, sans-serif; 
+    color: #F3F3F1;
+    font-family: Arial, Verdana, Helvetica, sans-serif;
     font-size: 8pt;
-
-	scrollbar-face-color: #475059;
-	scrollbar-highlight-color: #b8c2cc;
-	scrollbar-shadow-color: #b8c2cc; 
-	scrollbar-3dlight-color: #000000; 
-	scrollbar-arrow-color: #f2f5ff; 
-	scrollbar-track-color: #262d34; 
-	scrollbar-darkshadow-color: #000000;
+    scrollbar-face-color: #475059;
+    scrollbar-highlight-color: #b8c2cc;
+    scrollbar-shadow-color: #b8c2cc;
+    scrollbar-3dlight-color: #000000;
+    scrollbar-arrow-color: #f2f5ff;
+    scrollbar-track-color: #262d34;
+    scrollbar-darkshadow-color: #000000;
+    width: 90%;
+    margin: auto;
+    margin-top: 20px;
 }
+
+.topmenu1 {
+    font: 11px Arial, Verdana, Helvetica, sans-serif !important;
+}
+
 
 TD
 { 

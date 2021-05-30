@@ -1,0 +1,601 @@
+-- 
+-- Main UltraStats Database Layout, developed by Andre Lorbach
+-- The database design reaches second and partionally third 
+-- form of normalization ;)!
+-- 
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_aliases`
+-- 
+DROP TABLE IF EXISTS `stats_aliases`;
+CREATE TABLE `stats_aliases` (
+  `ID` int(11) NOT NULL auto_increment,
+  `SERVERID` tinyint(4) NOT NULL default '0',
+  `PLAYERID` int(11) unsigned NOT NULL default '0',
+  `AliasChecksum` int(11) NOT NULL,
+  `Alias` varchar(128) NOT NULL default '',
+  `AliasAsHtml` text NOT NULL,
+  `AliasStrippedCodes` varchar(128) NOT NULL default '',
+  `Count` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`ID`,`SERVERID`,`PLAYERID`,`Alias`)
+) ENGINE=InnoDB COMMENT='Holds a List of names player used on servers' AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `stats_attachments`
+--
+DROP TABLE IF EXISTS `stats_attachments`;
+CREATE TABLE `stats_attachments` (
+  `ID` varchar(64) NOT NULL,
+  `DisplayName` varchar(255) NOT NULL,
+  `Description_id` varchar(255) NOT NULL,
+  PRIMARY KEY  (`ID`)
+) ENGINE=InnoDB COMMENT='Helper table to store known attachments / perks';
+
+-- 
+-- Table structure for table `stats_chat`
+-- 
+DROP TABLE IF EXISTS `stats_chat`;
+CREATE TABLE `stats_chat` (
+  `ID` int(11) NOT NULL auto_increment,
+  `PLAYERID` int(11) unsigned NOT NULL default '0',
+  `SERVERID` tinyint(4) NOT NULL default '0',
+  `ROUNDID` int(11) NOT NULL default '0',
+  `TextSaid` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`ID`,`PLAYERID`,`SERVERID`,`ROUNDID`)
+) ENGINE=InnoDB COMMENT='Optional Table to save what was said ;)' AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_config`
+-- 
+DROP TABLE IF EXISTS `stats_config`;
+CREATE TABLE `stats_config` (
+  `name` varchar(63) NOT NULL default '',
+  `value` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`name`)
+) ENGINE=InnoDB COMMENT='Table to hold basic configuration values';
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_consolidated`
+-- 
+DROP TABLE IF EXISTS `stats_consolidated`;
+CREATE TABLE `stats_consolidated` (
+  `ID` int(11) NOT NULL auto_increment,
+  `NAME` varchar(63) NOT NULL default '',
+  `SERVERID` tinyint(4) NOT NULL default '0',
+  `Time_Year` mediumint(9) NOT NULL default '0',
+  `Time_Month` tinyint(4) NOT NULL default '0',
+  `SortID` int(11) NOT NULL default '0',
+  `DisplayName` varchar(255) NOT NULL default '',
+  `DescriptionID` varchar(255) NOT NULL default '0',
+  `VALUE_INT` int(11) NOT NULL default '0',
+  `VALUE_TXT` varchar(255) NOT NULL default '',
+  `PLAYER_ID` int(11) unsigned NOT NULL default '0',
+  PRIMARY KEY  (`ID`,`NAME`,`SERVERID`,`Time_Year`,`Time_Month`)
+) ENGINE=InnoDB COMMENT='Table to hold total values and medals' AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_player_kills`
+-- 
+DROP TABLE IF EXISTS `stats_player_kills`;
+CREATE TABLE `stats_player_kills` (
+  `ID` int(11) NOT NULL auto_increment,
+  `SERVERID` tinyint(4) NOT NULL default '0',
+  `ROUNDID` int(11) NOT NULL default '0',
+  `PLAYERID` int(11) unsigned NOT NULL default '0',
+  `ENEMYID` int(11) unsigned NOT NULL default '0',
+  `WEAPONID` smallint(6) NOT NULL default '0',
+  `DAMAGETYPEID` tinyint(4) NOT NULL default '0',
+  `HITLOCATIONID` tinyint(4) NOT NULL default '0',
+  `Kills` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`ID`,`SERVERID`,`ROUNDID`,`PLAYERID`,`ENEMYID`,`WEAPONID`,`DAMAGETYPEID`,`HITLOCATIONID`)
+) ENGINE=InnoDB COMMENT='Contains all kills made by the player' AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_players`
+-- 
+DROP TABLE IF EXISTS `stats_players`;
+CREATE TABLE `stats_players` (
+  `GUID` int(11) unsigned NOT NULL default '0',
+  `SERVERID` tinyint(4) NOT NULL default '0',
+  `Time_Year` mediumint(9) NOT NULL default '0',
+  `Time_Month` tinyint(4) NOT NULL default '0',
+  `Kills` int(11) NOT NULL default '0',
+  `Deaths` int(11) NOT NULL default '0',
+  `Teamkills` int(11) NOT NULL default '0',
+  `Suicides` int(11) NOT NULL default '0',
+  `KillRatio` float NOT NULL default '0',
+  PRIMARY KEY  (`GUID`,`SERVERID`,`Time_Year`,`Time_Month`)
+) ENGINE=InnoDB COMMENT='Stores total values for the player used in the Player lists ';
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_players_static`
+-- 
+DROP TABLE IF EXISTS `stats_players_static`;
+CREATE TABLE `stats_players_static` (
+  `GUID` int(11) unsigned NOT NULL default '0',
+  `ISCLANMEMBER` tinyint(1) NOT NULL default '0',
+  `ISBANNED` tinyint(1) NOT NULL default '0',
+  `BanReason` varchar(255) NOT NULL default '',
+  `PBGUID` varchar(32) NOT NULL default '',
+  `PlayerLogoImage` varchar(255) NOT NULL default '',
+  `PlayerDescription` varchar(255) NOT NULL default ''
+) ENGINE=InnoDB COMMENT='Table to store static data per player!';
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_players_topalias`
+-- 
+DROP TABLE IF EXISTS `stats_players_topalias`;
+CREATE TABLE `stats_players_topalias` (
+  `GUID` int(11) unsigned NOT NULL default '0',
+  `SERVERID` tinyint(4) NOT NULL default '0',
+  `ALIASID` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`GUID`,`SERVERID`)
+) ENGINE=InnoDB COMMENT='Helper table to store the topaliases names';
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_roundactions`
+-- 
+DROP TABLE IF EXISTS `stats_roundactions`;
+CREATE TABLE `stats_roundactions` (
+  `ID` int(11) NOT NULL default '0',
+  `SERVERID` tinyint(4) NOT NULL default '0',
+  `ROUNDID` int(11) NOT NULL default '0',
+  `PLAYERID` int(11) unsigned NOT NULL default '0',
+  `Team` varchar(7) NOT NULL default '',
+  `ACTIONID` smallint(6) NOT NULL default '0',
+  `Count` smallint(6) NOT NULL default '0',
+  PRIMARY KEY  (`ID`,`SERVERID`,`ROUNDID`,`PLAYERID`,`Team`,`ACTIONID`)
+) ENGINE=InnoDB COMMENT='Actions which took place in a game round like flag capture';
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_rounds`
+-- 
+DROP TABLE IF EXISTS `stats_rounds`;
+CREATE TABLE `stats_rounds` (
+  `ID` int(11) NOT NULL auto_increment,
+  `SERVERID` tinyint(4) NOT NULL default '0',
+  `TIMEADDED` int(11) NOT NULL default '0',
+  `ROUNDDURATION` mediumint(9) NOT NULL default '0',
+  `GAMETYPE` tinyint(4) NOT NULL default '0',
+  `MAPID` int(11) NOT NULL default '0',
+  `ServerCvars` text NOT NULL,
+  `AxisRoundWins` int(11) NOT NULL default '0',
+  `AxisGuids` varchar(255) NOT NULL default '',
+  `AlliesRoundWins` int(11) NOT NULL default '0',
+  `AlliesGuids` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`ID`),
+  KEY `SERVERID` (`SERVERID`)
+) ENGINE=InnoDB COMMENT='Will contain all rounds which have been played' AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_servers`
+-- 
+DROP TABLE IF EXISTS `stats_servers`;
+CREATE TABLE `stats_servers` (
+  `ID` tinyint(4) NOT NULL auto_increment,
+  `Name` varchar(255) NOT NULL default '',
+  `IP` varchar(16) NOT NULL default '',
+  `Port` int(11) NOT NULL default '0',
+  `Description` text NOT NULL,
+  `ModName` varchar(32) NOT NULL default '',
+  `AdminName` varchar(255) NOT NULL default '',
+  `ClanName` varchar(255) NOT NULL default '',
+  `AdminEmail` varchar(255) NOT NULL default '',
+  `GameLogLocation` varchar(255) NOT NULL default '',
+  `LastLogLine` int(11) NOT NULL default '0',
+  `LastLogLineChecksum` int(11) NOT NULL default '0',
+  `PlayedSeconds` int(11) NOT NULL default '0',
+  `ServerEnabled` tinyint(1) NOT NULL default '0',
+  `ParsingEnabled` tinyint(1) NOT NULL default '0',
+  `ftppath` varchar(255) NOT NULL default '',
+  `LastUpdate` int(11) NOT NULL default '0',
+  `ServerLogo` varchar(255) NOT NULL default '',
+  `FTPPassiveMode` tinyint(1) NOT NULL default '0',
+  PRIMARY KEY  (`ID`)
+) ENGINE=InnoDB COMMENT='Table to store the Server Informations' AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_time`
+-- 
+DROP TABLE IF EXISTS `stats_time`;
+CREATE TABLE `stats_time` (
+  `SERVERID` tinyint(4) NOT NULL default '0',
+  `Time_Year` mediumint(9) NOT NULL default '0',
+  `Time_Month` tinyint(4) NOT NULL default '0',
+  `ROUNDID` int(11) NOT NULL default '0',
+  `PLAYERID` int(11) unsigned NOT NULL default '0',
+  `TIMEPLAYED` smallint(6) NOT NULL default '0',
+  PRIMARY KEY  (`SERVERID`,`ROUNDID`,`PLAYERID`)
+) ENGINE=InnoDB COMMENT='Contains Information on how long the player has played';
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_users`
+-- 
+DROP TABLE IF EXISTS `stats_users`;
+CREATE TABLE `stats_users` (
+  `ID` int(11) NOT NULL auto_increment,
+  `username` varchar(32) NOT NULL default '',
+  `password` varchar(32) NOT NULL default '',
+  `session_time` int(11) NOT NULL default '0',
+  `access_level` tinyint(4) NOT NULL default '0',
+  PRIMARY KEY  (`ID`)
+) ENGINE=InnoDB COMMENT='This table holds UltraStats users who can administrate them' AUTO_INCREMENT=1 ;
+
+-- 
+-- Table structure for table `stats_weapons_perserver`
+-- 
+DROP TABLE IF EXISTS `stats_weapons_perserver`;
+CREATE TABLE `stats_weapons_perserver` (
+  `WEAPONID` int(11) NOT NULL default '0',
+  `SERVERID` tinyint(4) NOT NULL default '0',
+  `ENABLED` tinyint(1) NOT NULL default '1',
+  PRIMARY KEY  (`WEAPONID`,`SERVERID`)
+) ENGINE=InnoDB COMMENT='Helper Table to define which weapons will be shown per serve';
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_damagetypes`
+-- 
+DROP TABLE IF EXISTS `stats_damagetypes`;
+CREATE TABLE `stats_damagetypes` (
+  `ID` tinyint(4) NOT NULL auto_increment,
+  `DAMAGETYPE` varchar(64) NOT NULL default '',
+  `DisplayName` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`ID`),
+  UNIQUE KEY `DAMAGETYPE` (`DAMAGETYPE`)
+) ENGINE=InnoDB COMMENT='Helpertable to store the damage types' AUTO_INCREMENT=1 ;
+
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_gameactions`
+-- 
+DROP TABLE IF EXISTS `stats_gameactions`;
+CREATE TABLE `stats_gameactions` (
+  `ID` smallint(6) NOT NULL auto_increment,
+  `NAME` varchar(64) NOT NULL default '',
+  `DisplayName` varchar(255) NOT NULL default '',
+  `SkillPoints` tinyint(4) NOT NULL default '0',
+  PRIMARY KEY  (`ID`),
+  UNIQUE KEY `NAME` (`NAME`)
+) ENGINE=InnoDB COMMENT='Helper table to game actions' AUTO_INCREMENT=11 ;
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_gametypes`
+-- 
+
+DROP TABLE IF EXISTS `stats_gametypes`;
+CREATE TABLE `stats_gametypes` (
+  `ID` tinyint(4) NOT NULL auto_increment,
+  `NAME` varchar(16) NOT NULL default '',
+  `DisplayName` varchar(127) NOT NULL default '',
+  `Description_id` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`ID`),
+  UNIQUE KEY `NAME` (`NAME`)
+) ENGINE=InnoDB COMMENT='Contains some detailed informations about the Gametypes' AUTO_INCREMENT=12 ;
+
+-- 
+-- Data will be inserted based on the Game Version
+-- 
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_hitlocations`
+-- 
+DROP TABLE IF EXISTS `stats_hitlocations`;
+CREATE TABLE `stats_hitlocations` (
+  `ID` tinyint(4) NOT NULL auto_increment,
+  `BODYPART` varchar(32) NOT NULL default '',
+  `DisplayName` varchar(64) NOT NULL default '',
+  PRIMARY KEY  (`ID`),
+  KEY `BODYPART` (`BODYPART`)
+) ENGINE=InnoDB COMMENT='Hitlocation helper table for complex statements' AUTO_INCREMENT=20 ;
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_language_strings`
+-- 
+
+DROP TABLE IF EXISTS `stats_language_strings`;
+CREATE TABLE `stats_language_strings` (
+  `LANG` char(2) NOT NULL default '',
+  `STRINGID` varchar(255) NOT NULL default '',
+  `TEXT` text NOT NULL,
+  PRIMARY KEY  (`LANG`,`STRINGID`)
+) ENGINE=InnoDB COMMENT='This table holds strings which can be editied by the user (m';
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_maps`
+-- 
+
+DROP TABLE IF EXISTS `stats_maps`;
+CREATE TABLE `stats_maps` (
+  `ID` int(11) NOT NULL auto_increment,
+  `MAPNAME` varchar(63) NOT NULL default '',
+  `DisplayName` varchar(127) NOT NULL default '',
+  `Description_id` varchar(255) NOT NULL default '',
+  `Gametypes` varchar(127) NOT NULL default '',
+  PRIMARY KEY  (`ID`,`MAPNAME`),
+  UNIQUE KEY `MAPNAME_UNIQUE` (`MAPNAME`),
+  KEY `MAPNAME` (`MAPNAME`)
+
+) ENGINE=InnoDB COMMENT='The parser will fill this table with map lists. You can enan' AUTO_INCREMENT=1 ;
+
+-- 
+-- Data will be inserted based on the Game Version
+-- 
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_weapons`
+-- 
+
+DROP TABLE IF EXISTS `stats_weapons`;
+CREATE TABLE `stats_weapons` (
+  `ID` smallint(6) NOT NULL auto_increment,
+  `INGAMENAME` varchar(32) NOT NULL default '',
+  `BULLETNAME` varchar(32) NOT NULL default '',
+  `WeaponType` tinyint(4) NOT NULL default '0',
+  `DisplayName` varchar(127) NOT NULL default '',
+  `Description_id` varchar(255) NOT NULL default '',
+  `ExternalInfoUrl` varchar(255) NOT NULL default '',
+  `Damage` int(11) NOT NULL default '0',
+  `Accuracy` int(11) NOT NULL default '0',
+  `Ammotype` varchar(64) NOT NULL default '',
+  PRIMARY KEY  (`ID`),
+  UNIQUE KEY `INGAMENAME_UNIQUE` (`INGAMENAME`),
+  KEY `INGAMENAME` (`INGAMENAME`,`BULLETNAME`)
+) ENGINE=InnoDB COMMENT='Table containing Informations about weapons' AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+-- 
+-- Table structure for table `stats_damagetypes_kills`
+-- 
+
+DROP TABLE IF EXISTS `stats_damagetypes_kills`;
+CREATE TABLE `stats_damagetypes_kills` (
+  `damagetypeid` tinyint(4) NOT NULL,
+  `SERVERID` tinyint(4) NOT NULL,
+  `Time_Year` mediumint(9) NOT NULL,
+  `Time_Month` tinyint(4) NOT NULL,
+  `Kills` int(11) NOT NULL,
+  `PlayersCount` int(11) NOT NULL,
+  PRIMARY KEY  (`damagetypeid`,`SERVERID`,`Time_Year`,`Time_Month`)
+) ENGINE=InnoDB COMMENT='Helper table to store and combine damagetype kills';
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `stats_weapons_kills`
+--
+
+DROP TABLE IF EXISTS `stats_weapons_kills`;
+CREATE TABLE `stats_weapons_kills` (
+  `WEAPONID` smallint(6) NOT NULL,
+  `SERVERID` tinyint(4) NOT NULL,
+  `Time_Year` mediumint(9) NOT NULL,
+  `Time_Month` tinyint(4) NOT NULL,
+  `Kills` int(11) NOT NULL,
+  `PlayersCount` int(11) NOT NULL,
+  PRIMARY KEY  (`WEAPONID`,`SERVERID`,`Time_Year`,`Time_Month`)
+) ENGINE=InnoDB COMMENT='Helper table to store and combine weapon kills';
+
+-- --------------------------------------------------------
+
+--
+-- data for table `stats_attachments`
+--
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('grip', 'Grip', 'attachment_grip_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('acog', 'Acog Scope', 'attachment_acog_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('bigammo', 'Extra Ammo', 'attachment_bigammo_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('scoped', 'Scope', 'attachment_scoped_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('aperture', 'Aperture', 'attachment_aperture_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('bayonet', 'Bayonet', 'attachment_bayonet_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('bipod', 'Bipod', 'attachment_bipod_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('silenced', 'Silencer', 'attachment_silencer_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('sawoff', 'Sawoff', 'attachment_sawoff_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('singleshot', 'Single Shot', 'attachment_singleshot_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('selectfire', 'Select Fire', 'attachment_selectfire_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('fullauto', 'Full Auto', 'attachment_fullauto_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('flash', 'Flash Surpressor', 'attachment_flash_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('gl', 'Grenade Launcher', 'attachment_gl_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('silencer', 'Silencer', 'attachment_silencer_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('reflex', 'Reflex', 'attachment_relfex_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('crouch', 'Crouch', 'attachment_crouch_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('stand', 'Stand', 'attachment_stand_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('20mm', '20mm', 'attachment_20mm_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('ffar', 'FFar', 'attachment_ffar_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('telescopic', 'Telescopic', 'attachment_telescopic_description');
+INSERT INTO `stats_attachments` (`ID`, `DisplayName`, `Description_id`) VALUES('none', 'None', 'attachment_none_description');
+
+-- --------------------------------------------------------
+
+-- 
+-- Dumping data for table `stats_damagetypes`
+-- 
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_RIFLE_BULLET', 'Rifle Bullet');
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_HEAD_SHOT', 'Headshot');
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_GRENADE_SPLASH', 'Grenade Splash');
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_SUICIDE', 'Suicide');
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_MELEE', 'Knife kill');
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_PISTOL_BULLET', 'Pistol Bullet');
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_EXPLOSIVE', 'S&D Explosion');
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_UNKNOWN', 'Unknown Damage');
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_GRENADE', 'Grenade');
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_PROJECTILE_SPLASH', 'Projectile Splash');
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_IMPACT', 'Impact');
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_PROJECTILE', 'Projectile');
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_BURNED', 'Burned');
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_BAYONET', 'Bayonet');
+INSERT INTO `stats_damagetypes` (`DAMAGETYPE`, `DisplayName`) VALUES('MOD_CRUSH', 'Crushed');
+
+-- --------------------------------------------------------
+
+-- 
+-- Dumping data for table `stats_gameactions`
+-- 
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('Exploit abuser was suicided by server', 'ExplotAbuser', -10);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('radio_capture', 'Radio Capture', 10);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('bomb_plant', 'Bomb Plant', 10);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('radio_destroy', 'Radio Destroy', 5);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('bomb_defuse', 'Bomb Defuse', 5);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('ctf_returned', 'Flag returned', 5);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('ctf_captured', 'Flag captured', 10);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('ctf_take', 'Flag taken', 2);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('ctf_pickup', 'Flag pickup', 2);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('ctf_defended', 'Flag defended', 5);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('unknown_action', 'Unknown', 0);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('flag_taken', 'Flag taken', 2);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('flag_returned', 'Flag returned', 5);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('flag_captured', 'Flag captured', 10);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('headquaters_captured', 'HQ Captured', 10);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('headquaters_destroyed', 'Destroyed', 5);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('bomb_planted', 'Bomb planted', 5);
+INSERT INTO `stats_gameactions` (`NAME`, `DisplayName`, `SkillPoints`) VALUES ('bomb_defused', 'Bomb defused', 10);
+-- --------------------------------------------------------
+
+-- 
+-- Dumping data for table `stats_hitlocations`
+-- 
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('neck', 'neck');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('torso_upper', 'Upper Torso');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('right_leg_upper', 'Upper right leg');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('right_leg_lower', 'Lower right leg');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('torso_lower', 'Lower Torso');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('head', 'Head');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('none', 'None');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('left_arm_upper', 'Upper left arm');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('left_arm_lower', 'Lower left arm');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('right_arm_lower', 'Lower right arm');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('right_arm_upper', 'Upper right arm');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('right_foot', 'Right foot');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('left_foot', 'Left foot');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('right_arm_lower', 'Lower right arm');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('right_arm_upper', 'Upper right arm');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('left_leg_lower', 'Lower left leg');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('left_leg_upper', 'Upper left leg');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('right_hand', 'Right Hand');
+INSERT INTO `stats_hitlocations` (`BODYPART`, `DisplayName`) VALUES ('left_hand', 'Left Hand');
+
+-- --------------------------------------------------------
+
+-- 
+-- Dumping data for table `stats_language_strings`
+-- 
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'medal_pro_killer', 'Player who killed the most peoples ');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'medal_pro_headshot', 'Player with the most Headshots ');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'medal_pro_explosivekiller', 'Player who has the most explosive kills ');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'medal_pro_slappyhappy', 'Player who has the most slap kills ');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'medal_pro_sniper', 'Player who has the most sniper kills ');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'medal_pro_pistol', 'Player who has the most pistol kills ');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'medal_anti_no1target', 'Player who was killed');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'medal_anti_teamkiller', 'Player who killed the most team m8s');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'medal_anti_suicide', 'Player who seems not to like his life');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'medal_anti_nademagnet', 'Player who seems to who seems to attract nades ');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'medal_anti_whiner', 'Player who is bitching around the most time (chat)');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'medal_pro_knifekills', 'Player with the most knife kills');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'medal_pro_claymorec4', 'Player with the most claymore and c4 kills');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'medal_anti_nademagnet', 'Spieler der die Granaten am meisten anzieht.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'medal_anti_no1target', 'Staatsfeind. spieler mit den meisten Toden.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'medal_anti_suicide', 'Spieler mit den meisten Selbstmorden.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'medal_anti_teamkiller', 'Spieler mit den meisten Team abschüssen.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'medal_anti_whiner', 'Spieler der am meisten rumheult.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'medal_pro_claymorec4', 'Spieler mit den meisten Claymore und C4 Kills.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'medal_pro_explosivekiller', 'Spieler mit den meisten explosiven Kills.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'medal_pro_headshot', 'Spieler mit den meisten Headshot Kills.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'medal_pro_killer', 'Spieler mit den meisten Kills.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'medal_pro_knifekills', 'Spieler mit den meisten Messer Kills.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'medal_pro_pistol', 'Spieler mit den meisten Pistolen Kills.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'medal_pro_slappyhappy', 'Spieler mit den meisten Schlag Kills.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'medal_pro_sniper', 'Spieler mit den meisten Scharfschützen Kills.');
+
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_RIFLE_BULLET', 'Killed by a Rifle Bullet.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_HEAD_SHOT', 'Most likely the head has been blown off. ');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_GRENADE_SPLASH', 'Kill by a grenade splash.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_SUICIDE', 'Player killed himself, most often by accident. ');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_MELEE', 'Either stabbed (into the back), or killed by knife. Both is very humiliating. ');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_PISTOL_BULLET', 'Killed by a pistol bullet.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_EXPLOSIVE', 'This represents a SD Explosion. Player was to close to the bomb ;).');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_UNKNOWN', 'Unknown Damagetype');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_GRENADE', 'Directly killed by a grenade.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_PROJECTILE_SPLASH', 'Killed by a projectile Splash.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_IMPACT', 'Impact by what? I don''t know ...');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_PROJECTILE', 'Killed directly by a projectile. ');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_BURNED', 'Player literally burned to death');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_BAYONET', 'Player was stabbed by a bayonet.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'MOD_CRUSH', 'This can happen if a tank rolls over a player, maybe on purpose or maybe by accident. You never know ;)\r\n');
+
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'gametype_war_codww', 'The War game mode featured in CoD3 returns. Each map has a number of territorial points that can only be captured in a linear sequence. The first team to capture the enemy’s starting point wins, and if neither team captures this point then the game enters sudden death.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'gametype_vtdm', 'This gametype works just like Team Deathmatch, but includes vehicles. \r\n');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'gametype_twar', 'Works like the WAR Mode, but includes vehicles. \r\n');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'gametype_dm', 'This is basically every-man-for-himself deathmatch. No teams, no special goals, just a battlefield of chaos as everyone fights each other. It may not be realistic, but it sure is fun.\r\n\r\n<br><br>Source: <a href="http://www.planetcallofduty.com/callofduty2/mp/maps.shtml" target="_blank">Planet CallOfDuty.com</A>\r\n');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'gametype_tdm', 'A somewhat more realistic play style, Team Match pits the Allies against the Axis in a large deathmatch contest. The team with the most frags wins.\r\n\r\n<br><br>Source: <a href="http://www.planetcallofduty.com/callofduty2/mp/maps.shtml" target="_blank">Planet CallOfDuty.com</A>\r\n');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'gametype_sd', 'On all the default multiplayer maps except for "Pavlov," it''s the Allied forces attempting to search out and destroy a specific target, usually a gun emplacement. These maps typically have two potential targets for the Allied forces, so the Axis cannot simply camp out the one target and wait -- the Allied forces win if they destroy either target. The Axis win a round by killing the entire Allied team, by defusing a planted bomb, or by letting the timer run out.\r\n\r\n<br><br>Source: <a href="http://www.planetcallofduty.com/callofduty2/mp/maps.shtml" target="_blank">Planet CallOfDuty.com</A>\r\n');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'gametype_hq', 'In this mode there are two different points on the map designated as capture points for each team. In order to score points a team must control and &#8220;setup&#8221; headquarters at one of these capture points. Once they have done that, they must defend that headquarters. The longer they can keep the headquarters from being taken, the more points they get. The interesting twist is that if you die while on the defending team, you are not allowed to respawn until your headquarters is taken over by the other team, while the attacking team still gets to respawn. This means that as you defend your headquarters, you have less team mates to help you as they slowly get killed. Always a pain being the last defender alive. Once taken over, the capture points are changed to new locations and it starts all over again. This is a very fun mode to play and is always changing.\r\n\r\n<br><br>Source: <a href="http://www.planetcallofduty.com/callofduty2/mp/maps.shtml" target="_blank">Planet CallOfDuty.com</A>\r\n');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'gametype_ctf', 'Similar to the Day of Defeat style of play. Whichever team captures the most flags before the round is over, wins.\r\n\r\n<br><br>Source: <a href="http://www.planetcallofduty.com/callofduty2/mp/maps.shtml" target="_blank">Planet CallOfDuty.com</A>\r\n');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'gametype_htf', 'The goal of HTF is to be the one who captures your team''s flag. Where they get the "hold" part of "hold the flag" is beyond me. Think of it as a figure of speech. When a flag is capped, a special HTF scoreboard notes the point and you can see it in the same area chat and server messages are displayed in.\r\n\r\n<br><br>Source: <a href="http://www.planetcallofduty.com/callofduty2/mp/maps.shtml" target="_blank">Planet CallOfDuty.com</A>\r\n');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'gametype_sab', '\r\n<p>Similar to Search and Destroy, a neutral suitcase bomb is placed in the center of the map, both teams rush to capture the bomb and plant it on the enemy''s objective.&nbsp;</p>\r\n<p> Each team''s goal is to take the bomb and blow up the objective in the enemy''s base. The bomb carrier can fire his weapons, but his position will be announced periodically throughout the game. Also, unlike Search and Destroy, players have unlimited respawns as opposed to just one per round, although it is not instantaneous like Team Deathmatch or Free-for-All.</p>\r\n');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'gametype_dom', 'Flags are placed in strategic points around the map. All flags start neutral. Teams battle to hold the most flags. Game ends when the time limit is reached, or the score limit is reached.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'gametype_ctf', '2 Teams die um Flaggen Spielen. Das Team, dass zuerst die benötigte Punktezahl erreicht hat, hat gewonnen.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'gametype_dm', 'Jeder gegen Jeder. Der jenige, der zuerst die vorgegebene Punktezahl erreicht hat, hat gewonnen.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'gametype_dom', '2 Teams, 3 Flaggenpunkte. Das Team das mehr Flaggen besitzt, bekommt schneller und mehr Punkte. Gewonnen hat das Team, dass die vorgegebene Punktezahl erreicht hat.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'gametype_hq', '2 Teams und jeweils 1 Hauptquratier (HQ). Das Team dass das HQ eingenommen hat, muss es bis zur selbst zerstörung verteidigen. Durch das einhemen und behalten des HQ''s gibt es Punkte. Das Team dass zuerst die vorgegebenen Punkte erreicht hat, hat gewonnen.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'gametype_sab', '2 Teams versuchen als erstes an der Bombe zu sein. Diese müssen sie dann im gegnerischen Gebiet legen und bis zum Explosions Punkt verteidigen.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'gametype_sd', '2 Teams, 1 Bombe. Ein Team muss versuchen die Bombe an einem der vorgegeben Bombenpunkten zu legen und bis zu Explosion zu verteidigen. Gelingt dies, hat das Team gewonnen. Kann jedoch das andere Team das explodieren der Bombe verhindern, hat dieses gewonnen.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('DE', 'gametype_tdm', '2 Teams die gegeneinander kämpfen. Das Team, das zuerst die vorgegebene Punktezahl erreicht hat, hat gewonnen.');
+
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'weapon_none', 'Killed by no weapon? Nothing is impossible in this game, isn''t it?');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'weapon_frag_grenade_mp', '<p><b>hand grenade</b> is a small hand-held <a href="http://en.wikipedia.org/wiki/Anti-personnel" title="Anti-personnel" class="mw-redirect">anti-personnel</a>\r\nweapon designed to be thrown and then explode after a short time. The word\r\n&quot;grenade&quot; is derived from the French <i>grenade</i>, meaning <a href="http://en.wikipedia.org/wiki/Pomegranate" title="Pomegranate">pomegranate</a>,\r\nso named because its <a href="http://en.wikipedia.org/wiki/Shrapnel" title="Shrapnel">shrapnel</a>\r\npellets reminded soldiers of the seeds of this fruit. <a href="http://en.wikipedia.org/wiki/Grenadier_(soldier)" title="Grenadier (soldier)" class="mw-redirect">Grenadiers</a>\r\nwere originally <a href="http://en.wikipedia.org/wiki/Soldiers" title="Soldiers" class="mw-redirect">soldiers</a>\r\nwho specialized in throwing grenades.</p>\r\n');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'weapon_frag_grenade_short_mp', 'Killed by a grenade which was dropped by a dead player, called Martyrdom.');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'weapon_briefcase_bomb_defuse_mp', 'Player was killed while defusing the bomb. ');
+INSERT INTO `stats_language_strings` (`LANG`, `STRINGID`, `TEXT`) VALUES('EN', 'weapon_briefcase_bomb_mp', 'Killed by the S&D Bomb.');
+
+-- --------------------------------------------------------
+
+
+-- 
+-- data for table `stats_weapons` , all other data will be added based on the game
+-- 
+INSERT INTO `stats_weapons` (`INGAMENAME`, `BULLETNAME`, `WeaponType`, `DisplayName`, `Description_id`, `ExternalInfoUrl`, `Damage`, `Accuracy`, `Ammotype`) VALUES('none', '', 10, 'No Weapon at all', 'weapon_none', '', 0, 0, '');
+
+-- --------------------------------------------------------
+
+-- 
+-- Moved REST of INSERTS into db_template_codww2only.txt and db_template_cod4only.txt
+-- 
